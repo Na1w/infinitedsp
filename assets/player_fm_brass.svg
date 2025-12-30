@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 60">
+  <rect width="400" height="60" fill="#2d2d2d" rx="8" ry="8"/>
+  <path d="M 30 20 L 30 40 L 50 30 Z" fill="#cccccc"/>
+  <text x="70" y="37" font-family="Arial, sans-serif" font-size="20" fill="#ffffff">
+    FM Brass Demo
+  </text>
+</svg>

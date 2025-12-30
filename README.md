@@ -30,8 +30,8 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 
 Listen to some renderings of the examples below:
 
-*   **[Trance Synth Demo](assets/audio/trance_synth.wav)** - The trance synth example.
-*   **[FM Brass Demo](assets/audio/filter_sweep.wav)** - The filter sweep example.
+*   **[Trance Synth](assets/audio/trance_synth.wav)** - The trance synth example.
+*   **[Filter Sweep](assets/audio/filter_sweep.wav)** - The filter sweep example.
 
 
 ## Project Structure

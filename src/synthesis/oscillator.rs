@@ -79,6 +79,8 @@ impl FrameProcessor for Oscillator {
             let freq = self.freq_buffer[i];
             let inc = freq / self.sample_rate;
 
+            let current_phase = self.phase;
+
             self.phase += inc;
 
             // Handle phase wrapping for both positive and negative frequencies
@@ -89,10 +91,9 @@ impl FrameProcessor for Oscillator {
             }
 
             let val = match self.waveform {
-                // libm::sinf
-                Waveform::Sine => libm::sinf(self.phase * 2.0 * PI),
+                Waveform::Sine => libm::sinf(current_phase * 2.0 * PI),
                 Waveform::Triangle => {
-                    let x = self.phase;
+                    let x = current_phase;
                     if x < 0.5 {
                         4.0 * x - 1.0
                     } else {
@@ -100,13 +101,13 @@ impl FrameProcessor for Oscillator {
                     }
                 },
                 Waveform::Saw => {
-                    let naive = 2.0 * self.phase - 1.0;
-                    naive - Self::poly_blep(self.phase, inc.abs())
+                    let naive = 2.0 * current_phase - 1.0;
+                    naive - Self::poly_blep(current_phase, inc.abs())
                 },
                 Waveform::Square => {
-                    let naive = if self.phase < 0.5 { 1.0 } else { -1.0 };
+                    let naive = if current_phase < 0.5 { 1.0 } else { -1.0 };
                     let abs_inc = inc.abs();
-                    let corr = Self::poly_blep(self.phase, abs_inc) - Self::poly_blep((self.phase + 0.5) % 1.0, abs_inc);
+                    let corr = Self::poly_blep(current_phase, abs_inc) - Self::poly_blep((current_phase + 0.5) % 1.0, abs_inc);
                     naive + corr
                 },
                 Waveform::WhiteNoise => {
@@ -138,7 +139,11 @@ mod tests {
         let mut buffer = [0.0; 100];
         osc.process(&mut buffer, 0);
 
+        // First sample should be sin(0) = 0
         assert!((buffer[0]).abs() < 1e-5);
+
+        // Sample 25 (at 44100Hz, 441Hz) is 1/4 cycle = PI/2
+        // sin(PI/2) = 1.0
         assert!((buffer[25] - 1.0).abs() < 1e-5);
     }
 }

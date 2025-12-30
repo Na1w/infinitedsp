@@ -1,0 +1,20 @@
+[package]
+name = "infinitedsp-core"
+authors = ["Fredrik Andersson <fredrikandersson@mac.com>"]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "A modular audio DSP library for synthesis and effects."
+repository = "https://github.com/fredrikandersson/infinitedsp-core"
+
+[workspace]
+members = [
+    ".",
+    "examples_app",
+]
+
+[dependencies]
+wide = "1.1.1"
+microfft = "0.6.0"
+num-complex = { version = "0.4", default-features = false, features = ["libm"] }
+libm = "0.2"

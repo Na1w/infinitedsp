@@ -1,0 +1,12 @@
+[package]
+name = "infinitedsp-examples"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+infinitedsp-core = { path = "../" }
+cpal = "0.17"
+anyhow = "1.0"
+microfft = "0.6.0"
+num-complex = "0.4"

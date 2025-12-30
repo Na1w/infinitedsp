@@ -1,0 +1,68 @@
+use super::frame_processor::FrameProcessor;
+use super::mixer::Mixer;
+use crate::core::audio_param::AudioParam;
+use alloc::vec::Vec;
+use alloc::boxed::Box;
+use alloc::vec;
+
+/// A chain of DSP processors.
+///
+/// Processes audio sequentially through a list of processors.
+pub struct DspChain {
+    processors: Vec<Box<dyn FrameProcessor + Send>>,
+    sample_rate: f32,
+}
+
+impl DspChain {
+    /// Creates a new DspChain starting with the given processor.
+    pub fn new(mut first: impl FrameProcessor + Send + 'static, sample_rate: f32) -> Self {
+        first.set_sample_rate(sample_rate);
+        DspChain {
+            processors: vec![Box::new(first)],
+            sample_rate,
+        }
+    }
+
+    /// Appends a processor to the chain.
+    pub fn and(mut self, mut processor: impl FrameProcessor + Send + 'static) -> Self {
+        processor.set_sample_rate(self.sample_rate);
+        self.processors.push(Box::new(processor));
+        self
+    }
+
+    /// Appends a processor to the chain with a dry/wet mix.
+    pub fn and_mix(mut self, mix: f32, mut processor: impl FrameProcessor + Send + 'static) -> Self {
+        processor.set_sample_rate(self.sample_rate);
+        let mixed = Mixer::new(mix, processor);
+        self.processors.push(Box::new(mixed));
+        self
+    }
+
+    /// Appends a processor to the chain with a modulatable dry/wet mix.
+    pub fn and_mix_param(mut self, mix: AudioParam, mut processor: impl FrameProcessor + Send + 'static) -> Self {
+        processor.set_sample_rate(self.sample_rate);
+        let mut mixed = Mixer::new(0.0, processor); // Initial value doesn't matter as we set param
+        mixed.set_mix(mix);
+        self.processors.push(Box::new(mixed));
+        self
+    }
+}
+
+impl FrameProcessor for DspChain {
+    fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
+        for p in &mut self.processors {
+            p.process(buffer, sample_index);
+        }
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f32) {
+        self.sample_rate = sample_rate;
+        for p in &mut self.processors {
+            p.set_sample_rate(sample_rate);
+        }
+    }
+
+    fn latency_samples(&self) -> u32 {
+        self.processors.iter().map(|p| p.latency_samples()).sum()
+    }
+}

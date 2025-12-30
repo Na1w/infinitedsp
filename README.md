@@ -25,6 +25,15 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
     *   **Physical Modeling:** Karplus-Strong (String), Brass Model.
     *   **Control:** LFO, ADSR Envelope.
 
+
+## Demos
+
+Listen to some renderings of the examples below:
+
+*   **[Trance Synth Demo](assets/audio/trance_synth.wav)** - The trance synth example.
+*   **[FM Brass Demo](assets/audio/filter_sweep.wav)** - The filter sweep example.
+
+
 ## Project Structure
 
 *   `src/core`: Core traits and infrastructure (`FrameProcessor`, `AudioParam`, `DspChain`, `Ola`).

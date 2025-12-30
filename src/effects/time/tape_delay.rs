@@ -129,7 +129,7 @@ impl FrameProcessor for TapeDelay {
             self.lfo_phase += self.lfo_inc;
             if self.lfo_phase > 2.0 * PI { self.lfo_phase -= 2.0 * PI; }
 
-            let lfo = self.lfo_phase.sin();
+            let lfo = libm::sinf(self.lfo_phase);
             let current_delay = base_delay_samples + lfo * self.depth * self.flutter_amount;
 
             let read_pos = (self.write_ptr as f32 - current_delay + len_f) % len_f;
@@ -142,10 +142,10 @@ impl FrameProcessor for TapeDelay {
             self.filter_state += self.lowpass_coeff * (raw_delayed - self.filter_state);
             let filtered = self.filter_state;
 
-            let saturated = (filtered * drive).tanh();
+            let saturated = libm::tanhf(filtered * drive);
 
             let feedback_signal = saturated * fb;
-            let tape_input = (input + feedback_signal).tanh();
+            let tape_input = libm::tanhf(input + feedback_signal);
 
             self.buffer[self.write_ptr] = tape_input;
 

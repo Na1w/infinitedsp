@@ -78,7 +78,7 @@ impl FrameProcessor for Delay {
         // For Digital Delay, we use the first sample of delay_time for the whole block to keep SIMD optimization.
         // If sample-accurate modulation is needed, TapeDelay should be used.
         let current_delay_s = self.delay_buffer[0];
-        self.delay_samples = (current_delay_s * self.sample_rate as f32).round() as usize;
+        self.delay_samples = libm::roundf(current_delay_s * self.sample_rate as f32) as usize;
         if self.delay_samples >= len {
             self.delay_samples = if len > 0 { len - 1 } else { 0 };
         }

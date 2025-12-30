@@ -128,7 +128,7 @@ impl FrameProcessor for Distortion {
                 DistortionType::HardClip => driven.clamp(-1.0, 1.0),
                 DistortionType::BitCrush(bits) => {
                     let steps = libm::powf(2.0, bits);
-                    (driven * steps).round() / steps
+                    libm::roundf(driven * steps) / steps
                 },
                 DistortionType::Foldback => libm::sinf(driven),
             };

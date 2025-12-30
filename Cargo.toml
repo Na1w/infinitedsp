@@ -1,11 +1,11 @@
 [package]
 name = "infinitedsp-core"
 authors = ["Fredrik Andersson <fredrikandersson@mac.com>"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 description = "A modular audio DSP library for synthesis and effects."
-repository = "https://github.com/fredrikandersson/infinitedsp-core"
+repository = "https://github.com/Na1w/infinitedsp/"
 readme = "README.md"
 keywords = ["audio", "dsp", "synthesis", "effects", "no_std"]
 categories = ["multimedia::audio", "embedded", "no-std"]

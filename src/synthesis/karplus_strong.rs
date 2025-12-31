@@ -23,8 +23,6 @@ pub struct KarplusStrong {
     gate_buffer: Vec<f32>,
     damping_buffer: Vec<f32>,
     pick_pos_buffer: Vec<f32>,
-
-    exc_filter_state: f32,
 }
 
 impl KarplusStrong {
@@ -53,7 +51,6 @@ impl KarplusStrong {
             gate_buffer: Vec::new(),
             damping_buffer: Vec::new(),
             pick_pos_buffer: Vec::new(),
-            exc_filter_state: 0.0,
         }
     }
 
@@ -84,64 +81,22 @@ impl FrameProcessor for KarplusStrong {
             let gate_val = self.gate_buffer[i];
 
             if gate_val >= 0.5 && self.last_gate < 0.5 {
-                // Pluck with filtered noise
                 let pitch_val = self.pitch_buffer[i];
                 let period = (self.sample_rate / pitch_val).max(1.0) as usize;
                 let pick_pos = self.pick_pos_buffer[i].clamp(0.01, 0.5);
                 let pick_offset = (period as f32 * pick_pos) as usize;
 
                 if period < delay_len {
-                    // 1. Fill with noise
                     for j in 0..period {
                         let idx = (self.write_ptr + j) % delay_len;
                         let noise = Self::next_random(&mut self.rng_state);
-
-                        self.exc_filter_state += 0.5 * (noise - self.exc_filter_state);
-                        self.delay_line[idx] = self.exc_filter_state;
+                        self.delay_line[idx] = noise;
                     }
-
-                    // 2. Apply Pick Position Comb Filter (in-place)
-                    // y[n] = x[n] - x[n - pick_offset]
-                    // We iterate backwards to avoid overwriting data we need
-                    // But wait, it's a circular buffer.
-                    // And we want to filter the *initial* noise burst.
-
-                    // Actually, simpler:
-                    // Just write noise at idx, and -noise at idx + pick_offset?
-                    // No, that's for impulse excitation. For noise burst, we need comb filter.
-
-                    // Let's do a second pass. Since we just wrote it, we know where it is.
-                    // We need to be careful not to read outside the burst.
-                    // The burst is at [write_ptr ... write_ptr + period].
-
-                    // We can just copy the burst to a temp buffer, filter it, and write back.
-                    // Or just do it on the fly if we are careful.
-
-                    // Let's try a simpler approach:
-                    // Write noise.
-                    // Subtract noise from (idx + pick_offset).
 
                     for j in 0..(period - pick_offset) {
                         let idx = (self.write_ptr + j) % delay_len;
                         let delayed_idx = (self.write_ptr + j + pick_offset) % delay_len;
-
-                        let val = self.delay_line[idx];
-                        // Subtract from the future sample (which is currently just noise)
-                        // This creates the comb filter effect:
-                        // The sample at 'delayed_idx' becomes 'noise[j+offset] - noise[j]'
-                        // Wait, standard comb is y[n] = x[n] - x[n-D].
-                        // Here we have x filled in the buffer.
-                        // We want to replace x with y.
-
-                        // Let's just do:
-                        // delay_line[idx] = delay_line[idx] - delay_line[idx + pick_offset]
-                        // But delay_line[idx + pick_offset] is future noise.
-
-                        // Correct way:
-                        // delay_line[idx + pick_offset] -= delay_line[idx];
-                        // This adds the inverted delayed signal.
-
-                        self.delay_line[delayed_idx] -= val;
+                        self.delay_line[delayed_idx] -= self.delay_line[idx];
                     }
                 }
             }
@@ -157,9 +112,9 @@ impl FrameProcessor for KarplusStrong {
 
             let delayed_sample = self.delay_line[idx_a] * (1.0 - frac) + self.delay_line[idx_b] * frac;
             let damping_val = self.damping_buffer[i];
-            let avg = (delayed_sample + self.delay_line[self.write_ptr]) * 0.5;
 
-            let feedback = (delayed_sample * (1.0 - damping_val) + avg * damping_val) * 0.999;
+            let avg = (delayed_sample + self.delay_line[self.write_ptr]) * 0.5;
+            let feedback = (delayed_sample * (1.0 - damping_val) + avg * damping_val) * 0.996;
 
             self.delay_line[self.write_ptr] = feedback;
             *sample = feedback;

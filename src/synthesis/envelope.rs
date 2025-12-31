@@ -1,6 +1,8 @@
 use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
 use alloc::vec::Vec;
+use alloc::sync::Arc;
+use core::sync::atomic::{AtomicBool, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum AdsrState {
@@ -9,6 +11,19 @@ enum AdsrState {
     Decay,
     Sustain,
     Release,
+}
+
+/// A handle to manually trigger an envelope.
+#[derive(Clone)]
+pub struct Trigger {
+    flag: Arc<AtomicBool>,
+}
+
+impl Trigger {
+    /// Fires the trigger.
+    pub fn fire(&self) {
+        self.flag.store(true, Ordering::Relaxed);
+    }
 }
 
 /// An ADSR (Attack, Decay, Sustain, Release) envelope generator.
@@ -41,6 +56,8 @@ pub struct Adsr {
     decay_buffer: Vec<f32>,
     sustain_buffer: Vec<f32>,
     release_buffer: Vec<f32>,
+
+    retrigger: Arc<AtomicBool>,
 }
 
 impl Adsr {
@@ -74,9 +91,18 @@ impl Adsr {
             decay_buffer: Vec::new(),
             sustain_buffer: Vec::new(),
             release_buffer: Vec::new(),
+            retrigger: Arc::new(AtomicBool::new(false)),
         };
         adsr.recalc(0.01, 0.1, 0.1); // Initial dummy recalc
         adsr
+    }
+
+    /// Creates a trigger handle for this envelope.
+    /// Use this to manually retrigger the envelope from any thread.
+    pub fn create_trigger(&self) -> Trigger {
+        Trigger {
+            flag: self.retrigger.clone(),
+        }
     }
 
     fn recalc(&mut self, attack: f32, decay: f32, release: f32) {
@@ -131,6 +157,13 @@ impl FrameProcessor for Adsr {
         self.sustain_level.process(&mut self.sustain_buffer[0..len], sample_index);
         self.release_time.process(&mut self.release_buffer[0..len], sample_index);
 
+        // Check for manual retrigger
+        let mut triggered = false;
+        if self.retrigger.load(Ordering::Relaxed) {
+            self.retrigger.store(false, Ordering::Relaxed);
+            triggered = true;
+        }
+
         for (i, sample) in buffer.iter_mut().enumerate() {
             let gate_val = self.gate_buffer[i];
             let attack = self.attack_buffer[i];
@@ -140,7 +173,11 @@ impl FrameProcessor for Adsr {
 
             self.recalc(attack, decay, release);
 
-            if gate_val >= 0.5 && self.last_gate < 0.5 {
+            if triggered {
+                self.state = AdsrState::Attack;
+                self.current_level = 0.0; // Reset level on retrigger
+                triggered = false; // Only trigger once per block/event
+            } else if gate_val >= 0.5 && self.last_gate < 0.5 {
                 self.state = AdsrState::Attack;
             } else if gate_val < 0.5 && self.last_gate >= 0.5 {
                 self.state = AdsrState::Release;

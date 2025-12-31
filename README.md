@@ -12,27 +12,28 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 *   **`no_std` Compatible:** Built for portability using `libm` and `alloc`.
 *   **Modular Architecture:** Build complex audio chains using `DspChain` and `Mixer`.
 *   **AudioParam System:** All parameters can be static, linked to thread-safe controls (atomics), or modulated by other audio signals (e.g., LFOs, Envelopes) at sample rate.
+*   **Signal Math:** Combine signals easily with `Add` and `Multiply` processors.
 *   **SIMD Optimization:** Uses `wide` for SIMD-accelerated processing where applicable.
 *   **Spectral Processing:** Includes a robust Overlap-Add (OLA) engine for FFT-based effects.
 *   **Comprehensive Effect Suite:**
     *   **Time:** Delay, Tape Delay (with saturation & flutter), Reverb (Schroeder).
-    *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style).
+    *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style), State Variable Filter (TPT/ZDF).
     *   **Dynamics:** Compressor, Limiter, Distortion (Soft/Hard Clip, BitCrush, Foldback).
     *   **Modulation:** Phaser, Tremolo, Ring Modulator, Chorus, Flanger.
     *   **Spectral:** FFT Pitch Shift, Granular Pitch Shift, Spectral Filter.
+    *   **Utility:** Gain, Offset, Stereo Panner.
 *   **Synthesis:**
     *   **Oscillators:** Sine, Triangle, Saw, Square (PolyBLEP anti-aliased), Noise.
     *   **Physical Modeling:** Karplus-Strong (String), Brass Model.
-    *   **Control:** LFO, ADSR Envelope.
-
+    *   **Control:** LFO, ADSR Envelope (with retrigger support).
 
 ## Demos
 
-Listen to some renderings of the examples below:
+Listen to some of the examples generated with this library:
 
-*   **[Trance Synth](assets/audio/trance_synth.wav)** - The trance synth example.
-*   **[Filter Sweep](assets/audio/filter_sweep.wav)** - The filter sweep example.
+[![Filter Sweep Demo](assets/player_filter_sweep.svg)](assets/audio/filter_sweep.wav)
 
+[![Trance Synth Demo](assets/player_trance_synth.svg)](assets/audio/trance_synth.wav)
 
 ## Project Structure
 
@@ -85,6 +86,7 @@ cargo run --release -p infinitedsp-examples --bin <example_name>
 *   **`fm_brass`**: FM synthesis demonstration with envelopes controlling modulation index.
 *   **`trance_synth`**: A massive stereo supersaw trance pluck with delay, reverb, and a sequencer.
 *   **`karplus_demo`**: Physical modeling of a guitar string (Karplus-Strong algorithm).
+*   **`svf_demo`**: State Variable Filter demonstration (BandPass sweep).
 *   **`spectral_demo`**: FFT-based Pitch Shifting using the Overlap-Add (OLA) engine.
 *   **`granular_demo`**: Time-domain Granular Pitch Shifting.
 

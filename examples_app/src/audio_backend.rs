@@ -57,6 +57,30 @@ where
     Ok((stream, sample_rate))
 }
 
+pub fn init_audio_interleaved<F>(create_processor: F) -> Result<(cpal::Stream, f32)>
+where
+    F: FnOnce(f32) -> DspChain,
+{
+    let host = cpal::default_host();
+    let device = host.default_output_device().expect("No output device available");
+    let config = device.default_output_config()?;
+    let sample_rate = config.sample_rate() as f32;
+
+    let chain = create_processor(sample_rate);
+    let processor = Arc::new(Mutex::new(chain));
+
+    let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+
+    let stream = match config.sample_format() {
+        cpal::SampleFormat::F32 => run_interleaved::<f32>(&device, &config.into(), processor, err_fn)?,
+        cpal::SampleFormat::I16 => run_interleaved::<i16>(&device, &config.into(), processor, err_fn)?,
+        cpal::SampleFormat::U16 => run_interleaved::<u16>(&device, &config.into(), processor, err_fn)?,
+        _ => return Err(anyhow::anyhow!("Unsupported sample format")),
+    };
+
+    Ok((stream, sample_rate))
+}
+
 fn run_mono<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
@@ -144,6 +168,44 @@ where
                 } else {
                     frame[0] = T::from_sample((l_slice[i] + r_slice[i]) * 0.5);
                 }
+            }
+        },
+        err_fn,
+        None,
+    )?;
+
+    Ok(stream)
+}
+
+fn run_interleaved<T>(
+    device: &cpal::Device,
+    config: &cpal::StreamConfig,
+    processor: Arc<Mutex<DspChain>>,
+    err_fn: impl Fn(cpal::StreamError) + Send + 'static,
+) -> Result<cpal::Stream>
+where
+    T: cpal::Sample + cpal::SizedSample + cpal::FromSample<f32>,
+{
+    let channels = config.channels as usize;
+    let mut process_buffer = vec![0.0; 512];
+    let mut sample_clock = 0u64;
+
+    let stream = device.build_output_stream(
+        config,
+        move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
+            let mut proc = processor.lock().unwrap();
+
+            if process_buffer.len() < data.len() {
+                process_buffer.resize(data.len(), 0.0);
+            }
+
+            let proc_slice = &mut process_buffer[0..data.len()];
+
+            proc.process(proc_slice, sample_clock);
+            sample_clock += (data.len() / channels) as u64;
+
+            for (i, sample) in data.iter_mut().enumerate() {
+                *sample = T::from_sample(proc_slice[i]);
             }
         },
         err_fn,

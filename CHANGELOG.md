@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] - 2024-05-22
+## [0.2.0] - 2025-12-31
 
 ### Added
 - **ADSR Retriggering:** Added `create_trigger()` to `Adsr` to allow manual retriggering via a thread-safe `Trigger` handle.
@@ -13,19 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stereo Panner:** Added `StereoPanner` for panning stereo (interleaved) signals.
 - **State Variable Filter:** Added `StateVariableFilter` (SVF) supporting LP, HP, BP, Notch, and Peak outputs.
 
-## [0.1.2] - 2024-05-22
+## [0.1.2] - 2025-12-30
 
 ### Fixed
 - Fixed `no_std` compatibility by disabling default features for `wide` dependency.
 - Replaced `std` math functions with `libm` equivalents throughout the codebase.
 - Added missing `alloc` imports.
 
-## [0.1.1] - 2024-05-22
+## [0.1.1] - 2025-12-30
 
 ### Fixed
 - Corrected repository URL in `Cargo.toml`.
 
-## [0.1.0] - 2024-05-22
+## [0.1.0] - 2025-12-30
 
 ### Added
 - Initial public release of `infinitedsp-core`.

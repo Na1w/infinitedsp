@@ -4,18 +4,17 @@ use core::f32::consts::PI;
 use alloc::vec::Vec;
 
 struct Allpass {
-    a1: f32,
     zm1: f32,
 }
 
 impl Allpass {
     fn new() -> Self {
-        Allpass { a1: 0.0, zm1: 0.0 }
+        Allpass { zm1: 0.0 }
     }
 
-    fn process(&mut self, input: f32) -> f32 {
-        let y = input * -self.a1 + self.zm1;
-        self.zm1 = y * self.a1 + input;
+    fn process(&mut self, input: f32, a1: f32) -> f32 {
+        let y = input * -a1 + self.zm1;
+        self.zm1 = input + y * a1;
         y
     }
 }
@@ -122,12 +121,12 @@ impl FrameProcessor for Phaser {
 
             let w = 2.0 * PI * freq / self.sample_rate;
             let tan = libm::tanf(w * 0.5);
-            let a1 = (tan - 1.0) / (tan + 1.0);
+
+            let a1 = (1.0 - tan) / (1.0 + tan);
 
             let mut out = input;
             for filter in &mut self.filters {
-                filter.a1 = a1;
-                out = filter.process(out);
+                out = filter.process(out, a1);
             }
 
             self.last_sample = out;

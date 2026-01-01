@@ -24,7 +24,7 @@ impl Allpass {
 ///
 /// Creates sweeping notch filters by mixing the input with a phase-shifted version of itself.
 pub struct Phaser {
-    filters: Vec<Allpass>,
+    filters: [Allpass; 6],
     lfo_phase: f32,
     lfo_inc: f32,
     min_freq: AudioParam,
@@ -49,8 +49,10 @@ impl Phaser {
     /// * `feedback` - Feedback amount (0.0 - 1.0).
     /// * `mix` - Dry/Wet mix (0.0 - 1.0).
     pub fn new(min_freq: AudioParam, max_freq: AudioParam, feedback: AudioParam, mix: AudioParam) -> Self {
-        let stages = 6;
-        let filters = (0..stages).map(|_| Allpass::new()).collect();
+        let filters = [
+            Allpass::new(), Allpass::new(), Allpass::new(),
+            Allpass::new(), Allpass::new(), Allpass::new()
+        ];
         let sample_rate = 44100.0;
 
         Phaser {

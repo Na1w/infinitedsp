@@ -170,8 +170,8 @@ impl Allpass {
 ///
 /// Uses parallel comb filters and series allpass filters to create a dense reverberation tail.
 pub struct Reverb {
-    combs: Vec<Comb>,
-    allpasses: Vec<Allpass>,
+    combs: [Comb; 8],
+    allpasses: [Allpass; 8],
     gain: AudioParam,
     sample_rate: f32,
     input_buffer: Vec<f32>,
@@ -194,17 +194,18 @@ impl Reverb {
     /// * `gain` - Input gain.
     /// * `seed` - Seed for filter length randomization.
     pub fn new_with_seed(gain: AudioParam, seed: usize) -> Self {
-        let mut r = Reverb {
-            combs: Vec::new(),
-            allpasses: Vec::new(),
+        let sample_rate = 44100.0;
+        let (combs, allpasses) = Self::create_filters(sample_rate, seed);
+
+        Reverb {
+            combs,
+            allpasses,
             gain,
-            sample_rate: 44100.0,
+            sample_rate,
             input_buffer: Vec::new(),
             gain_buffer: Vec::new(),
             seed,
-        };
-        r.init_filters();
-        r
+        }
     }
 
     /// Sets the input gain parameter.
@@ -212,9 +213,9 @@ impl Reverb {
         self.gain = gain;
     }
 
-    fn init_filters(&mut self) {
-        let sr_scale = self.sample_rate / 44100.0;
-        let offset = self.seed * 23;
+    fn create_filters(sample_rate: f32, seed: usize) -> ([Comb; 8], [Allpass; 8]) {
+        let sr_scale = sample_rate / 44100.0;
+        let offset = seed * 23;
 
         let comb_lengths = [1674, 1782, 1915, 2034, 2133, 2236, 2335, 2425];
         let allpass_lengths = [225, 341, 441, 561, 689, 832, 971, 1083];
@@ -222,13 +223,29 @@ impl Reverb {
         let feedback = 0.8;
         let damp = 0.3;
 
-        self.combs = comb_lengths.iter()
-            .map(|&len| Comb::new(((len + offset) as f32 * sr_scale) as usize, feedback, damp))
-            .collect();
+        let combs = [
+            Comb::new(((comb_lengths[0] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(((comb_lengths[1] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(((comb_lengths[2] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(((comb_lengths[3] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(((comb_lengths[4] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(((comb_lengths[5] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(((comb_lengths[6] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(((comb_lengths[7] + offset) as f32 * sr_scale) as usize, feedback, damp),
+        ];
 
-        self.allpasses = allpass_lengths.iter()
-            .map(|&len| Allpass::new(((len + offset) as f32 * sr_scale) as usize))
-            .collect();
+        let allpasses = [
+            Allpass::new(((allpass_lengths[0] + offset) as f32 * sr_scale) as usize),
+            Allpass::new(((allpass_lengths[1] + offset) as f32 * sr_scale) as usize),
+            Allpass::new(((allpass_lengths[2] + offset) as f32 * sr_scale) as usize),
+            Allpass::new(((allpass_lengths[3] + offset) as f32 * sr_scale) as usize),
+            Allpass::new(((allpass_lengths[4] + offset) as f32 * sr_scale) as usize),
+            Allpass::new(((allpass_lengths[5] + offset) as f32 * sr_scale) as usize),
+            Allpass::new(((allpass_lengths[6] + offset) as f32 * sr_scale) as usize),
+            Allpass::new(((allpass_lengths[7] + offset) as f32 * sr_scale) as usize),
+        ];
+
+        (combs, allpasses)
     }
 }
 
@@ -274,7 +291,9 @@ impl FrameProcessor for Reverb {
         if (self.sample_rate - sample_rate).abs() > 1.0 {
             self.sample_rate = sample_rate;
             self.gain.set_sample_rate(sample_rate);
-            self.init_filters();
+            let (combs, allpasses) = Self::create_filters(sample_rate, self.seed);
+            self.combs = combs;
+            self.allpasses = allpasses;
         }
     }
 }

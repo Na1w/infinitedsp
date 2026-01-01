@@ -16,6 +16,8 @@ pub struct GranularPitchShift {
     window_ms: f32,
     sample_rate: f32,
     semitones_buffer: Vec<f32>,
+
+    last_semitones_bits: u32,
 }
 
 impl GranularPitchShift {
@@ -39,6 +41,7 @@ impl GranularPitchShift {
             window_ms,
             sample_rate,
             semitones_buffer: Vec::new(),
+            last_semitones_bits: u32::MAX,
         }
     }
 
@@ -59,7 +62,13 @@ impl FrameProcessor for GranularPitchShift {
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let semitones = self.semitones_buffer[i];
-            self.pitch_factor = libm::powf(2.0, semitones / 12.0);
+
+            let semitones_bits = semitones.to_bits();
+            if semitones_bits != self.last_semitones_bits {
+                self.pitch_factor = libm::powf(2.0, semitones / 12.0);
+                self.last_semitones_bits = semitones_bits;
+            }
+
             let inc = 1.0 - self.pitch_factor;
 
             let input = *sample;
@@ -97,6 +106,7 @@ impl FrameProcessor for GranularPitchShift {
         self.sample_rate = sample_rate;
         self.semitones.set_sample_rate(sample_rate);
         self.window_size = self.window_ms * sample_rate / 1000.0;
+        self.last_semitones_bits = u32::MAX;
 
         let needed = (sample_rate * 0.5) as usize;
         if needed > self.buffer.len() {

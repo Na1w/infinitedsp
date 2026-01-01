@@ -33,7 +33,9 @@ pub struct Biquad {
 
     freq_buffer: Vec<f32>,
     q_buffer: Vec<f32>,
-    gain_buffer: Vec<f32>,
+
+    last_freq_bits: u32,
+    last_q_bits: u32,
 }
 
 impl Biquad {
@@ -56,7 +58,8 @@ impl Biquad {
             y1: 0.0, y2: 0.0,
             freq_buffer: Vec::new(),
             q_buffer: Vec::new(),
-            gain_buffer: Vec::new(),
+            last_freq_bits: u32::MAX,
+            last_q_bits: u32::MAX,
         }
     }
 
@@ -131,23 +134,31 @@ impl Biquad {
 impl FrameProcessor for Biquad {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
+
         if self.freq_buffer.len() < len { self.freq_buffer.resize(len, 0.0); }
         if self.q_buffer.len() < len { self.q_buffer.resize(len, 0.0); }
-        if self.gain_buffer.len() < len { self.gain_buffer.resize(len, 0.0); }
 
         self.frequency.process(&mut self.freq_buffer[0..len], sample_index);
         self.q.process(&mut self.q_buffer[0..len], sample_index);
-        self.gain_db.process(&mut self.gain_buffer[0..len], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let freq = self.freq_buffer[i];
             let q = self.q_buffer[i];
 
-            self.recalc(freq, q);
+            let freq_bits = freq.to_bits();
+            let q_bits = q.to_bits();
+
+            if freq_bits != self.last_freq_bits || q_bits != self.last_q_bits {
+                self.recalc(freq, q);
+                self.last_freq_bits = freq_bits;
+                self.last_q_bits = q_bits;
+            }
 
             let x = *sample;
             let y = self.b0 * x + self.b1 * self.x1 + self.b2 * self.x2
                   - self.a1 * self.y1 - self.a2 * self.y2;
+
+            let y = if y.abs() < 1e-20 { 0.0 } else { y };
 
             self.x2 = self.x1;
             self.x1 = x;
@@ -163,5 +174,6 @@ impl FrameProcessor for Biquad {
         self.frequency.set_sample_rate(sample_rate);
         self.q.set_sample_rate(sample_rate);
         self.gain_db.set_sample_rate(sample_rate);
+        self.last_freq_bits = u32::MAX;
     }
 }

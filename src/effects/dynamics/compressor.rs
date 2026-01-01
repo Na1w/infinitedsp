@@ -22,6 +22,9 @@ pub struct Compressor {
     attack_buffer: Vec<f32>,
     release_buffer: Vec<f32>,
     makeup_buffer: Vec<f32>,
+
+    last_attack_bits: u32,
+    last_release_bits: u32,
 }
 
 impl Compressor {
@@ -46,6 +49,8 @@ impl Compressor {
             attack_buffer: Vec::new(),
             release_buffer: Vec::new(),
             makeup_buffer: Vec::new(),
+            last_attack_bits: u32::MAX,
+            last_release_bits: u32::MAX,
         };
         c.recalc(10.0, 100.0);
         c
@@ -96,6 +101,7 @@ impl Compressor {
 impl FrameProcessor for Compressor {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
+
         if self.threshold_buffer.len() < len { self.threshold_buffer.resize(len, 0.0); }
         if self.ratio_buffer.len() < len { self.ratio_buffer.resize(len, 0.0); }
         if self.attack_buffer.len() < len { self.attack_buffer.resize(len, 0.0); }
@@ -115,7 +121,14 @@ impl FrameProcessor for Compressor {
             let release_ms = self.release_buffer[i];
             let makeup_db = self.makeup_buffer[i];
 
-            self.recalc(attack_ms, release_ms);
+            let att_bits = attack_ms.to_bits();
+            let rel_bits = release_ms.to_bits();
+
+            if att_bits != self.last_attack_bits || rel_bits != self.last_release_bits {
+                self.recalc(attack_ms, release_ms);
+                self.last_attack_bits = att_bits;
+                self.last_release_bits = rel_bits;
+            }
 
             let threshold_linear = libm::powf(10.0, threshold_db / 20.0);
             let makeup = libm::powf(10.0, makeup_db / 20.0);
@@ -148,6 +161,7 @@ impl FrameProcessor for Compressor {
         self.attack_ms.set_sample_rate(sample_rate);
         self.release_ms.set_sample_rate(sample_rate);
         self.makeup_gain_db.set_sample_rate(sample_rate);
+        self.last_attack_bits = u32::MAX;
     }
 }
 

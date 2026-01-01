@@ -151,6 +151,12 @@ impl FrameProcessor for Adsr {
         if self.sustain_buffer.len() < len { self.sustain_buffer.resize(len, 0.0); }
         if self.release_buffer.len() < len { self.release_buffer.resize(len, 0.0); }
 
+        self.gate_buffer.fill(0.0);
+        self.attack_buffer.fill(0.0);
+        self.decay_buffer.fill(0.0);
+        self.sustain_buffer.fill(0.0);
+        self.release_buffer.fill(0.0);
+
         self.gate.process(&mut self.gate_buffer[0..len], sample_index);
         self.attack_time.process(&mut self.attack_buffer[0..len], sample_index);
         self.decay_time.process(&mut self.decay_buffer[0..len], sample_index);

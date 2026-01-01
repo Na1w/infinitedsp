@@ -71,6 +71,8 @@ impl FrameProcessor for Oscillator {
             self.freq_buffer.resize(buffer.len(), 0.0);
         }
 
+        self.freq_buffer.fill(0.0);
+
         self.frequency.process(&mut self.freq_buffer, sample_index);
 
         let mut rng_state = self.rng_state;

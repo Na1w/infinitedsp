@@ -5,3 +5,6 @@ pub mod dc_source;
 pub mod add;
 pub mod multiply;
 pub mod panner;
+pub mod map_range;
+pub mod gate;
+pub mod stereo_widener;

@@ -1,5 +1,5 @@
-use core::sync::atomic::{AtomicU32, Ordering};
 use alloc::sync::Arc;
+use core::sync::atomic::{AtomicU32, Ordering};
 
 /// A thread-safe floating point parameter.
 ///

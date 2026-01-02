@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::vec;
+use alloc::vec::Vec;
 
 /// A Karplus-Strong string synthesis model.
 ///
@@ -33,7 +33,12 @@ impl KarplusStrong {
     /// * `gate` - Gate signal to trigger a pluck (0.0 -> 1.0).
     /// * `damping` - Damping factor (0.0 - 1.0), higher values mean shorter decay.
     /// * `pick_position` - Pluck position (0.0 = bridge, 0.5 = middle).
-    pub fn new(pitch: AudioParam, gate: AudioParam, damping: AudioParam, pick_position: AudioParam) -> Self {
+    pub fn new(
+        pitch: AudioParam,
+        gate: AudioParam,
+        damping: AudioParam,
+        pick_position: AudioParam,
+    ) -> Self {
         let sample_rate = 44100.0;
         let buffer_size = (sample_rate / 20.0) as usize;
 
@@ -64,18 +69,32 @@ impl KarplusStrong {
 impl FrameProcessor for KarplusStrong {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.pitch_buffer.len() < len { self.pitch_buffer.resize(len, 0.0); }
-        if self.gate_buffer.len() < len { self.gate_buffer.resize(len, 0.0); }
-        if self.damping_buffer.len() < len { self.damping_buffer.resize(len, 0.0); }
-        if self.pick_pos_buffer.len() < len { self.pick_pos_buffer.resize(len, 0.0); }
+        if self.pitch_buffer.len() < len {
+            self.pitch_buffer.resize(len, 0.0);
+        }
+        if self.gate_buffer.len() < len {
+            self.gate_buffer.resize(len, 0.0);
+        }
+        if self.damping_buffer.len() < len {
+            self.damping_buffer.resize(len, 0.0);
+        }
+        if self.pick_pos_buffer.len() < len {
+            self.pick_pos_buffer.resize(len, 0.0);
+        }
 
-        self.pitch.process(&mut self.pitch_buffer[0..len], sample_index);
-        self.gate.process(&mut self.gate_buffer[0..len], sample_index);
-        self.damping.process(&mut self.damping_buffer[0..len], sample_index);
-        self.pick_position.process(&mut self.pick_pos_buffer[0..len], sample_index);
+        self.pitch
+            .process(&mut self.pitch_buffer[0..len], sample_index);
+        self.gate
+            .process(&mut self.gate_buffer[0..len], sample_index);
+        self.damping
+            .process(&mut self.damping_buffer[0..len], sample_index);
+        self.pick_position
+            .process(&mut self.pick_pos_buffer[0..len], sample_index);
 
         let delay_len = self.delay_line.len();
-        if delay_len == 0 { return; }
+        if delay_len == 0 {
+            return;
+        }
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let gate_val = self.gate_buffer[i];
@@ -110,7 +129,8 @@ impl FrameProcessor for KarplusStrong {
             let idx_b = (idx_a + 1) % delay_len;
             let frac = read_pos - idx_a as f32;
 
-            let delayed_sample = self.delay_line[idx_a] * (1.0 - frac) + self.delay_line[idx_b] * frac;
+            let delayed_sample =
+                self.delay_line[idx_a] * (1.0 - frac) + self.delay_line[idx_b] * frac;
             let damping_val = self.damping_buffer[i];
 
             let avg = (delayed_sample + self.delay_line[self.write_ptr]) * 0.5;

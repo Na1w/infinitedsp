@@ -3,15 +3,15 @@ use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
+use infinitedsp_core::core::summing_mixer::SummingMixer;
 use infinitedsp_core::effects::dynamics::compressor::Compressor;
 use infinitedsp_core::effects::filter::state_variable::{StateVariableFilter, SvfType};
 use infinitedsp_core::effects::time::reverb::Reverb;
 use infinitedsp_core::effects::utility::gain::Gain;
 use infinitedsp_core::effects::utility::gate::TimedGate;
-use infinitedsp_core::effects::utility::map_range::{MapRange, CurveType};
+use infinitedsp_core::effects::utility::map_range::{CurveType, MapRange};
 use infinitedsp_core::effects::utility::panner::StereoPanner;
 use infinitedsp_core::effects::utility::stereo_widener::StereoWidener;
-use infinitedsp_core::core::summing_mixer::SummingMixer;
 use infinitedsp_core::synthesis::envelope::Adsr;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 use infinitedsp_examples::audio_backend::init_audio_interleaved;
@@ -46,13 +46,20 @@ struct VoiceConfig {
     sample_rate: f32,
 }
 
-fn create_envelope(gate: AudioParam, attack: f32, decay: f32, sustain: f32, release: f32, sample_rate: f32) -> AudioParam {
+fn create_envelope(
+    gate: AudioParam,
+    attack: f32,
+    decay: f32,
+    sustain: f32,
+    release: f32,
+    sample_rate: f32,
+) -> AudioParam {
     let env = Adsr::new(
         gate,
         AudioParam::seconds(attack),
         AudioParam::seconds(decay),
         AudioParam::linear(sustain),
-        AudioParam::seconds(release)
+        AudioParam::seconds(release),
     );
     AudioParam::Dynamic(Box::new(DspChain::new(env, sample_rate)))
 }
@@ -60,51 +67,58 @@ fn create_envelope(gate: AudioParam, attack: f32, decay: f32, sustain: f32, rele
 fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor + Send> {
     let pitch_param = create_envelope(
         AudioParam::Static(1.0),
-        config.attack_time, 0.1, 1.0, 0.1,
-        config.sample_rate
+        config.attack_time,
+        0.1,
+        1.0,
+        0.1,
+        config.sample_rate,
     );
 
     let sweep = MapRange::new(
         pitch_param,
         AudioParam::Static(config.start_freq),
         AudioParam::Static(config.end_freq),
-        CurveType::Exponential
+        CurveType::Exponential,
     );
 
     let osc = Oscillator::new(AudioParam::Dynamic(Box::new(sweep)), Waveform::Saw);
 
     let filter_param = create_envelope(
         AudioParam::Static(1.0),
-        config.attack_time + 1.0, 0.1, 1.0, 0.1,
-        config.sample_rate
+        config.attack_time + 1.0,
+        0.1,
+        1.0,
+        0.1,
+        config.sample_rate,
     );
 
     let cutoff_sweep = MapRange::new(
         filter_param,
         AudioParam::hz(200.0),
         AudioParam::hz(15000.0),
-        CurveType::Exponential
+        CurveType::Exponential,
     );
 
     let filter = StateVariableFilter::new(
         SvfType::LowPass,
         AudioParam::Dynamic(Box::new(cutoff_sweep)),
-        AudioParam::linear(0.1)
+        AudioParam::linear(0.1),
     );
 
     let gate_proc = TimedGate::new(7.0, config.sample_rate);
     let amp_gate = AudioParam::Dynamic(Box::new(gate_proc));
 
-    let amp_param = create_envelope(
-        amp_gate,
-        0.5, 0.1, 0.04, 2.5,
-        config.sample_rate
-    );
+    let amp_param = create_envelope(amp_gate, 0.5, 0.1, 0.04, 2.5, config.sample_rate);
 
     let panner = StereoPanner::new(AudioParam::Static(config.pan));
     let gain = Gain::new(amp_param);
 
-    Box::new(DspChain::new(osc, config.sample_rate).and(filter).and(panner).and(gain))
+    Box::new(
+        DspChain::new(osc, config.sample_rate)
+            .and(filter)
+            .and(panner)
+            .and(gain),
+    )
 }
 
 fn create_thx_chain(sample_rate: f32) -> DspChain {
@@ -112,11 +126,9 @@ fn create_thx_chain(sample_rate: f32) -> DspChain {
     let mut voices = Vec::new();
 
     let target_notes = [
-        36.71, 36.71, 73.42, 73.42, 110.00, 110.00,
-        146.83, 146.83, 185.00, 220.00, 220.00, 293.66, 293.66,
-        369.99, 440.00, 440.00, 587.33, 739.99, 880.00,
-        1174.66, 1479.98, 1760.00, 2349.32, 2960.00, 3520.00,
-        4698.63, 5919.91, 7040.00, 9397.27, 11839.82
+        36.71, 36.71, 73.42, 73.42, 110.00, 110.00, 146.83, 146.83, 185.00, 220.00, 220.00, 293.66,
+        293.66, 369.99, 440.00, 440.00, 587.33, 739.99, 880.00, 1174.66, 1479.98, 1760.00, 2349.32,
+        2960.00, 3520.00, 4698.63, 5919.91, 7040.00, 9397.27, 11839.82,
     ];
 
     for &end_freq in target_notes.iter() {

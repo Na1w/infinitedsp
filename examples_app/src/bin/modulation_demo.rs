@@ -26,10 +26,7 @@ fn create_modulation_chain(sample_rate: f32, gate: AudioParam) -> DspChain {
 
     let vca = Gain::new(AudioParam::Dynamic(Box::new(env)));
 
-    let tremolo = Tremolo::new(
-        AudioParam::hz(6.0),
-        AudioParam::linear(0.7)
-    );
+    let tremolo = Tremolo::new(AudioParam::hz(6.0), AudioParam::linear(0.7));
 
     let chorus = ModulatedDelay::new_chorus();
 
@@ -37,7 +34,7 @@ fn create_modulation_chain(sample_rate: f32, gate: AudioParam) -> DspChain {
         1.0,
         AudioParam::ms(300.0),
         AudioParam::linear(0.4),
-        AudioParam::linear(0.3)
+        AudioParam::linear(0.3),
     );
 
     let passthrough = Passthrough::new();
@@ -60,9 +57,8 @@ fn main() -> Result<()> {
     let chain = create_modulation_chain(44100.0, AudioParam::Linked(gate_param.clone()));
     println!("Signal Chain:\n{}", chain.get_graph());
 
-    let (stream, _sample_rate) = init_audio(move |sr| {
-        create_modulation_chain(sr, AudioParam::Linked(g.clone()))
-    })?;
+    let (stream, _sample_rate) =
+        init_audio(move |sr| create_modulation_chain(sr, AudioParam::Linked(g.clone())))?;
 
     println!("Playing Modulation Demo (Tremolo -> Chorus -> TapeDelay)...");
     stream.play()?;

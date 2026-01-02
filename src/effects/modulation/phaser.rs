@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 struct Allpass {
     zm1: f32,
@@ -47,10 +47,19 @@ impl Phaser {
     /// * `max_freq` - Maximum frequency of the sweep (Hz).
     /// * `feedback` - Feedback amount (0.0 - 1.0).
     /// * `mix` - Dry/Wet mix (0.0 - 1.0).
-    pub fn new(min_freq: AudioParam, max_freq: AudioParam, feedback: AudioParam, mix: AudioParam) -> Self {
+    pub fn new(
+        min_freq: AudioParam,
+        max_freq: AudioParam,
+        feedback: AudioParam,
+        mix: AudioParam,
+    ) -> Self {
         let filters = [
-            Allpass::new(), Allpass::new(), Allpass::new(),
-            Allpass::new(), Allpass::new(), Allpass::new()
+            Allpass::new(),
+            Allpass::new(),
+            Allpass::new(),
+            Allpass::new(),
+            Allpass::new(),
+            Allpass::new(),
         ];
         let sample_rate = 44100.0;
 
@@ -95,14 +104,25 @@ impl Phaser {
 impl FrameProcessor for Phaser {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.min_freq_buffer.len() < len { self.min_freq_buffer.resize(len, 0.0); }
-        if self.max_freq_buffer.len() < len { self.max_freq_buffer.resize(len, 0.0); }
-        if self.feedback_buffer.len() < len { self.feedback_buffer.resize(len, 0.0); }
-        if self.mix_buffer.len() < len { self.mix_buffer.resize(len, 0.0); }
+        if self.min_freq_buffer.len() < len {
+            self.min_freq_buffer.resize(len, 0.0);
+        }
+        if self.max_freq_buffer.len() < len {
+            self.max_freq_buffer.resize(len, 0.0);
+        }
+        if self.feedback_buffer.len() < len {
+            self.feedback_buffer.resize(len, 0.0);
+        }
+        if self.mix_buffer.len() < len {
+            self.mix_buffer.resize(len, 0.0);
+        }
 
-        self.min_freq.process(&mut self.min_freq_buffer[0..len], sample_index);
-        self.max_freq.process(&mut self.max_freq_buffer[0..len], sample_index);
-        self.feedback.process(&mut self.feedback_buffer[0..len], sample_index);
+        self.min_freq
+            .process(&mut self.min_freq_buffer[0..len], sample_index);
+        self.max_freq
+            .process(&mut self.max_freq_buffer[0..len], sample_index);
+        self.feedback
+            .process(&mut self.feedback_buffer[0..len], sample_index);
         self.mix.process(&mut self.mix_buffer[0..len], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
@@ -114,7 +134,9 @@ impl FrameProcessor for Phaser {
             let input = *sample + self.last_sample * feedback;
 
             self.lfo_phase += self.lfo_inc;
-            if self.lfo_phase > 2.0 * PI { self.lfo_phase -= 2.0 * PI; }
+            if self.lfo_phase > 2.0 * PI {
+                self.lfo_phase -= 2.0 * PI;
+            }
 
             let lfo = (libm::sinf(self.lfo_phase) + 1.0) * 0.5;
             let freq = min_freq + lfo * (max_freq - min_freq);
@@ -160,7 +182,7 @@ mod tests {
             AudioParam::Static(200.0),
             AudioParam::Static(2000.0),
             AudioParam::Static(0.5),
-            AudioParam::Static(0.5)
+            AudioParam::Static(0.5),
         );
         let mut buffer = [1.0; 100];
         phaser.process(&mut buffer, 0);

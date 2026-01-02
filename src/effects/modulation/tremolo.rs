@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// A tremolo effect.
 ///
@@ -50,11 +50,17 @@ impl Tremolo {
 impl FrameProcessor for Tremolo {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.depth_buffer.len() < len { self.depth_buffer.resize(len, 0.0); }
-        if self.rate_buffer.len() < len { self.rate_buffer.resize(len, 0.0); }
+        if self.depth_buffer.len() < len {
+            self.depth_buffer.resize(len, 0.0);
+        }
+        if self.rate_buffer.len() < len {
+            self.rate_buffer.resize(len, 0.0);
+        }
 
-        self.depth.process(&mut self.depth_buffer[0..len], sample_index);
-        self.rate.process(&mut self.rate_buffer[0..len], sample_index);
+        self.depth
+            .process(&mut self.depth_buffer[0..len], sample_index);
+        self.rate
+            .process(&mut self.rate_buffer[0..len], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let depth = self.depth_buffer[i];
@@ -66,7 +72,9 @@ impl FrameProcessor for Tremolo {
             let current_phase = self.phase;
 
             self.phase += self.inc;
-            if self.phase > 2.0 * PI { self.phase -= 2.0 * PI; }
+            if self.phase > 2.0 * PI {
+                self.phase -= 2.0 * PI;
+            }
 
             let lfo = (libm::sinf(current_phase) + 1.0) * 0.5;
             let gain = 1.0 - depth * lfo;

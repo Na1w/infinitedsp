@@ -1,11 +1,11 @@
 use super::frame_processor::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use wide::f32x4;
-use alloc::vec::Vec;
-#[cfg(feature = "debug_visualize")]
-use alloc::string::String;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
+#[cfg(feature = "debug_visualize")]
+use alloc::string::String;
+use alloc::vec::Vec;
+use wide::f32x4;
 
 /// A Parallel Mixer (Dry/Wet).
 ///
@@ -92,7 +92,11 @@ impl<P: FrameProcessor> FrameProcessor for ParallelMixer<P> {
 
             let one_vec = f32x4::splat(1.0);
 
-            for ((dry_chunk, wet_chunk), mix_chunk) in dry_chunks.iter().zip(wet_chunks.iter_mut()).zip(mix_chunks.iter()) {
+            for ((dry_chunk, wet_chunk), mix_chunk) in dry_chunks
+                .iter()
+                .zip(wet_chunks.iter_mut())
+                .zip(mix_chunks.iter())
+            {
                 let d = f32x4::from(*dry_chunk);
                 let w = f32x4::from(*wet_chunk);
                 let wet_gain = f32x4::from(*mix_chunk);
@@ -102,7 +106,9 @@ impl<P: FrameProcessor> FrameProcessor for ParallelMixer<P> {
                 *wet_chunk = res.to_array();
             }
 
-            for ((dry, wet), &wet_gain) in dry_rem.iter().zip(wet_rem.iter_mut()).zip(mix_rem.iter()) {
+            for ((dry, wet), &wet_gain) in
+                dry_rem.iter().zip(wet_rem.iter_mut()).zip(mix_rem.iter())
+            {
                 let dry_gain = 1.0 - wet_gain;
                 *wet = *dry * dry_gain + *wet * wet_gain;
             }

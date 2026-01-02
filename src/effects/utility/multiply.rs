@@ -1,11 +1,11 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use wide::f32x4;
-use alloc::vec::Vec;
-#[cfg(feature = "debug_visualize")]
-use alloc::string::String;
+use crate::FrameProcessor;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
+#[cfg(feature = "debug_visualize")]
+use alloc::string::String;
+use alloc::vec::Vec;
+use wide::f32x4;
 
 /// Multiplies two signals together (ring modulation).
 /// This is functionally similar to Gain with a dynamic parameter, but can be clearer.
@@ -31,11 +31,17 @@ impl Multiply {
 impl FrameProcessor for Multiply {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.buffer_a.len() < len { self.buffer_a.resize(len, 0.0); }
-        if self.buffer_b.len() < len { self.buffer_b.resize(len, 0.0); }
+        if self.buffer_a.len() < len {
+            self.buffer_a.resize(len, 0.0);
+        }
+        if self.buffer_b.len() < len {
+            self.buffer_b.resize(len, 0.0);
+        }
 
-        self.input_a.process(&mut self.buffer_a[0..len], sample_index);
-        self.input_b.process(&mut self.buffer_b[0..len], sample_index);
+        self.input_a
+            .process(&mut self.buffer_a[0..len], sample_index);
+        self.input_b
+            .process(&mut self.buffer_b[0..len], sample_index);
 
         let (chunks, remainder) = buffer.as_chunks_mut::<4>();
         let (a_chunks, a_rem) = self.buffer_a[0..len].as_chunks::<4>();

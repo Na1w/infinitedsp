@@ -22,11 +22,7 @@ fn create_svf_chain(sample_rate: f32) -> DspChain {
 
     let cutoff_param = AudioParam::Dynamic(Box::new(lfo_scaled));
 
-    let filter = StateVariableFilter::new(
-        SvfType::BandPass,
-        cutoff_param,
-        AudioParam::linear(0.8)
-    );
+    let filter = StateVariableFilter::new(SvfType::BandPass, cutoff_param, AudioParam::linear(0.8));
 
     DspChain::new(osc, sample_rate)
         .and(filter)
@@ -39,7 +35,10 @@ fn main() -> Result<()> {
 
     let (stream, sample_rate) = init_audio(create_svf_chain)?;
 
-    println!("Playing State Variable Filter Demo (BandPass Sweep) at {}Hz...", sample_rate);
+    println!(
+        "Playing State Variable Filter Demo (BandPass Sweep) at {}Hz...",
+        sample_rate
+    );
 
     stream.play()?;
 

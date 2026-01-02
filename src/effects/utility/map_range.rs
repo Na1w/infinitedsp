@@ -1,5 +1,5 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
 
 /// The type of curve to use for mapping.
@@ -47,9 +47,15 @@ impl MapRange {
 impl FrameProcessor for MapRange {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.input_buffer.len() < len { self.input_buffer.resize(len, 0.0); }
-        if self.min_buffer.len() < len { self.min_buffer.resize(len, 0.0); }
-        if self.max_buffer.len() < len { self.max_buffer.resize(len, 0.0); }
+        if self.input_buffer.len() < len {
+            self.input_buffer.resize(len, 0.0);
+        }
+        if self.min_buffer.len() < len {
+            self.min_buffer.resize(len, 0.0);
+        }
+        if self.max_buffer.len() < len {
+            self.max_buffer.resize(len, 0.0);
+        }
 
         self.input.process(&mut self.input_buffer, sample_index);
         self.min.process(&mut self.min_buffer, sample_index);

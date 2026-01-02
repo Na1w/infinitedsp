@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use wide::f32x4;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use wide::f32x4;
 
 /// Adds a DC offset to the signal.
 pub struct Offset {
@@ -43,7 +43,7 @@ impl FrameProcessor for Offset {
                 for sample in remainder {
                     *sample += *val;
                 }
-            },
+            }
             _ => {
                 if self.offset_buffer.len() < buffer.len() {
                     self.offset_buffer.resize(buffer.len(), 0.0);

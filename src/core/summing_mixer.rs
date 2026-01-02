@@ -1,11 +1,11 @@
-use crate::core::frame_processor::FrameProcessor;
 use crate::core::audio_param::AudioParam;
+use crate::core::frame_processor::FrameProcessor;
 use alloc::boxed::Box;
-use alloc::vec::Vec;
-use alloc::string::String;
-use wide::f32x4;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
+use alloc::string::String;
+use alloc::vec::Vec;
+use wide::f32x4;
 
 /// Sums multiple audio signals together, with optional gain and soft clipping.
 ///
@@ -139,7 +139,8 @@ impl FrameProcessor for SummingMixer {
     }
 
     fn latency_samples(&self) -> u32 {
-        self.inputs.iter()
+        self.inputs
+            .iter()
             .map(|input| input.latency_samples())
             .max()
             .unwrap_or(0)

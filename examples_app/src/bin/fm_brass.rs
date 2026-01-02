@@ -31,7 +31,10 @@ fn create_fm_brass(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspCh
     );
 
     let mod_signal_chain = DspChain::new(
-        Oscillator::new(AudioParam::Dynamic(Box::new(mod_freq_source)), Waveform::Sine),
+        Oscillator::new(
+            AudioParam::Dynamic(Box::new(mod_freq_source)),
+            Waveform::Sine,
+        ),
         sample_rate,
     )
     .and(Gain::new(AudioParam::Dynamic(Box::new(mod_env))))
@@ -39,8 +42,9 @@ fn create_fm_brass(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspCh
 
     let carrier_base_freq = DcSource::new(AudioParam::Linked(pitch.clone()));
 
-    let carrier_freq_mod = DspChain::new(carrier_base_freq, sample_rate)
-        .and(Offset::new_param(AudioParam::Dynamic(Box::new(mod_signal_chain))));
+    let carrier_freq_mod = DspChain::new(carrier_base_freq, sample_rate).and(Offset::new_param(
+        AudioParam::Dynamic(Box::new(mod_signal_chain)),
+    ));
 
     let carrier_freq_param = AudioParam::Dynamic(Box::new(carrier_freq_mod));
 
@@ -74,9 +78,8 @@ fn main() -> Result<()> {
     let pitch_clone = pitch_param.clone();
     let gate_clone = gate_param.clone();
 
-    let (stream, _sample_rate) = init_audio(move |sr| {
-        create_fm_brass(sr, pitch_clone, gate_clone)
-    })?;
+    let (stream, _sample_rate) =
+        init_audio(move |sr| create_fm_brass(sr, pitch_clone, gate_clone))?;
 
     stream.play()?;
     println!("Playing FM Brass Melody (Run with --release)...");
@@ -90,11 +93,31 @@ fn main() -> Result<()> {
     let c4 = 261.63;
 
     let melody = vec![
-        Note { start_beat: 0.0, duration_beats: 1.0, freq: c3 },
-        Note { start_beat: 1.0, duration_beats: 1.0, freq: e3 },
-        Note { start_beat: 2.0, duration_beats: 1.0, freq: g3 },
-        Note { start_beat: 3.0, duration_beats: 1.0, freq: c4 },
-        Note { start_beat: 4.0, duration_beats: 2.0, freq: g3 },
+        Note {
+            start_beat: 0.0,
+            duration_beats: 1.0,
+            freq: c3,
+        },
+        Note {
+            start_beat: 1.0,
+            duration_beats: 1.0,
+            freq: e3,
+        },
+        Note {
+            start_beat: 2.0,
+            duration_beats: 1.0,
+            freq: g3,
+        },
+        Note {
+            start_beat: 3.0,
+            duration_beats: 1.0,
+            freq: c4,
+        },
+        Note {
+            start_beat: 4.0,
+            duration_beats: 2.0,
+            freq: g3,
+        },
     ];
 
     let start_time = Instant::now();
@@ -107,7 +130,9 @@ fn main() -> Result<()> {
         let mut active_note = None;
 
         for note in &melody {
-            if current_beat >= note.start_beat && current_beat < (note.start_beat + note.duration_beats) {
+            if current_beat >= note.start_beat
+                && current_beat < (note.start_beat + note.duration_beats)
+            {
                 if current_beat < (note.start_beat + note.duration_beats - 0.1) {
                     active_note = Some(note);
                 }

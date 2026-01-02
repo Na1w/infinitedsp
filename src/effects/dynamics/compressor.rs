@@ -1,5 +1,5 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
 
 /// A dynamic range compressor.
@@ -102,24 +102,39 @@ impl FrameProcessor for Compressor {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
 
-        if self.threshold_buffer.len() < len { self.threshold_buffer.resize(len, 0.0); }
-        if self.ratio_buffer.len() < len { self.ratio_buffer.resize(len, 0.0); }
-        if self.attack_buffer.len() < len { self.attack_buffer.resize(len, 0.0); }
-        if self.release_buffer.len() < len { self.release_buffer.resize(len, 0.0); }
-        if self.makeup_buffer.len() < len { self.makeup_buffer.resize(len, 0.0); }
+        if self.threshold_buffer.len() < len {
+            self.threshold_buffer.resize(len, 0.0);
+        }
+        if self.ratio_buffer.len() < len {
+            self.ratio_buffer.resize(len, 0.0);
+        }
+        if self.attack_buffer.len() < len {
+            self.attack_buffer.resize(len, 0.0);
+        }
+        if self.release_buffer.len() < len {
+            self.release_buffer.resize(len, 0.0);
+        }
+        if self.makeup_buffer.len() < len {
+            self.makeup_buffer.resize(len, 0.0);
+        }
 
-        self.threshold_db.process(&mut self.threshold_buffer[0..len], sample_index);
-        self.ratio.process(&mut self.ratio_buffer[0..len], sample_index);
-        self.attack_ms.process(&mut self.attack_buffer[0..len], sample_index);
-        self.release_ms.process(&mut self.release_buffer[0..len], sample_index);
-        self.makeup_gain_db.process(&mut self.makeup_buffer[0..len], sample_index);
+        self.threshold_db
+            .process(&mut self.threshold_buffer[0..len], sample_index);
+        self.ratio
+            .process(&mut self.ratio_buffer[0..len], sample_index);
+        self.attack_ms
+            .process(&mut self.attack_buffer[0..len], sample_index);
+        self.release_ms
+            .process(&mut self.release_buffer[0..len], sample_index);
+        self.makeup_gain_db
+            .process(&mut self.makeup_buffer[0..len], sample_index);
 
         if let (Some(thresh_db), Some(ratio), Some(att_ms), Some(rel_ms), Some(makeup_db)) = (
             self.threshold_db.get_constant(),
             self.ratio.get_constant(),
             self.attack_ms.get_constant(),
             self.release_ms.get_constant(),
-            self.makeup_gain_db.get_constant()
+            self.makeup_gain_db.get_constant(),
         ) {
             let att_bits = att_ms.to_bits();
             let rel_bits = rel_ms.to_bits();
@@ -139,9 +154,11 @@ impl FrameProcessor for Compressor {
                 let abs_input = input.abs();
 
                 if abs_input > self.envelope {
-                    self.envelope = self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                    self.envelope =
+                        self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
                 } else {
-                    self.envelope = self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                    self.envelope =
+                        self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
                 }
 
                 let mut gain = 1.0;
@@ -178,9 +195,11 @@ impl FrameProcessor for Compressor {
                 let abs_input = input.abs();
 
                 if abs_input > self.envelope {
-                    self.envelope = self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                    self.envelope =
+                        self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
                 } else {
-                    self.envelope = self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                    self.envelope =
+                        self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
                 }
 
                 let mut gain = 1.0;

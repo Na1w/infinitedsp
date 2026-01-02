@@ -1,7 +1,7 @@
 use alloc::boxed::Box;
-use alloc::string::String;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
+use alloc::string::String;
 
 /// The core trait for all audio processors.
 ///
@@ -22,14 +22,20 @@ pub trait FrameProcessor {
     /// Returns the latency of the processor in samples.
     ///
     /// Used for delay compensation.
-    fn latency_samples(&self) -> u32 { 0 }
+    fn latency_samples(&self) -> u32 {
+        0
+    }
 
     /// Returns the name of the processor.
     fn name(&self) -> &str {
         #[cfg(feature = "debug_visualize")]
-        { "Node" }
+        {
+            "Node"
+        }
         #[cfg(not(feature = "debug_visualize"))]
-        { "" }
+        {
+            ""
+        }
     }
 
     /// Returns an ASCII visualization of the processor structure.

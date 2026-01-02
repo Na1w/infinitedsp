@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// The output type of the State Variable Filter.
 #[derive(Clone, Copy)]
@@ -60,11 +60,17 @@ impl StateVariableFilter {
 impl FrameProcessor for StateVariableFilter {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.cutoff_buffer.len() < len { self.cutoff_buffer.resize(len, 0.0); }
-        if self.res_buffer.len() < len { self.res_buffer.resize(len, 0.0); }
+        if self.cutoff_buffer.len() < len {
+            self.cutoff_buffer.resize(len, 0.0);
+        }
+        if self.res_buffer.len() < len {
+            self.res_buffer.resize(len, 0.0);
+        }
 
-        self.cutoff.process(&mut self.cutoff_buffer[0..len], sample_index);
-        self.resonance.process(&mut self.res_buffer[0..len], sample_index);
+        self.cutoff
+            .process(&mut self.cutoff_buffer[0..len], sample_index);
+        self.resonance
+            .process(&mut self.res_buffer[0..len], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let cutoff_hz = self.cutoff_buffer[i];

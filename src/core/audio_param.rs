@@ -1,5 +1,5 @@
-use crate::FrameProcessor;
 use crate::core::parameter::Parameter;
+use crate::FrameProcessor;
 use alloc::boxed::Box;
 
 /// A parameter that can be static, dynamic (controlled by another processor), or linked to a thread-safe Parameter.
@@ -18,10 +18,10 @@ impl AudioParam {
         match self {
             AudioParam::Static(val) => {
                 buffer.fill(*val);
-            },
+            }
             AudioParam::Dynamic(processor) => {
                 processor.process(buffer, sample_index);
-            },
+            }
             AudioParam::Linked(param) => {
                 let val = param.get();
                 buffer.fill(val);

@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::vec;
+use alloc::vec::Vec;
 
 /// A granular pitch shifter.
 ///
@@ -58,7 +58,8 @@ impl FrameProcessor for GranularPitchShift {
         if self.semitones_buffer.len() < buffer.len() {
             self.semitones_buffer.resize(buffer.len(), 0.0);
         }
-        self.semitones.process(&mut self.semitones_buffer, sample_index);
+        self.semitones
+            .process(&mut self.semitones_buffer, sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let semitones = self.semitones_buffer[i];
@@ -86,7 +87,9 @@ impl FrameProcessor for GranularPitchShift {
             let val1 = self.buffer[r1 as usize];
 
             let mut delay2 = self.phasor + self.window_size * 0.5;
-            if delay2 >= self.window_size { delay2 -= self.window_size; }
+            if delay2 >= self.window_size {
+                delay2 -= self.window_size;
+            }
             let r2 = (self.write_ptr as f32 - delay2 + len) % len;
             let val2 = self.buffer[r2 as usize];
 

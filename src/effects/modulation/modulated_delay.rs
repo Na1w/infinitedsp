@@ -1,8 +1,8 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::vec;
+use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// A modulated delay effect, used for Chorus and Flanger.
 pub struct ModulatedDelay {
@@ -92,13 +92,22 @@ impl FrameProcessor for ModulatedDelay {
         let len_f = len as f32;
         let block_size = buffer.len();
 
-        if self.depth_buffer.len() < block_size { self.depth_buffer.resize(block_size, 0.0); }
-        if self.feedback_buffer.len() < block_size { self.feedback_buffer.resize(block_size, 0.0); }
-        if self.mix_buffer.len() < block_size { self.mix_buffer.resize(block_size, 0.0); }
+        if self.depth_buffer.len() < block_size {
+            self.depth_buffer.resize(block_size, 0.0);
+        }
+        if self.feedback_buffer.len() < block_size {
+            self.feedback_buffer.resize(block_size, 0.0);
+        }
+        if self.mix_buffer.len() < block_size {
+            self.mix_buffer.resize(block_size, 0.0);
+        }
 
-        self.depth.process(&mut self.depth_buffer[0..block_size], sample_index);
-        self.feedback.process(&mut self.feedback_buffer[0..block_size], sample_index);
-        self.mix.process(&mut self.mix_buffer[0..block_size], sample_index);
+        self.depth
+            .process(&mut self.depth_buffer[0..block_size], sample_index);
+        self.feedback
+            .process(&mut self.feedback_buffer[0..block_size], sample_index);
+        self.mix
+            .process(&mut self.mix_buffer[0..block_size], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let input = *sample;
@@ -107,7 +116,9 @@ impl FrameProcessor for ModulatedDelay {
             let mix = self.mix_buffer[i];
 
             self.lfo_phase += self.lfo_inc;
-            if self.lfo_phase > 2.0 * PI { self.lfo_phase -= 2.0 * PI; }
+            if self.lfo_phase > 2.0 * PI {
+                self.lfo_phase -= 2.0 * PI;
+            }
 
             let lfo = libm::sinf(self.lfo_phase);
             let current_delay = self.base_delay + lfo * depth;

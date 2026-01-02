@@ -1,8 +1,8 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use wide::f32x4;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::vec;
+use alloc::vec::Vec;
+use wide::f32x4;
 
 pub struct Delay {
     buffer: Vec<f32>,
@@ -27,7 +27,12 @@ impl Delay {
     /// * `delay_time`: Delay time in seconds.
     /// * `feedback`: Feedback amount (0.0 - 1.0).
     /// * `mix`: Dry/Wet mix (0.0 - 1.0).
-    pub fn new(max_delay_seconds: f32, delay_time: AudioParam, feedback: AudioParam, mix: AudioParam) -> Self {
+    pub fn new(
+        max_delay_seconds: f32,
+        delay_time: AudioParam,
+        feedback: AudioParam,
+        mix: AudioParam,
+    ) -> Self {
         let sample_rate = 44100;
         let size = (max_delay_seconds * sample_rate as f32) as usize;
         let default_delay = (sample_rate / 2).min(if size > 0 { size - 1 } else { 0 });
@@ -63,17 +68,28 @@ impl Delay {
 impl FrameProcessor for Delay {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = self.buffer.len();
-        if len == 0 { return; }
+        if len == 0 {
+            return;
+        }
 
         let block_size = buffer.len();
 
-        if self.delay_buffer.len() < block_size { self.delay_buffer.resize(block_size, 0.0); }
-        if self.feedback_buffer.len() < block_size { self.feedback_buffer.resize(block_size, 0.0); }
-        if self.mix_buffer.len() < block_size { self.mix_buffer.resize(block_size, 0.0); }
+        if self.delay_buffer.len() < block_size {
+            self.delay_buffer.resize(block_size, 0.0);
+        }
+        if self.feedback_buffer.len() < block_size {
+            self.feedback_buffer.resize(block_size, 0.0);
+        }
+        if self.mix_buffer.len() < block_size {
+            self.mix_buffer.resize(block_size, 0.0);
+        }
 
-        self.delay_time.process(&mut self.delay_buffer[0..block_size], sample_index);
-        self.feedback.process(&mut self.feedback_buffer[0..block_size], sample_index);
-        self.mix.process(&mut self.mix_buffer[0..block_size], sample_index);
+        self.delay_time
+            .process(&mut self.delay_buffer[0..block_size], sample_index);
+        self.feedback
+            .process(&mut self.feedback_buffer[0..block_size], sample_index);
+        self.mix
+            .process(&mut self.mix_buffer[0..block_size], sample_index);
 
         // For Digital Delay, we use the first sample of delay_time for the whole block to keep SIMD optimization.
         // If sample-accurate modulation is needed, TapeDelay should be used.
@@ -102,12 +118,12 @@ impl FrameProcessor for Delay {
                 let mix_vec = f32x4::from(*mix_chunk);
                 let dry_mix_vec = f32x4::splat(1.0) - mix_vec;
 
-                let delayed_slice = &self.buffer[r_ptr..r_ptr+4];
+                let delayed_slice = &self.buffer[r_ptr..r_ptr + 4];
                 let delayed = f32x4::from(unsafe { *(delayed_slice.as_ptr() as *const [f32; 4]) });
 
                 let next_val = input + delayed * feedback_vec;
                 let next_val_arr = next_val.to_array();
-                self.buffer[w_ptr..w_ptr+4].copy_from_slice(&next_val_arr);
+                self.buffer[w_ptr..w_ptr + 4].copy_from_slice(&next_val_arr);
 
                 let output = input * dry_mix_vec + delayed * mix_vec;
                 *chunk = output.to_array();
@@ -130,7 +146,6 @@ impl FrameProcessor for Delay {
             }
 
             self.write_ptr = (self.write_ptr + block_size) % len;
-
         } else {
             for (i, sample) in buffer.iter_mut().enumerate() {
                 let input = *sample;
@@ -173,7 +188,12 @@ mod tests {
 
     #[test]
     fn test_delay() {
-        let mut delay = Delay::new(1.0, AudioParam::seconds(0.01), AudioParam::linear(0.5), AudioParam::linear(0.5));
+        let mut delay = Delay::new(
+            1.0,
+            AudioParam::seconds(0.01),
+            AudioParam::linear(0.5),
+            AudioParam::linear(0.5),
+        );
         delay.set_sample_rate(100.0);
 
         let mut buffer = [1.0, 0.0, 0.0];

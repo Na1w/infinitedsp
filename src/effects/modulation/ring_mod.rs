@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// A ring modulator effect.
 ///
@@ -50,10 +50,15 @@ impl RingMod {
 impl FrameProcessor for RingMod {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.freq_buffer.len() < len { self.freq_buffer.resize(len, 0.0); }
-        if self.mix_buffer.len() < len { self.mix_buffer.resize(len, 0.0); }
+        if self.freq_buffer.len() < len {
+            self.freq_buffer.resize(len, 0.0);
+        }
+        if self.mix_buffer.len() < len {
+            self.mix_buffer.resize(len, 0.0);
+        }
 
-        self.freq.process(&mut self.freq_buffer[0..len], sample_index);
+        self.freq
+            .process(&mut self.freq_buffer[0..len], sample_index);
         self.mix.process(&mut self.mix_buffer[0..len], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
@@ -65,7 +70,9 @@ impl FrameProcessor for RingMod {
             let current_phase = self.phase;
 
             self.phase += self.inc;
-            if self.phase > 2.0 * PI { self.phase -= 2.0 * PI; }
+            if self.phase > 2.0 * PI {
+                self.phase -= 2.0 * PI;
+            }
 
             let carrier = libm::sinf(current_phase);
             let wet = *sample * carrier;

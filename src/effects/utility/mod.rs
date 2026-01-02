@@ -1,10 +1,10 @@
-pub mod gain;
-pub mod offset;
-pub mod passthrough;
-pub mod dc_source;
 pub mod add;
-pub mod multiply;
-pub mod panner;
-pub mod map_range;
+pub mod dc_source;
+pub mod gain;
 pub mod gate;
+pub mod map_range;
+pub mod multiply;
+pub mod offset;
+pub mod panner;
+pub mod passthrough;
 pub mod stereo_widener;

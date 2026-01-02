@@ -1,5 +1,5 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
 
 /// A simple Mid/Side stereo widener.
@@ -32,10 +32,13 @@ impl FrameProcessor for StereoWidener {
             self.width_buffer.resize(frames, 0.0);
         }
 
-        self.width.process(&mut self.width_buffer[0..frames], sample_index);
+        self.width
+            .process(&mut self.width_buffer[0..frames], sample_index);
 
         for (i, frame) in buffer.chunks_mut(2).enumerate() {
-            if frame.len() < 2 { break; }
+            if frame.len() < 2 {
+                break;
+            }
             let width = self.width_buffer[i];
 
             let l = frame[0];

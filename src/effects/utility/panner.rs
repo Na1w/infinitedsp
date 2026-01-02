@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// A stereo panner.
 ///
@@ -38,10 +38,13 @@ impl FrameProcessor for StereoPanner {
             self.pan_buffer.resize(frames, 0.0);
         }
 
-        self.pan.process(&mut self.pan_buffer[0..frames], sample_index);
+        self.pan
+            .process(&mut self.pan_buffer[0..frames], sample_index);
 
         for (i, frame) in buffer.chunks_mut(2).enumerate() {
-            if frame.len() < 2 { break; }
+            if frame.len() < 2 {
+                break;
+            }
 
             let pan = self.pan_buffer[i].clamp(-1.0, 1.0);
 

@@ -1,5 +1,5 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
 use wide::f32x4;
@@ -114,12 +114,18 @@ impl FrameProcessor for PredictiveLadderFilter {
         let res_is_dynamic = matches!(self.resonance, AudioParam::Dynamic(_));
 
         if cutoff_is_dynamic {
-            if self.cutoff_buffer.len() < len { self.cutoff_buffer.resize(len, 0.0); }
-            self.cutoff.process(&mut self.cutoff_buffer[0..len], sample_index);
+            if self.cutoff_buffer.len() < len {
+                self.cutoff_buffer.resize(len, 0.0);
+            }
+            self.cutoff
+                .process(&mut self.cutoff_buffer[0..len], sample_index);
         }
         if res_is_dynamic {
-            if self.res_buffer.len() < len { self.res_buffer.resize(len, 0.0); }
-            self.resonance.process(&mut self.res_buffer[0..len], sample_index);
+            if self.res_buffer.len() < len {
+                self.res_buffer.resize(len, 0.0);
+            }
+            self.resonance
+                .process(&mut self.res_buffer[0..len], sample_index);
         }
 
         let cutoff_static = match &self.cutoff {
@@ -149,14 +155,14 @@ impl FrameProcessor for PredictiveLadderFilter {
             let mut i = 0;
             for chunk in chunks {
                 let c_vec = if cutoff_is_dynamic {
-                    let arr: [f32; 4] = cutoff_buf[i..i+4].try_into().unwrap();
+                    let arr: [f32; 4] = cutoff_buf[i..i + 4].try_into().unwrap();
                     f32x4::from(arr)
                 } else {
                     f32x4::splat(cutoff_static)
                 };
 
                 let r_vec = if res_is_dynamic {
-                    let arr: [f32; 4] = res_buf[i..i+4].try_into().unwrap();
+                    let arr: [f32; 4] = res_buf[i..i + 4].try_into().unwrap();
                     f32x4::from(arr)
                 } else {
                     f32x4::splat(res_static)
@@ -173,8 +179,16 @@ impl FrameProcessor for PredictiveLadderFilter {
 
             for (j, sample) in remainder.iter_mut().enumerate() {
                 let idx = i + j;
-                let c = if cutoff_is_dynamic { cutoff_buf[idx] } else { cutoff_static };
-                let r = if res_is_dynamic { res_buf[idx] } else { res_static };
+                let c = if cutoff_is_dynamic {
+                    cutoff_buf[idx]
+                } else {
+                    cutoff_static
+                };
+                let r = if res_is_dynamic {
+                    res_buf[idx]
+                } else {
+                    res_static
+                };
 
                 let (g, k, beta) = Self::calc_coeffs(c, r, sample_rate);
                 Self::step(s, sample, g, k, beta);

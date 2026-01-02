@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// The waveform shape for the LFO.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -102,11 +102,17 @@ impl FrameProcessor for Lfo {
                 // libm::sinf
                 LfoWaveform::Sine => libm::sinf(phase * 2.0 * PI),
                 LfoWaveform::Saw => 2.0 * phase - 1.0,
-                LfoWaveform::Square => if phase < 0.5 { 1.0 } else { -1.0 },
+                LfoWaveform::Square => {
+                    if phase < 0.5 {
+                        1.0
+                    } else {
+                        -1.0
+                    }
+                }
                 LfoWaveform::Triangle => {
                     let x = phase * 2.0 - 1.0;
                     2.0 * x.abs() - 1.0
-                },
+                }
                 LfoWaveform::SampleAndHold => {
                     if wrapped {
                         last_random = Self::next_random(&mut rng_state);

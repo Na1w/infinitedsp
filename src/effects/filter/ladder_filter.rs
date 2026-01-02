@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// A 4-pole lowpass ladder filter using Newton-Raphson ZDF.
 ///
@@ -35,7 +35,11 @@ impl LadderFilter {
     }
 
     #[inline(always)]
-    fn calc_coeffs(cutoff_val: f32, res_val: f32, sample_rate: f32) -> (f32, f32, f32, f32, f32, f32, f32) {
+    fn calc_coeffs(
+        cutoff_val: f32,
+        res_val: f32,
+        sample_rate: f32,
+    ) -> (f32, f32, f32, f32, f32, f32, f32) {
         let fc = cutoff_val.clamp(10.0, sample_rate * 0.49);
         let g = libm::tanf(PI * fc / sample_rate);
         let k = res_val * 4.0;
@@ -51,7 +55,17 @@ impl LadderFilter {
     }
 
     #[inline(always)]
-    fn step(s: &mut [f32; 4], sample: &mut f32, g: f32, k: f32, g1: f32, g2: f32, g3: f32, g4: f32, beta: f32) {
+    fn step(
+        s: &mut [f32; 4],
+        sample: &mut f32,
+        g: f32,
+        k: f32,
+        g1: f32,
+        g2: f32,
+        g3: f32,
+        g4: f32,
+        beta: f32,
+    ) {
         let x = *sample;
 
         let s1_term = s[0] * beta;
@@ -97,12 +111,18 @@ impl FrameProcessor for LadderFilter {
         let res_is_dynamic = matches!(self.resonance, AudioParam::Dynamic(_));
 
         if cutoff_is_dynamic {
-            if self.cutoff_buffer.len() < len { self.cutoff_buffer.resize(len, 0.0); }
-            self.cutoff.process(&mut self.cutoff_buffer[0..len], sample_index);
+            if self.cutoff_buffer.len() < len {
+                self.cutoff_buffer.resize(len, 0.0);
+            }
+            self.cutoff
+                .process(&mut self.cutoff_buffer[0..len], sample_index);
         }
         if res_is_dynamic {
-            if self.res_buffer.len() < len { self.res_buffer.resize(len, 0.0); }
-            self.resonance.process(&mut self.res_buffer[0..len], sample_index);
+            if self.res_buffer.len() < len {
+                self.res_buffer.resize(len, 0.0);
+            }
+            self.resonance
+                .process(&mut self.res_buffer[0..len], sample_index);
         }
 
         let cutoff_static = match &self.cutoff {
@@ -120,14 +140,23 @@ impl FrameProcessor for LadderFilter {
         let sample_rate = self.sample_rate;
 
         if !cutoff_is_dynamic && !res_is_dynamic {
-            let (g, k, g1, g2, g3, g4, beta) = Self::calc_coeffs(cutoff_static, res_static, sample_rate);
+            let (g, k, g1, g2, g3, g4, beta) =
+                Self::calc_coeffs(cutoff_static, res_static, sample_rate);
             for sample in buffer.iter_mut() {
                 Self::step(s, sample, g, k, g1, g2, g3, g4, beta);
             }
         } else {
             for (i, sample) in buffer.iter_mut().enumerate() {
-                let c = if cutoff_is_dynamic { self.cutoff_buffer[i] } else { cutoff_static };
-                let r = if res_is_dynamic { self.res_buffer[i] } else { res_static };
+                let c = if cutoff_is_dynamic {
+                    self.cutoff_buffer[i]
+                } else {
+                    cutoff_static
+                };
+                let r = if res_is_dynamic {
+                    self.res_buffer[i]
+                } else {
+                    res_static
+                };
 
                 let (g, k, g1, g2, g3, g4, beta) = Self::calc_coeffs(c, r, sample_rate);
                 Self::step(s, sample, g, k, g1, g2, g3, g4, beta);

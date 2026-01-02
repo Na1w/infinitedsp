@@ -17,7 +17,14 @@ impl DelayLine {
         }
     }
 
-    fn process_comb_block(&mut self, input: &[f32], output: &mut [f32], feedback: f32, damp: f32, filter_store: &mut f32) {
+    fn process_comb_block(
+        &mut self,
+        input: &[f32],
+        output: &mut [f32],
+        feedback: f32,
+        damp: f32,
+        filter_store: &mut f32,
+    ) {
         let len = self.buffer.len();
         let block_size = input.len();
 
@@ -61,7 +68,6 @@ impl DelayLine {
                 self.buffer[self.index] = *in_val + *filter_store * feedback;
                 self.index = (self.index + 1) % len;
             }
-
         } else {
             for (in_val, out_val) in input.iter().zip(output.iter_mut()) {
                 let buf_val = self.buffer[self.index];
@@ -87,14 +93,14 @@ impl DelayLine {
             for chunk in chunks {
                 let input = f32x4::from(*chunk);
 
-                let buf_slice = &self.buffer[buf_ptr..buf_ptr+4];
+                let buf_slice = &self.buffer[buf_ptr..buf_ptr + 4];
                 let buf_out = f32x4::from(unsafe { *(buf_slice.as_ptr() as *const [f32; 4]) });
 
                 let output = buf_out - input;
                 let to_write = input + buf_out * feedback_vec;
 
                 let to_write_arr = to_write.to_array();
-                self.buffer[buf_ptr..buf_ptr+4].copy_from_slice(&to_write_arr);
+                self.buffer[buf_ptr..buf_ptr + 4].copy_from_slice(&to_write_arr);
 
                 *chunk = output.to_array();
                 buf_ptr += 4;
@@ -111,7 +117,6 @@ impl DelayLine {
 
                 self.index = (self.index + 1) % len;
             }
-
         } else {
             for sample in buffer.iter_mut() {
                 let input = *sample;
@@ -144,7 +149,13 @@ impl Comb {
     }
 
     fn process_block(&mut self, input: &[f32], output: &mut [f32]) {
-        self.delay.process_comb_block(input, output, self.feedback, self.damp, &mut self.filter_store);
+        self.delay.process_comb_block(
+            input,
+            output,
+            self.feedback,
+            self.damp,
+            &mut self.filter_store,
+        );
     }
 }
 
@@ -224,14 +235,46 @@ impl Reverb {
         let damp = 0.3;
 
         let combs = [
-            Comb::new(((comb_lengths[0] + offset) as f32 * sr_scale) as usize, feedback, damp),
-            Comb::new(((comb_lengths[1] + offset) as f32 * sr_scale) as usize, feedback, damp),
-            Comb::new(((comb_lengths[2] + offset) as f32 * sr_scale) as usize, feedback, damp),
-            Comb::new(((comb_lengths[3] + offset) as f32 * sr_scale) as usize, feedback, damp),
-            Comb::new(((comb_lengths[4] + offset) as f32 * sr_scale) as usize, feedback, damp),
-            Comb::new(((comb_lengths[5] + offset) as f32 * sr_scale) as usize, feedback, damp),
-            Comb::new(((comb_lengths[6] + offset) as f32 * sr_scale) as usize, feedback, damp),
-            Comb::new(((comb_lengths[7] + offset) as f32 * sr_scale) as usize, feedback, damp),
+            Comb::new(
+                ((comb_lengths[0] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
+            Comb::new(
+                ((comb_lengths[1] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
+            Comb::new(
+                ((comb_lengths[2] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
+            Comb::new(
+                ((comb_lengths[3] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
+            Comb::new(
+                ((comb_lengths[4] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
+            Comb::new(
+                ((comb_lengths[5] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
+            Comb::new(
+                ((comb_lengths[6] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
+            Comb::new(
+                ((comb_lengths[7] + offset) as f32 * sr_scale) as usize,
+                feedback,
+                damp,
+            ),
         ];
 
         let allpasses = [
@@ -258,13 +301,18 @@ impl FrameProcessor for Reverb {
             self.gain_buffer.resize(buffer.len(), 0.0);
         }
 
-        self.gain.process(&mut self.gain_buffer[0..buffer.len()], sample_index);
+        self.gain
+            .process(&mut self.gain_buffer[0..buffer.len()], sample_index);
 
         let (in_chunks, in_rem) = buffer.as_chunks::<4>();
         let (tmp_chunks, tmp_rem) = self.input_buffer.as_chunks_mut::<4>();
         let (gain_chunks, gain_rem) = self.gain_buffer.as_chunks::<4>();
 
-        for ((in_c, tmp_c), gain_c) in in_chunks.iter().zip(tmp_chunks.iter_mut()).zip(gain_chunks.iter()) {
+        for ((in_c, tmp_c), gain_c) in in_chunks
+            .iter()
+            .zip(tmp_chunks.iter_mut())
+            .zip(gain_chunks.iter())
+        {
             let v = f32x4::from(*in_c);
             let g = f32x4::from(*gain_c);
             *tmp_c = (v * g).to_array();

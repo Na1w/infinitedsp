@@ -27,13 +27,13 @@ fn create_effects_chain(sample_rate: f32) -> DspChain {
 
     let modulated = Multiply::new(
         AudioParam::Dynamic(Box::new(DspChain::new(combined, sample_rate))),
-        lfo_param
+        lfo_param,
     );
 
     let dist = Distortion::new(
         AudioParam::linear(5.0),
         AudioParam::linear(1.0),
-        DistortionType::SoftClip
+        DistortionType::SoftClip,
     );
 
     let pan_lfo = Lfo::new(AudioParam::hz(0.5), LfoWaveform::Sine);
@@ -53,7 +53,10 @@ fn main() -> Result<()> {
 
     let (stream, sample_rate) = init_audio_interleaved(|sr| create_effects_chain(sr))?;
 
-    println!("Playing Effects Demo (Add, Multiply, Distortion, Panner) at {}Hz...", sample_rate);
+    println!(
+        "Playing Effects Demo (Add, Multiply, Distortion, Panner) at {}Hz...",
+        sample_rate
+    );
 
     stream.play()?;
 

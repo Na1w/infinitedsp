@@ -20,11 +20,10 @@ fn create_karplus_chain(sample_rate: f32, pitch: Parameter, gate: Parameter) -> 
         AudioParam::Linked(pitch),
         AudioParam::Linked(gate),
         AudioParam::linear(0.7),
-        AudioParam::linear(0.8)
+        AudioParam::linear(0.8),
     );
 
-    DspChain::new(string, sample_rate)
-        .and(Gain::new_db(-3.0))
+    DspChain::new(string, sample_rate).and(Gain::new_db(-3.0))
 }
 
 fn main() -> Result<()> {
@@ -37,9 +36,7 @@ fn main() -> Result<()> {
     let p = pitch_param.clone();
     let g = gate_param.clone();
 
-    let (stream, _sample_rate) = init_audio(move |sr| {
-        create_karplus_chain(sr, p, g)
-    })?;
+    let (stream, _sample_rate) = init_audio(move |sr| create_karplus_chain(sr, p, g))?;
 
     println!("Playing Karplus-Strong Guitar Demo (Dry)...");
     stream.play()?;
@@ -52,18 +49,61 @@ fn main() -> Result<()> {
     let e4 = 329.63;
 
     let melody = vec![
-        Note { start_beat: 0.0, duration_beats: 1.0, freq: e2 },
-        Note { start_beat: 1.0, duration_beats: 1.0, freq: a2 },
-        Note { start_beat: 2.0, duration_beats: 1.0, freq: d3 },
-        Note { start_beat: 3.0, duration_beats: 1.0, freq: g3 },
-        Note { start_beat: 4.0, duration_beats: 1.0, freq: b3 },
-        Note { start_beat: 5.0, duration_beats: 1.0, freq: e4 },
-
-        Note { start_beat: 6.0, duration_beats: 0.5, freq: b3 },
-        Note { start_beat: 6.5, duration_beats: 0.5, freq: g3 },
-        Note { start_beat: 7.0, duration_beats: 0.5, freq: d3 },
-        Note { start_beat: 7.5, duration_beats: 0.5, freq: a2 },
-        Note { start_beat: 8.0, duration_beats: 2.0, freq: e2 },
+        Note {
+            start_beat: 0.0,
+            duration_beats: 1.0,
+            freq: e2,
+        },
+        Note {
+            start_beat: 1.0,
+            duration_beats: 1.0,
+            freq: a2,
+        },
+        Note {
+            start_beat: 2.0,
+            duration_beats: 1.0,
+            freq: d3,
+        },
+        Note {
+            start_beat: 3.0,
+            duration_beats: 1.0,
+            freq: g3,
+        },
+        Note {
+            start_beat: 4.0,
+            duration_beats: 1.0,
+            freq: b3,
+        },
+        Note {
+            start_beat: 5.0,
+            duration_beats: 1.0,
+            freq: e4,
+        },
+        Note {
+            start_beat: 6.0,
+            duration_beats: 0.5,
+            freq: b3,
+        },
+        Note {
+            start_beat: 6.5,
+            duration_beats: 0.5,
+            freq: g3,
+        },
+        Note {
+            start_beat: 7.0,
+            duration_beats: 0.5,
+            freq: d3,
+        },
+        Note {
+            start_beat: 7.5,
+            duration_beats: 0.5,
+            freq: a2,
+        },
+        Note {
+            start_beat: 8.0,
+            duration_beats: 2.0,
+            freq: e2,
+        },
     ];
 
     let bpm = 100.0;
@@ -78,7 +118,9 @@ fn main() -> Result<()> {
         let mut active_note = None;
 
         for note in &melody {
-            if current_beat >= note.start_beat && current_beat < (note.start_beat + note.duration_beats) {
+            if current_beat >= note.start_beat
+                && current_beat < (note.start_beat + note.duration_beats)
+            {
                 if current_beat < (note.start_beat + 0.1) {
                     active_note = Some(note);
                 }

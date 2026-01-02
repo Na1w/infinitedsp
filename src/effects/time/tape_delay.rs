@@ -1,8 +1,8 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::vec;
+use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// A tape delay simulation with saturation, wow/flutter, and low-pass filtering.
 pub struct TapeDelay {
@@ -40,7 +40,12 @@ impl TapeDelay {
     /// * `delay_time` - Delay time in seconds.
     /// * `feedback` - Feedback amount (0.0 - 1.0).
     /// * `mix` - Dry/Wet mix (0.0 - 1.0).
-    pub fn new(max_delay_s: f32, delay_time: AudioParam, feedback: AudioParam, mix: AudioParam) -> Self {
+    pub fn new(
+        max_delay_s: f32,
+        delay_time: AudioParam,
+        feedback: AudioParam,
+        mix: AudioParam,
+    ) -> Self {
         let sample_rate = 44100.0;
         let buffer_size = (sample_rate * (max_delay_s + 0.1)) as usize;
 
@@ -101,21 +106,35 @@ impl TapeDelay {
 
 impl FrameProcessor for TapeDelay {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        if self.lowpass_coeff == 0.0 { self.recalc_filter(); }
+        if self.lowpass_coeff == 0.0 {
+            self.recalc_filter();
+        }
 
         let len = self.buffer.len();
         let len_f = len as f32;
         let block_size = buffer.len();
 
-        if self.delay_buffer.len() < block_size { self.delay_buffer.resize(block_size, 0.0); }
-        if self.feedback_buffer.len() < block_size { self.feedback_buffer.resize(block_size, 0.0); }
-        if self.mix_buffer.len() < block_size { self.mix_buffer.resize(block_size, 0.0); }
-        if self.drive_buffer.len() < block_size { self.drive_buffer.resize(block_size, 0.0); }
+        if self.delay_buffer.len() < block_size {
+            self.delay_buffer.resize(block_size, 0.0);
+        }
+        if self.feedback_buffer.len() < block_size {
+            self.feedback_buffer.resize(block_size, 0.0);
+        }
+        if self.mix_buffer.len() < block_size {
+            self.mix_buffer.resize(block_size, 0.0);
+        }
+        if self.drive_buffer.len() < block_size {
+            self.drive_buffer.resize(block_size, 0.0);
+        }
 
-        self.base_delay.process(&mut self.delay_buffer[0..block_size], sample_index);
-        self.feedback.process(&mut self.feedback_buffer[0..block_size], sample_index);
-        self.mix.process(&mut self.mix_buffer[0..block_size], sample_index);
-        self.drive.process(&mut self.drive_buffer[0..block_size], sample_index);
+        self.base_delay
+            .process(&mut self.delay_buffer[0..block_size], sample_index);
+        self.feedback
+            .process(&mut self.feedback_buffer[0..block_size], sample_index);
+        self.mix
+            .process(&mut self.mix_buffer[0..block_size], sample_index);
+        self.drive
+            .process(&mut self.drive_buffer[0..block_size], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let input = *sample;
@@ -127,7 +146,9 @@ impl FrameProcessor for TapeDelay {
             let base_delay_samples = delay_s * self.sample_rate;
 
             self.lfo_phase += self.lfo_inc;
-            if self.lfo_phase > 2.0 * PI { self.lfo_phase -= 2.0 * PI; }
+            if self.lfo_phase > 2.0 * PI {
+                self.lfo_phase -= 2.0 * PI;
+            }
 
             let lfo = libm::sinf(self.lfo_phase);
             let current_delay = base_delay_samples + lfo * self.depth * self.flutter_amount;

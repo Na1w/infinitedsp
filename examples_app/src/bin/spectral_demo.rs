@@ -19,8 +19,7 @@ fn create_spectral_chain(sample_rate: f32) -> DspChain {
     let hop_size = 512.0;
     let control_rate = sample_rate / hop_size;
 
-    let lfo_scaled = DspChain::new(lfo, control_rate)
-        .and(Gain::new_fixed(12.0));
+    let lfo_scaled = DspChain::new(lfo, control_rate).and(Gain::new_fixed(12.0));
 
     let pitch_param = AudioParam::Dynamic(Box::new(lfo_scaled));
 

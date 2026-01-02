@@ -15,11 +15,10 @@ fn create_phaser_chain(sample_rate: f32) -> DspChain {
         AudioParam::hz(100.0),
         AudioParam::hz(8000.0),
         AudioParam::linear(0.85),
-        AudioParam::linear(0.5)
+        AudioParam::linear(0.5),
     );
 
-    DspChain::new(osc, sample_rate)
-        .and(phaser)
+    DspChain::new(osc, sample_rate).and(phaser)
 }
 
 fn main() -> Result<()> {

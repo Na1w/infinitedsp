@@ -1,7 +1,7 @@
-use crate::core::ola::SpectralProcessor;
 use crate::core::audio_param::AudioParam;
-use num_complex::{Complex32, ComplexFloat};
+use crate::core::ola::SpectralProcessor;
 use alloc::vec::Vec;
+use num_complex::{Complex32, ComplexFloat};
 
 /// A spectral pitch shifter using FFT.
 ///
@@ -69,13 +69,16 @@ impl<const N: usize> FftPitchShift<N> {
 
 impl<const N: usize> SpectralProcessor for FftPitchShift<N> {
     fn process_spectral(&mut self, bins: &mut [Complex32], sample_index: u64) {
-        if bins.len() != N { return; }
+        if bins.len() != N {
+            return;
+        }
 
         if self.semitones_buffer.is_empty() {
             self.semitones_buffer.resize(1, 0.0);
         }
 
-        self.semitones.process(&mut self.semitones_buffer[0..1], sample_index);
+        self.semitones
+            .process(&mut self.semitones_buffer[0..1], sample_index);
         let semitones_val = self.semitones_buffer[0];
 
         self.factor = libm::powf(2.0, semitones_val / 12.0);

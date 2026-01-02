@@ -15,8 +15,7 @@ fn create_granular_chain(sample_rate: f32) -> DspChain {
 
     let lfo = Lfo::new(AudioParam::hz(0.2), LfoWaveform::Sine);
 
-    let lfo_scaled = DspChain::new(lfo, sample_rate)
-        .and(Gain::new_fixed(12.0));
+    let lfo_scaled = DspChain::new(lfo, sample_rate).and(Gain::new_fixed(12.0));
 
     let pitch_param = AudioParam::Dynamic(Box::new(lfo_scaled));
 

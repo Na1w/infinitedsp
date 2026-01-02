@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use wide::f32x4;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use wide::f32x4;
 
 /// A simple gain processor.
 ///

@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::vec;
+use alloc::vec::Vec;
 
 /// A physical model of a brass instrument.
 ///
@@ -60,16 +60,27 @@ impl BrassModel {
 impl FrameProcessor for BrassModel {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.pitch_buffer.len() < len { self.pitch_buffer.resize(len, 0.0); }
-        if self.breath_buffer.len() < len { self.breath_buffer.resize(len, 0.0); }
-        if self.tension_buffer.len() < len { self.tension_buffer.resize(len, 0.0); }
+        if self.pitch_buffer.len() < len {
+            self.pitch_buffer.resize(len, 0.0);
+        }
+        if self.breath_buffer.len() < len {
+            self.breath_buffer.resize(len, 0.0);
+        }
+        if self.tension_buffer.len() < len {
+            self.tension_buffer.resize(len, 0.0);
+        }
 
-        self.pitch.process(&mut self.pitch_buffer[0..len], sample_index);
-        self.breath_pressure.process(&mut self.breath_buffer[0..len], sample_index);
-        self.lip_tension.process(&mut self.tension_buffer[0..len], sample_index);
+        self.pitch
+            .process(&mut self.pitch_buffer[0..len], sample_index);
+        self.breath_pressure
+            .process(&mut self.breath_buffer[0..len], sample_index);
+        self.lip_tension
+            .process(&mut self.tension_buffer[0..len], sample_index);
 
         let delay_len = self.delay_line.len();
-        if delay_len == 0 { return; }
+        if delay_len == 0 {
+            return;
+        }
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let pitch_val = self.pitch_buffer[i];

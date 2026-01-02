@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use wide::f32x4;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use wide::f32x4;
 
 /// The type of distortion algorithm to apply.
 pub enum DistortionType {
@@ -57,10 +57,15 @@ impl Distortion {
 impl FrameProcessor for Distortion {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.drive_buffer.len() < len { self.drive_buffer.resize(len, 0.0); }
-        if self.mix_buffer.len() < len { self.mix_buffer.resize(len, 0.0); }
+        if self.drive_buffer.len() < len {
+            self.drive_buffer.resize(len, 0.0);
+        }
+        if self.mix_buffer.len() < len {
+            self.mix_buffer.resize(len, 0.0);
+        }
 
-        self.drive.process(&mut self.drive_buffer[0..len], sample_index);
+        self.drive
+            .process(&mut self.drive_buffer[0..len], sample_index);
         self.mix.process(&mut self.mix_buffer[0..len], sample_index);
 
         let (chunks, remainder) = buffer.as_chunks_mut::<4>();
@@ -72,7 +77,9 @@ impl FrameProcessor for Distortion {
 
         match self.dist_type {
             DistortionType::HardClip => {
-                for ((chunk, drive_chunk), mix_chunk) in chunks.iter_mut().zip(drive_chunks).zip(mix_chunks) {
+                for ((chunk, drive_chunk), mix_chunk) in
+                    chunks.iter_mut().zip(drive_chunks).zip(mix_chunks)
+                {
                     let input = f32x4::from(*chunk);
                     let drive_vec = f32x4::from(*drive_chunk);
                     let mix_vec = f32x4::from(*mix_chunk);
@@ -83,12 +90,14 @@ impl FrameProcessor for Distortion {
                     let result = input * dry_mix_vec + wet * mix_vec;
                     *chunk = result.to_array();
                 }
-            },
+            }
             DistortionType::BitCrush(bits) => {
                 let steps = libm::powf(2.0, bits);
                 let steps_vec = f32x4::splat(steps);
 
-                for ((chunk, drive_chunk), mix_chunk) in chunks.iter_mut().zip(drive_chunks).zip(mix_chunks) {
+                for ((chunk, drive_chunk), mix_chunk) in
+                    chunks.iter_mut().zip(drive_chunks).zip(mix_chunks)
+                {
                     let input = f32x4::from(*chunk);
                     let drive_vec = f32x4::from(*drive_chunk);
                     let mix_vec = f32x4::from(*mix_chunk);
@@ -99,9 +108,11 @@ impl FrameProcessor for Distortion {
                     let result = input * dry_mix_vec + wet * mix_vec;
                     *chunk = result.to_array();
                 }
-            },
+            }
             _ => {
-                for ((chunk, drive_chunk), mix_chunk) in chunks.iter_mut().zip(drive_chunks).zip(mix_chunks) {
+                for ((chunk, drive_chunk), mix_chunk) in
+                    chunks.iter_mut().zip(drive_chunks).zip(mix_chunks)
+                {
                     for i in 0..4 {
                         let input = chunk[i];
                         let drive = drive_chunk[i];
@@ -129,7 +140,7 @@ impl FrameProcessor for Distortion {
                 DistortionType::BitCrush(bits) => {
                     let steps = libm::powf(2.0, bits);
                     libm::roundf(driven * steps) / steps
-                },
+                }
                 DistortionType::Foldback => libm::sinf(driven),
             };
 
@@ -159,7 +170,11 @@ mod tests {
 
     #[test]
     fn test_hard_clip() {
-        let mut dist = Distortion::new(AudioParam::Static(2.0), AudioParam::Static(1.0), DistortionType::HardClip);
+        let mut dist = Distortion::new(
+            AudioParam::Static(2.0),
+            AudioParam::Static(1.0),
+            DistortionType::HardClip,
+        );
         let mut buffer = [0.4, 0.6, -0.6];
         dist.process(&mut buffer, 0);
 

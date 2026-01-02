@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use core::f32::consts::PI;
+use crate::FrameProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 /// The waveform shape for the oscillator.
 #[derive(Clone, Copy)]
@@ -101,20 +101,19 @@ impl FrameProcessor for Oscillator {
                     } else {
                         4.0 * (1.0 - x) - 1.0
                     }
-                },
+                }
                 Waveform::Saw => {
                     let naive = 2.0 * current_phase - 1.0;
                     naive - Self::poly_blep(current_phase, inc.abs())
-                },
+                }
                 Waveform::Square => {
                     let naive = if current_phase < 0.5 { 1.0 } else { -1.0 };
                     let abs_inc = inc.abs();
-                    let corr = Self::poly_blep(current_phase, abs_inc) - Self::poly_blep((current_phase + 0.5) % 1.0, abs_inc);
+                    let corr = Self::poly_blep(current_phase, abs_inc)
+                        - Self::poly_blep((current_phase + 0.5) % 1.0, abs_inc);
                     naive + corr
-                },
-                Waveform::WhiteNoise => {
-                    Self::next_random(&mut rng_state)
                 }
+                Waveform::WhiteNoise => Self::next_random(&mut rng_state),
             };
 
             *sample = val;
@@ -142,8 +141,8 @@ impl FrameProcessor for Oscillator {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::parameter::Parameter;
     use super::*;
+    use crate::core::parameter::Parameter;
 
     #[test]
     fn test_oscillator_sine() {

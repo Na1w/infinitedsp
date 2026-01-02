@@ -1,7 +1,7 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -69,7 +69,13 @@ impl Adsr {
     /// * `decay_time` - Decay time in seconds.
     /// * `sustain_level` - Sustain level (0.0 - 1.0).
     /// * `release_time` - Release time in seconds.
-    pub fn new(gate: AudioParam, attack_time: AudioParam, decay_time: AudioParam, sustain_level: AudioParam, release_time: AudioParam) -> Self {
+    pub fn new(
+        gate: AudioParam,
+        attack_time: AudioParam,
+        decay_time: AudioParam,
+        sustain_level: AudioParam,
+        release_time: AudioParam,
+    ) -> Self {
         let mut adsr = Adsr {
             gate,
             attack_time,
@@ -108,7 +114,11 @@ impl Adsr {
     fn recalc(&mut self, attack: f32, decay: f32, release: f32) {
         if (attack - self.last_attack).abs() > 0.0001 {
             let attack_samples = attack * self.sample_rate;
-            self.attack_step = if attack_samples > 0.0 { 1.0 / attack_samples } else { 1.0 };
+            self.attack_step = if attack_samples > 0.0 {
+                1.0 / attack_samples
+            } else {
+                1.0
+            };
             self.last_attack = attack;
         }
 
@@ -117,7 +127,9 @@ impl Adsr {
             self.decay_coeff = if decay_samples > 0.0 {
                 // libm::expf
                 libm::expf(-1.0 / (decay_samples / 3.0))
-            } else { 0.0 };
+            } else {
+                0.0
+            };
             self.last_decay = decay;
         }
 
@@ -126,30 +138,50 @@ impl Adsr {
             self.release_coeff = if release_samples > 0.0 {
                 // libm::expf
                 libm::expf(-1.0 / (release_samples / 3.0))
-            } else { 0.0 };
+            } else {
+                0.0
+            };
             self.last_release = release;
         }
     }
 
     /// Sets the attack time parameter (seconds).
-    pub fn set_attack(&mut self, time: AudioParam) { self.attack_time = time; }
+    pub fn set_attack(&mut self, time: AudioParam) {
+        self.attack_time = time;
+    }
     /// Sets the decay time parameter (seconds).
-    pub fn set_decay(&mut self, time: AudioParam) { self.decay_time = time; }
+    pub fn set_decay(&mut self, time: AudioParam) {
+        self.decay_time = time;
+    }
     /// Sets the sustain level parameter.
-    pub fn set_sustain(&mut self, level: AudioParam) { self.sustain_level = level; }
+    pub fn set_sustain(&mut self, level: AudioParam) {
+        self.sustain_level = level;
+    }
     /// Sets the release time parameter (seconds).
-    pub fn set_release(&mut self, time: AudioParam) { self.release_time = time; }
+    pub fn set_release(&mut self, time: AudioParam) {
+        self.release_time = time;
+    }
 }
 
 impl FrameProcessor for Adsr {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
 
-        if self.gate_buffer.len() < len { self.gate_buffer.resize(len, 0.0); }
-        if self.attack_buffer.len() < len { self.attack_buffer.resize(len, 0.0); }
-        if self.decay_buffer.len() < len { self.decay_buffer.resize(len, 0.0); }
-        if self.sustain_buffer.len() < len { self.sustain_buffer.resize(len, 0.0); }
-        if self.release_buffer.len() < len { self.release_buffer.resize(len, 0.0); }
+        if self.gate_buffer.len() < len {
+            self.gate_buffer.resize(len, 0.0);
+        }
+        if self.attack_buffer.len() < len {
+            self.attack_buffer.resize(len, 0.0);
+        }
+        if self.decay_buffer.len() < len {
+            self.decay_buffer.resize(len, 0.0);
+        }
+        if self.sustain_buffer.len() < len {
+            self.sustain_buffer.resize(len, 0.0);
+        }
+        if self.release_buffer.len() < len {
+            self.release_buffer.resize(len, 0.0);
+        }
 
         self.gate_buffer.fill(0.0);
         self.attack_buffer.fill(0.0);
@@ -157,11 +189,16 @@ impl FrameProcessor for Adsr {
         self.sustain_buffer.fill(0.0);
         self.release_buffer.fill(0.0);
 
-        self.gate.process(&mut self.gate_buffer[0..len], sample_index);
-        self.attack_time.process(&mut self.attack_buffer[0..len], sample_index);
-        self.decay_time.process(&mut self.decay_buffer[0..len], sample_index);
-        self.sustain_level.process(&mut self.sustain_buffer[0..len], sample_index);
-        self.release_time.process(&mut self.release_buffer[0..len], sample_index);
+        self.gate
+            .process(&mut self.gate_buffer[0..len], sample_index);
+        self.attack_time
+            .process(&mut self.attack_buffer[0..len], sample_index);
+        self.decay_time
+            .process(&mut self.decay_buffer[0..len], sample_index);
+        self.sustain_level
+            .process(&mut self.sustain_buffer[0..len], sample_index);
+        self.release_time
+            .process(&mut self.release_buffer[0..len], sample_index);
 
         // Check for manual retrigger
         let mut triggered = false;
@@ -193,24 +230,25 @@ impl FrameProcessor for Adsr {
             match self.state {
                 AdsrState::Idle => {
                     self.current_level = 0.0;
-                },
+                }
                 AdsrState::Attack => {
                     self.current_level += self.attack_step;
                     if self.current_level >= 1.0 {
                         self.current_level = 1.0;
                         self.state = AdsrState::Decay;
                     }
-                },
+                }
                 AdsrState::Decay => {
-                    self.current_level = sustain + (self.current_level - sustain) * self.decay_coeff;
+                    self.current_level =
+                        sustain + (self.current_level - sustain) * self.decay_coeff;
                     if (self.current_level - sustain).abs() < 0.001 {
                         self.current_level = sustain;
                         self.state = AdsrState::Sustain;
                     }
-                },
+                }
                 AdsrState::Sustain => {
                     self.current_level = sustain;
-                },
+                }
                 AdsrState::Release => {
                     self.current_level *= self.release_coeff;
                     if self.current_level < 0.0001 {

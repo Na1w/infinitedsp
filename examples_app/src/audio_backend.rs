@@ -13,7 +13,9 @@ where
     F: FnOnce(f32) -> DspChain,
 {
     let host = cpal::default_host();
-    let device = host.default_output_device().expect("No output device available");
+    let device = host
+        .default_output_device()
+        .expect("No output device available");
     let config = device.default_output_config()?;
     let sample_rate = config.sample_rate() as f32;
 
@@ -38,7 +40,9 @@ where
     F: FnOnce(f32) -> P,
 {
     let host = cpal::default_host();
-    let device = host.default_output_device().expect("No output device available");
+    let device = host
+        .default_output_device()
+        .expect("No output device available");
     let config = device.default_output_config()?;
     let sample_rate = config.sample_rate() as f32;
 
@@ -48,9 +52,15 @@ where
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let stream = match config.sample_format() {
-        cpal::SampleFormat::F32 => run_stereo::<f32, P>(&device, &config.into(), processor, err_fn)?,
-        cpal::SampleFormat::I16 => run_stereo::<i16, P>(&device, &config.into(), processor, err_fn)?,
-        cpal::SampleFormat::U16 => run_stereo::<u16, P>(&device, &config.into(), processor, err_fn)?,
+        cpal::SampleFormat::F32 => {
+            run_stereo::<f32, P>(&device, &config.into(), processor, err_fn)?
+        }
+        cpal::SampleFormat::I16 => {
+            run_stereo::<i16, P>(&device, &config.into(), processor, err_fn)?
+        }
+        cpal::SampleFormat::U16 => {
+            run_stereo::<u16, P>(&device, &config.into(), processor, err_fn)?
+        }
         _ => return Err(anyhow::anyhow!("Unsupported sample format")),
     };
 
@@ -62,7 +72,9 @@ where
     F: FnOnce(f32) -> DspChain,
 {
     let host = cpal::default_host();
-    let device = host.default_output_device().expect("No output device available");
+    let device = host
+        .default_output_device()
+        .expect("No output device available");
     let config = device.default_output_config()?;
     let sample_rate = config.sample_rate() as f32;
 
@@ -72,9 +84,15 @@ where
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let stream = match config.sample_format() {
-        cpal::SampleFormat::F32 => run_interleaved::<f32>(&device, &config.into(), processor, err_fn)?,
-        cpal::SampleFormat::I16 => run_interleaved::<i16>(&device, &config.into(), processor, err_fn)?,
-        cpal::SampleFormat::U16 => run_interleaved::<u16>(&device, &config.into(), processor, err_fn)?,
+        cpal::SampleFormat::F32 => {
+            run_interleaved::<f32>(&device, &config.into(), processor, err_fn)?
+        }
+        cpal::SampleFormat::I16 => {
+            run_interleaved::<i16>(&device, &config.into(), processor, err_fn)?
+        }
+        cpal::SampleFormat::U16 => {
+            run_interleaved::<u16>(&device, &config.into(), processor, err_fn)?
+        }
         _ => return Err(anyhow::anyhow!("Unsupported sample format")),
     };
 

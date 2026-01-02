@@ -1,5 +1,5 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
+use crate::FrameProcessor;
 
 /// Generates a constant DC signal.
 ///

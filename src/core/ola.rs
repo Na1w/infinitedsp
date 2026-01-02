@@ -1,13 +1,13 @@
 use super::frame_processor::FrameProcessor;
-use core::f32::consts::PI;
-use num_complex::{Complex32, ComplexFloat};
 use alloc::collections::VecDeque;
-use alloc::vec;
-use alloc::vec::Vec;
-#[cfg(feature = "debug_visualize")]
-use alloc::string::String;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
+#[cfg(feature = "debug_visualize")]
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::f32::consts::PI;
+use num_complex::{Complex32, ComplexFloat};
 
 /// Trait for processors that operate on spectral data (FFT bins).
 pub trait SpectralProcessor {
@@ -21,9 +21,13 @@ pub trait SpectralProcessor {
     /// Returns the name of the spectral processor.
     fn name(&self) -> &str {
         #[cfg(feature = "debug_visualize")]
-        { "SpectralProcessor" }
+        {
+            "SpectralProcessor"
+        }
         #[cfg(not(feature = "debug_visualize"))]
-        { "" }
+        {
+            ""
+        }
     }
 }
 
@@ -38,9 +42,13 @@ impl FftHelper for [Complex32; 256] {
         let _ = microfft::complex::cfft_256(self);
     }
     fn do_ifft(&mut self) {
-        for x in self.iter_mut() { *x = x.conj(); }
+        for x in self.iter_mut() {
+            *x = x.conj();
+        }
         let _ = microfft::complex::cfft_256(self);
-        for x in self.iter_mut() { *x = x.conj() / 256.0; }
+        for x in self.iter_mut() {
+            *x = x.conj() / 256.0;
+        }
     }
 }
 
@@ -49,9 +57,13 @@ impl FftHelper for [Complex32; 512] {
         let _ = microfft::complex::cfft_512(self);
     }
     fn do_ifft(&mut self) {
-        for x in self.iter_mut() { *x = x.conj(); }
+        for x in self.iter_mut() {
+            *x = x.conj();
+        }
         let _ = microfft::complex::cfft_512(self);
-        for x in self.iter_mut() { *x = x.conj() / 512.0; }
+        for x in self.iter_mut() {
+            *x = x.conj() / 512.0;
+        }
     }
 }
 
@@ -60,9 +72,13 @@ impl FftHelper for [Complex32; 1024] {
         let _ = microfft::complex::cfft_1024(self);
     }
     fn do_ifft(&mut self) {
-        for x in self.iter_mut() { *x = x.conj(); }
+        for x in self.iter_mut() {
+            *x = x.conj();
+        }
         let _ = microfft::complex::cfft_1024(self);
-        for x in self.iter_mut() { *x = x.conj() / 1024.0; }
+        for x in self.iter_mut() {
+            *x = x.conj() / 1024.0;
+        }
     }
 }
 
@@ -71,9 +87,13 @@ impl FftHelper for [Complex32; 2048] {
         let _ = microfft::complex::cfft_2048(self);
     }
     fn do_ifft(&mut self) {
-        for x in self.iter_mut() { *x = x.conj(); }
+        for x in self.iter_mut() {
+            *x = x.conj();
+        }
         let _ = microfft::complex::cfft_2048(self);
-        for x in self.iter_mut() { *x = x.conj() / 2048.0; }
+        for x in self.iter_mut() {
+            *x = x.conj() / 2048.0;
+        }
     }
 }
 
@@ -96,7 +116,9 @@ pub struct Ola<P: SpectralProcessor, const N: usize> {
 }
 
 impl<P: SpectralProcessor, const N: usize> Ola<P, N>
-where [Complex32; N]: FftHelper {
+where
+    [Complex32; N]: FftHelper,
+{
     /// Creates a new OLA processor.
     ///
     /// # Arguments
@@ -125,7 +147,9 @@ where [Complex32; N]: FftHelper {
 }
 
 impl<P: SpectralProcessor, const N: usize> FrameProcessor for Ola<P, N>
-where [Complex32; N]: FftHelper {
+where
+    [Complex32; N]: FftHelper,
+{
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         if self.input_queue.is_empty() {
             self.current_sample_index = sample_index;
@@ -142,7 +166,8 @@ where [Complex32; N]: FftHelper {
 
             self.fft_buffer.do_fft();
 
-            self.processor.process_spectral(&mut self.fft_buffer, self.current_sample_index);
+            self.processor
+                .process_spectral(&mut self.fft_buffer, self.current_sample_index);
 
             self.fft_buffer.do_ifft();
 
@@ -182,6 +207,12 @@ where [Complex32; N]: FftHelper {
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
         let spaces = " ".repeat(indent);
-        format!("{}Ola (FFT Size: {})\n{}  |-- {}\n", spaces, N, spaces, self.processor.name())
+        format!(
+            "{}Ola (FFT Size: {})\n{}  |-- {}\n",
+            spaces,
+            N,
+            spaces,
+            self.processor.name()
+        )
     }
 }

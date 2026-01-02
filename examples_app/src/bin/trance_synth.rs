@@ -22,9 +22,16 @@ struct Note {
     freq: f32,
 }
 
-fn d_freq(g: f32) -> f32 { g * 1.4983 }
+fn d_freq(g: f32) -> f32 {
+    g * 1.4983
+}
 
-fn create_trance_voice(sample_rate: f32, pitch: Parameter, gate: Parameter, delay_time_s: f32) -> DspChain {
+fn create_trance_voice(
+    sample_rate: f32,
+    pitch: Parameter,
+    gate: Parameter,
+    delay_time_s: f32,
+) -> DspChain {
     let osc = Oscillator::new(AudioParam::Linked(pitch.clone()), Waveform::Saw);
     let noise = Oscillator::new(AudioParam::Static(0.0), Waveform::WhiteNoise);
 
@@ -42,7 +49,7 @@ fn create_trance_voice(sample_rate: f32, pitch: Parameter, gate: Parameter, dela
 
     let filter = LadderFilter::new(
         AudioParam::Dynamic(Box::new(cutoff_mod)),
-        AudioParam::Static(0.4)
+        AudioParam::Static(0.4),
     );
 
     let amp_env = Adsr::new(
@@ -59,7 +66,7 @@ fn create_trance_voice(sample_rate: f32, pitch: Parameter, gate: Parameter, dela
         1.0,
         AudioParam::seconds(delay_time_s),
         AudioParam::linear(0.5),
-        AudioParam::linear(1.0)
+        AudioParam::linear(1.0),
     );
 
     DspChain::new(osc, sample_rate)
@@ -73,10 +80,7 @@ fn create_trance_voice(sample_rate: f32, pitch: Parameter, gate: Parameter, dela
 fn create_riser_voice(sample_rate: f32, cutoff: Parameter, gain: Parameter) -> DspChain {
     let noise = Oscillator::new(AudioParam::Static(0.0), Waveform::WhiteNoise);
 
-    let filter = LadderFilter::new(
-        AudioParam::Linked(cutoff),
-        AudioParam::Static(0.7)
-    );
+    let filter = LadderFilter::new(AudioParam::Linked(cutoff), AudioParam::Static(0.7));
 
     DspChain::new(noise, sample_rate)
         .and(filter)
@@ -103,15 +107,22 @@ struct StereoEngine {
 impl StereoProcessor for StereoEngine {
     fn process(&mut self, left: &mut [f32], right: &mut [f32], sample_index: u64) {
         let len = left.len();
-        if self.riser_buffer.len() < len { self.riser_buffer.resize(len, 0.0); }
-        if self.reverb_buf_l.len() < len { self.reverb_buf_l.resize(len, 0.0); }
-        if self.reverb_buf_r.len() < len { self.reverb_buf_r.resize(len, 0.0); }
+        if self.riser_buffer.len() < len {
+            self.riser_buffer.resize(len, 0.0);
+        }
+        if self.reverb_buf_l.len() < len {
+            self.reverb_buf_l.resize(len, 0.0);
+        }
+        if self.reverb_buf_r.len() < len {
+            self.reverb_buf_r.resize(len, 0.0);
+        }
 
         self.left_voice.process(left, sample_index);
         self.right_voice.process(right, sample_index);
 
         self.riser_buffer.fill(0.0);
-        self.riser_voice.process(&mut self.riser_buffer[0..len], sample_index);
+        self.riser_voice
+            .process(&mut self.riser_buffer[0..len], sample_index);
 
         for i in 0..len {
             let r = self.riser_buffer[i] * 0.5;
@@ -125,8 +136,10 @@ impl StereoProcessor for StereoEngine {
         self.reverb_buf_l[0..len].copy_from_slice(left);
         self.reverb_buf_r[0..len].copy_from_slice(right);
 
-        self.reverb_l.process(&mut self.reverb_buf_l[0..len], sample_index);
-        self.reverb_r.process(&mut self.reverb_buf_r[0..len], sample_index);
+        self.reverb_l
+            .process(&mut self.reverb_buf_l[0..len], sample_index);
+        self.reverb_r
+            .process(&mut self.reverb_buf_r[0..len], sample_index);
 
         for i in 0..len {
             let wet_l = self.reverb_buf_l[i] * 0.2;
@@ -153,7 +166,8 @@ fn main() -> Result<()> {
     let delay_l = beat_sec * 0.75;
     let delay_r = beat_sec * 1.0;
 
-    let voice_chain = create_trance_voice(44100.0, pitch_param.clone(), gate_param.clone(), delay_l);
+    let voice_chain =
+        create_trance_voice(44100.0, pitch_param.clone(), gate_param.clone(), delay_l);
     println!("Trance Voice Chain:\n{}", voice_chain.get_graph());
 
     let p_l = pitch_param.clone();
@@ -163,24 +177,25 @@ fn main() -> Result<()> {
     let rc = riser_cutoff.clone();
     let rg = riser_gain.clone();
 
-    let (stream, sample_rate) = init_audio_stereo(move |sr| {
-        StereoEngine {
-            left_voice: create_trance_voice(sr, p_l.clone(), g.clone(), delay_l),
-            right_voice: create_trance_voice(sr, p_r.clone(), g.clone(), delay_r),
-            riser_voice: create_riser_voice(sr, rc.clone(), rg.clone()),
-            master_filter_l: LadderFilter::new(AudioParam::Linked(mc.clone()), AudioParam::Static(0.2)),
-            master_filter_r: LadderFilter::new(AudioParam::Linked(mc.clone()), AudioParam::Static(0.2)),
-            reverb_l: Reverb::new(AudioParam::linear(0.015)),
-            reverb_r: Reverb::new_with_seed(AudioParam::linear(0.015), 1),
-            master_comp_l: Compressor::new_limiter(),
-            master_comp_r: Compressor::new_limiter(),
-            riser_buffer: Vec::new(),
-            reverb_buf_l: Vec::new(),
-            reverb_buf_r: Vec::new(),
-        }
+    let (stream, sample_rate) = init_audio_stereo(move |sr| StereoEngine {
+        left_voice: create_trance_voice(sr, p_l.clone(), g.clone(), delay_l),
+        right_voice: create_trance_voice(sr, p_r.clone(), g.clone(), delay_r),
+        riser_voice: create_riser_voice(sr, rc.clone(), rg.clone()),
+        master_filter_l: LadderFilter::new(AudioParam::Linked(mc.clone()), AudioParam::Static(0.2)),
+        master_filter_r: LadderFilter::new(AudioParam::Linked(mc.clone()), AudioParam::Static(0.2)),
+        reverb_l: Reverb::new(AudioParam::linear(0.015)),
+        reverb_r: Reverb::new_with_seed(AudioParam::linear(0.015), 1),
+        master_comp_l: Compressor::new_limiter(),
+        master_comp_r: Compressor::new_limiter(),
+        riser_buffer: Vec::new(),
+        reverb_buf_l: Vec::new(),
+        reverb_buf_r: Vec::new(),
     })?;
 
-    println!("Playing Massive Trance Arp at {}Hz (Run with --release)...", sample_rate);
+    println!(
+        "Playing Massive Trance Arp at {}Hz (Run with --release)...",
+        sample_rate
+    );
     stream.play()?;
 
     let a1 = 55.00;
@@ -201,33 +216,65 @@ fn main() -> Result<()> {
         let root3 = r * 4.0;
 
         for _ in 0..2 {
-            melody.push(Note { start_beat: beat + 0.00, duration_beats: 0.25, freq: r });
-            melody.push(Note { start_beat: beat + 0.25, duration_beats: 0.25, freq: f });
-            melody.push(Note { start_beat: beat + 0.50, duration_beats: 0.25, freq: root2 });
-            melody.push(Note { start_beat: beat + 0.75, duration_beats: 0.25, freq: fifth2 });
+            melody.push(Note {
+                start_beat: beat + 0.00,
+                duration_beats: 0.25,
+                freq: r,
+            });
+            melody.push(Note {
+                start_beat: beat + 0.25,
+                duration_beats: 0.25,
+                freq: f,
+            });
+            melody.push(Note {
+                start_beat: beat + 0.50,
+                duration_beats: 0.25,
+                freq: root2,
+            });
+            melody.push(Note {
+                start_beat: beat + 0.75,
+                duration_beats: 0.25,
+                freq: fifth2,
+            });
 
-            melody.push(Note { start_beat: beat + 1.00, duration_beats: 0.25, freq: root3 });
-            melody.push(Note { start_beat: beat + 1.25, duration_beats: 0.25, freq: fifth2 });
-            melody.push(Note { start_beat: beat + 1.50, duration_beats: 0.25, freq: root2 });
-            melody.push(Note { start_beat: beat + 1.75, duration_beats: 0.25, freq: f });
+            melody.push(Note {
+                start_beat: beat + 1.00,
+                duration_beats: 0.25,
+                freq: root3,
+            });
+            melody.push(Note {
+                start_beat: beat + 1.25,
+                duration_beats: 0.25,
+                freq: fifth2,
+            });
+            melody.push(Note {
+                start_beat: beat + 1.50,
+                duration_beats: 0.25,
+                freq: root2,
+            });
+            melody.push(Note {
+                start_beat: beat + 1.75,
+                duration_beats: 0.25,
+                freq: f,
+            });
 
             beat += 2.0;
         }
     };
 
     for _ in 0..2 {
-        add_arp(a1, e3/2.0, 1.0);
+        add_arp(a1, e3 / 2.0, 1.0);
         add_arp(f2, c3, 1.0);
         add_arp(c2, g2, 1.0);
         add_arp(g2, d_freq(g2), 1.0);
     }
 
-    add_arp(a1, e3/2.0, 2.0);
+    add_arp(a1, e3 / 2.0, 2.0);
     add_arp(f2, c3, 2.0);
     add_arp(c2, g2, 2.0);
     add_arp(g2, d_freq(g2), 2.0);
 
-    add_arp(a1, e3/2.0, 4.0);
+    add_arp(a1, e3 / 2.0, 4.0);
     add_arp(f2, c3, 4.0);
     add_arp(c2, g2, 4.0);
     add_arp(g2, d_freq(g2), 4.0);
@@ -256,7 +303,9 @@ fn main() -> Result<()> {
 
         let mut active_note = None;
         for note in &melody {
-            if current_beat >= note.start_beat && current_beat < (note.start_beat + note.duration_beats) {
+            if current_beat >= note.start_beat
+                && current_beat < (note.start_beat + note.duration_beats)
+            {
                 if current_beat < (note.start_beat + note.duration_beats - 0.05) {
                     active_note = Some(note);
                 }

@@ -7,11 +7,11 @@ use alloc::string::String;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
 
-/// A Dry/Wet mixer.
+/// A Parallel Mixer (Dry/Wet).
 ///
 /// Mixes the processed signal (wet) with the original signal (dry).
 /// Handles latency compensation if the processor reports latency.
-pub struct Mixer<P> {
+pub struct ParallelMixer<P> {
     processor: P,
     mix: AudioParam,
     dry_buffer: Vec<f32>,
@@ -20,14 +20,14 @@ pub struct Mixer<P> {
     mix_buffer: Vec<f32>,
 }
 
-impl<P: FrameProcessor> Mixer<P> {
-    /// Creates a new Mixer.
+impl<P: FrameProcessor> ParallelMixer<P> {
+    /// Creates a new ParallelMixer.
     ///
     /// # Arguments
     /// * `mix` - Initial mix amount (0.0 = dry, 1.0 = wet).
     /// * `processor` - The processor to wrap.
     pub fn new(mix: f32, processor: P) -> Self {
-        Mixer {
+        ParallelMixer {
             processor,
             mix: AudioParam::Static(mix),
             dry_buffer: Vec::new(),
@@ -43,7 +43,7 @@ impl<P: FrameProcessor> Mixer<P> {
     }
 }
 
-impl<P: FrameProcessor> FrameProcessor for Mixer<P> {
+impl<P: FrameProcessor> FrameProcessor for ParallelMixer<P> {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let latency = self.processor.latency_samples() as usize;
 
@@ -120,7 +120,7 @@ impl<P: FrameProcessor> FrameProcessor for Mixer<P> {
 
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
-        "Mixer (Parallel)"
+        "ParallelMixer"
     }
 
     #[cfg(feature = "debug_visualize")]
@@ -128,7 +128,7 @@ impl<P: FrameProcessor> FrameProcessor for Mixer<P> {
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
-        output.push_str(&format!("{}Mixer (Parallel Path)\n", spaces));
+        output.push_str(&format!("{}ParallelMixer\n", spaces));
         output.push_str(&format!("{}  |-- Input Signal (Passthrough)\n", spaces));
         output.push_str(&format!("{}  |-- Processed Signal\n", spaces));
         output.push_str(&format!("{}  |    |\n", spaces));

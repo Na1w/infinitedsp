@@ -38,7 +38,7 @@ Listen to some of the examples generated with this library:
 
 ## Project Structure
 
-*   `src/core`: Core traits and infrastructure (`FrameProcessor`, `AudioParam`, `DspChain`, `Ola`).
+*   `src/core`: Core traits and infrastructure (`FrameProcessor`, `AudioParam`, `DspChain`, `Ola`, `ParallelMixer`, `SummingMixer`).
 *   `src/effects`: Audio effects implementations.
 *   `src/synthesis`: Sound generators and control signals.
 *   `examples_app`: A separate workspace member containing runnable examples using `cpal`.

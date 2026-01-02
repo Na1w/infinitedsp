@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-01-02
+
+### Added
+- **SummingMixer:** Added `gain` and `soft_clip` (saturation) parameters to `SummingMixer` for better mixing control.
+
+### Changed
+- **Renaming (Breaking):** Renamed `Mixer` to `ParallelMixer` to better reflect its purpose (Dry/Wet blending).
+- **Demo:** Updated `infinitedsp_demo` to use `SummingMixer` with saturation instead of a recursive tree of `Add` nodes.
+
 ## [0.4.0] - 2026-01-02
 
 ### Added

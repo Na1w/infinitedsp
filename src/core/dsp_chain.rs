@@ -1,5 +1,5 @@
 use super::frame_processor::FrameProcessor;
-use super::mixer::Mixer;
+use super::parallel_mixer::ParallelMixer;
 use crate::core::audio_param::AudioParam;
 use alloc::vec::Vec;
 use alloc::boxed::Box;
@@ -36,7 +36,7 @@ impl DspChain {
     /// Appends a processor to the chain with a dry/wet mix.
     pub fn and_mix(mut self, mix: f32, mut processor: impl FrameProcessor + Send + 'static) -> Self {
         processor.set_sample_rate(self.sample_rate);
-        let mixed = Mixer::new(mix, processor);
+        let mixed = ParallelMixer::new(mix, processor);
         self.processors.push(Box::new(mixed));
         self
     }
@@ -44,7 +44,7 @@ impl DspChain {
     /// Appends a processor to the chain with a modulatable dry/wet mix.
     pub fn and_mix_param(mut self, mix: AudioParam, mut processor: impl FrameProcessor + Send + 'static) -> Self {
         processor.set_sample_rate(self.sample_rate);
-        let mut mixed = Mixer::new(0.0, processor); // Initial value doesn't matter as we set param
+        let mut mixed = ParallelMixer::new(0.0, processor);
         mixed.set_mix(mix);
         self.processors.push(Box::new(mixed));
         self

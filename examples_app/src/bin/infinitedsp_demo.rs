@@ -6,12 +6,12 @@ use infinitedsp_core::core::frame_processor::FrameProcessor;
 use infinitedsp_core::effects::dynamics::compressor::Compressor;
 use infinitedsp_core::effects::filter::state_variable::{StateVariableFilter, SvfType};
 use infinitedsp_core::effects::time::reverb::Reverb;
-use infinitedsp_core::effects::utility::add::Add;
 use infinitedsp_core::effects::utility::gain::Gain;
 use infinitedsp_core::effects::utility::gate::TimedGate;
 use infinitedsp_core::effects::utility::map_range::{MapRange, CurveType};
 use infinitedsp_core::effects::utility::panner::StereoPanner;
 use infinitedsp_core::effects::utility::stereo_widener::StereoWidener;
+use infinitedsp_core::core::summing_mixer::SummingMixer;
 use infinitedsp_core::synthesis::envelope::Adsr;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 use infinitedsp_examples::audio_backend::init_audio_interleaved;
@@ -107,28 +107,6 @@ fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor + Send> {
     Box::new(DspChain::new(osc, config.sample_rate).and(filter).and(panner).and(gain))
 }
 
-fn combine_voices(mut voices: Vec<Box<dyn FrameProcessor + Send>>, sample_rate: f32) -> Box<dyn FrameProcessor + Send> {
-    if voices.is_empty() {
-        return Box::new(Gain::new_fixed(0.0));
-    }
-    if voices.len() == 1 {
-        return voices.remove(0);
-    }
-
-    let split_idx = voices.len() / 2;
-    let right_voices = voices.split_off(split_idx);
-
-    let left = combine_voices(voices, sample_rate);
-    let right = combine_voices(right_voices, sample_rate);
-
-    let adder = Add::new(
-        AudioParam::Dynamic(left),
-        AudioParam::Dynamic(right)
-    );
-
-    Box::new(DspChain::new(adder, sample_rate))
-}
-
 fn create_thx_chain(sample_rate: f32) -> DspChain {
     let mut rng = SimpleRng::new(12345);
     let mut voices = Vec::new();
@@ -167,7 +145,9 @@ fn create_thx_chain(sample_rate: f32) -> DspChain {
         }));
     }
 
-    let summed = combine_voices(voices, sample_rate);
+    let summed = SummingMixer::new(voices)
+        .with_gain(AudioParam::linear(0.8))
+        .with_soft_clip(true);
 
     DspChain::new(summed, sample_rate)
         .and(Compressor::new_limiter())

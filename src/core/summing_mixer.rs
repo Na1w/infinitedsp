@@ -108,7 +108,7 @@ impl FrameProcessor for SummingMixer {
                 let mut val = f32x4::from(*buf_c);
                 let g = f32x4::from(*gain_c);
 
-                val = val * g;
+                val *= g;
 
                 if self.soft_clip {
                     let mut arr = val.to_array();

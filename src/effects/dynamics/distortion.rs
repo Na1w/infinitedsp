@@ -141,6 +141,16 @@ impl FrameProcessor for Distortion {
         self.drive.set_sample_rate(sample_rate);
         self.mix.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        match self.dist_type {
+            DistortionType::SoftClip => "Distortion (SoftClip)",
+            DistortionType::HardClip => "Distortion (HardClip)",
+            DistortionType::BitCrush(_) => "Distortion (BitCrush)",
+            DistortionType::Foldback => "Distortion (Foldback)",
+        }
+    }
 }
 
 #[cfg(test)]

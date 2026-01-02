@@ -80,6 +80,11 @@ impl FrameProcessor for Tremolo {
         self.depth.set_sample_rate(sample_rate);
         self.rate.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Tremolo"
+    }
 }
 
 #[cfg(test)]

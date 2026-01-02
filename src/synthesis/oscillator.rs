@@ -127,6 +127,17 @@ impl FrameProcessor for Oscillator {
         self.sample_rate = sample_rate;
         self.frequency.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        match self.waveform {
+            Waveform::Sine => "Oscillator (Sine)",
+            Waveform::Triangle => "Oscillator (Triangle)",
+            Waveform::Saw => "Oscillator (Saw)",
+            Waveform::Square => "Oscillator (Square)",
+            Waveform::WhiteNoise => "Oscillator (WhiteNoise)",
+        }
+    }
 }
 
 #[cfg(test)]

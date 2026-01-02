@@ -2,6 +2,10 @@ use super::frame_processor::FrameProcessor;
 use crate::core::audio_param::AudioParam;
 use wide::f32x4;
 use alloc::vec::Vec;
+#[cfg(feature = "debug_visualize")]
+use alloc::string::String;
+#[cfg(feature = "debug_visualize")]
+use alloc::format;
 
 /// A Dry/Wet mixer.
 ///
@@ -112,5 +116,34 @@ impl<P: FrameProcessor> FrameProcessor for Mixer<P> {
 
     fn latency_samples(&self) -> u32 {
         self.processor.latency_samples()
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Mixer (Parallel)"
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn visualize(&self, indent: usize) -> String {
+        let spaces = " ".repeat(indent);
+        let mut output = String::new();
+
+        output.push_str(&format!("{}Mixer (Parallel Path)\n", spaces));
+        output.push_str(&format!("{}  |-- Input Signal (Passthrough)\n", spaces));
+        output.push_str(&format!("{}  |-- Processed Signal\n", spaces));
+        output.push_str(&format!("{}  |    |\n", spaces));
+        output.push_str(&format!("{}  |    v\n", spaces));
+
+        let inner_viz = self.processor.visualize(0);
+
+        for line in inner_viz.lines() {
+            output.push_str(&format!("{}  |    {}\n", spaces, line));
+        }
+
+        output.push_str(&format!("{}  |    |\n", spaces));
+        output.push_str(&format!("{}  |    v\n", spaces));
+        output.push_str(&format!("{}  |-- Sum\n", spaces));
+
+        output
     }
 }

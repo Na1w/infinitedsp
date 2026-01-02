@@ -36,4 +36,9 @@ impl FrameProcessor for TimedGate {
         self.sample_rate = sample_rate;
         self.duration_samples = (self.duration_samples as f32 * sample_rate / old_sr) as u64;
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "TimedGate"
+    }
 }

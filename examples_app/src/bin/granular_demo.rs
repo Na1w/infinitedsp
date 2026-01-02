@@ -28,6 +28,9 @@ fn create_granular_chain(sample_rate: f32) -> DspChain {
 }
 
 fn main() -> Result<()> {
+    let chain = create_granular_chain(44100.0);
+    println!("Signal Chain:\n{}", chain.get_graph());
+
     let (stream, sample_rate) = init_audio(create_granular_chain)?;
 
     println!("Playing Granular Pitch Shift Demo at {}Hz...", sample_rate);

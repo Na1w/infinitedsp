@@ -4,6 +4,10 @@ use num_complex::{Complex32, ComplexFloat};
 use alloc::collections::VecDeque;
 use alloc::vec;
 use alloc::vec::Vec;
+#[cfg(feature = "debug_visualize")]
+use alloc::string::String;
+#[cfg(feature = "debug_visualize")]
+use alloc::format;
 
 /// Trait for processors that operate on spectral data (FFT bins).
 pub trait SpectralProcessor {
@@ -13,6 +17,14 @@ pub trait SpectralProcessor {
     /// * `bins` - The spectral data.
     /// * `sample_index` - The sample index corresponding to the start of the analysis window.
     fn process_spectral(&mut self, bins: &mut [Complex32], sample_index: u64);
+
+    /// Returns the name of the spectral processor.
+    fn name(&self) -> &str {
+        #[cfg(feature = "debug_visualize")]
+        { "SpectralProcessor" }
+        #[cfg(not(feature = "debug_visualize"))]
+        { "" }
+    }
 }
 
 /// Helper trait to abstract FFT operations for different sizes.
@@ -161,4 +173,15 @@ where [Complex32; N]: FftHelper {
     }
 
     fn set_sample_rate(&mut self, _sample_rate: f32) {}
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Ola (Spectral Wrapper)"
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn visualize(&self, indent: usize) -> String {
+        let spaces = " ".repeat(indent);
+        format!("{}Ola (FFT Size: {})\n{}  |-- {}\n", spaces, N, spaces, self.processor.name())
+    }
 }

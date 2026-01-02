@@ -143,6 +143,11 @@ impl FrameProcessor for Phaser {
         self.mix.set_sample_rate(sample_rate);
         self.lfo_inc = self.lfo_inc * old_sr / sample_rate;
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Phaser"
+    }
 }
 
 #[cfg(test)]

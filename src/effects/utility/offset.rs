@@ -73,4 +73,9 @@ impl FrameProcessor for Offset {
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.offset.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Offset"
+    }
 }

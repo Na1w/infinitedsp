@@ -68,6 +68,9 @@ fn main() -> Result<()> {
     let pitch_param = Parameter::new(440.0);
     let gate_param = Parameter::new(0.0);
 
+    let chain = create_fm_brass(44100.0, pitch_param.clone(), gate_param.clone());
+    println!("Signal Chain:\n{}", chain.get_graph());
+
     let pitch_clone = pitch_param.clone();
     let gate_clone = gate_param.clone();
 

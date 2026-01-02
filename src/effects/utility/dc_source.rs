@@ -26,4 +26,9 @@ impl FrameProcessor for DcSource {
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.value.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "DcSource"
+    }
 }

@@ -1,8 +1,8 @@
-use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
-use wide::f32x4;
-use alloc::vec::Vec;
+use crate::FrameProcessor;
 use alloc::vec;
+use alloc::vec::Vec;
+use wide::f32x4;
 
 struct DelayLine {
     buffer: Vec<f32>,
@@ -295,5 +295,10 @@ impl FrameProcessor for Reverb {
             self.combs = combs;
             self.allpasses = allpasses;
         }
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Reverb (Schroeder)"
     }
 }

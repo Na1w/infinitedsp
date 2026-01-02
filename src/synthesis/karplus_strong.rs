@@ -135,4 +135,9 @@ impl FrameProcessor for KarplusStrong {
             self.delay_line.resize(buffer_size, 0.0);
         }
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "KarplusStrong"
+    }
 }

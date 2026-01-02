@@ -143,4 +143,9 @@ impl FrameProcessor for ModulatedDelay {
             self.buffer.resize(needed, 0.0);
         }
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "ModulatedDelay (Chorus/Flanger)"
+    }
 }

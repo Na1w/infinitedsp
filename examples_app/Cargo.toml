@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-infinitedsp-core = { path = "../" }
+infinitedsp-core = { path = "../", features = ["debug_visualize"] }
 cpal = "0.17"
 anyhow = "1.0"
 microfft = "0.6.0"

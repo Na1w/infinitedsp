@@ -31,6 +31,9 @@ fn main() -> Result<()> {
     let pitch_param = Parameter::new(440.0);
     let gate_param = Parameter::new(0.0);
 
+    let chain = create_karplus_chain(44100.0, pitch_param.clone(), gate_param.clone());
+    println!("Signal Chain:\n{}", chain.get_graph());
+
     let p = pitch_param.clone();
     let g = gate_param.clone();
 

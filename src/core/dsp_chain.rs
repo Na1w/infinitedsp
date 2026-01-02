@@ -4,6 +4,9 @@ use crate::core::audio_param::AudioParam;
 use alloc::vec::Vec;
 use alloc::boxed::Box;
 use alloc::vec;
+use alloc::string::String;
+#[cfg(feature = "debug_visualize")]
+use alloc::format;
 
 /// A chain of DSP processors.
 ///
@@ -46,6 +49,11 @@ impl DspChain {
         self.processors.push(Box::new(mixed));
         self
     }
+
+    /// Returns a graph visualization of the entire chain.
+    pub fn get_graph(&self) -> String {
+        self.visualize(0)
+    }
 }
 
 impl FrameProcessor for DspChain {
@@ -64,5 +72,35 @@ impl FrameProcessor for DspChain {
 
     fn latency_samples(&self) -> u32 {
         self.processors.iter().map(|p| p.latency_samples()).sum()
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "DspChain"
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn visualize(&self, indent: usize) -> String {
+        let mut output = String::new();
+        let spaces = " ".repeat(indent);
+        let arrow_spaces = " ".repeat(indent + 2); // Indent arrows slightly
+
+        output.push_str(&format!("{}DspChain Start\n", spaces));
+        output.push_str(&format!("{}|\n", arrow_spaces));
+        output.push_str(&format!("{}v\n", arrow_spaces));
+
+        for (i, p) in self.processors.iter().enumerate() {
+            output.push_str(&p.visualize(indent));
+            if i < self.processors.len() - 1 {
+                output.push_str(&format!("{}|\n", arrow_spaces));
+                output.push_str(&format!("{}v\n", arrow_spaces));
+            }
+        }
+
+        output.push_str(&format!("{}|\n", arrow_spaces));
+        output.push_str(&format!("{}v\n", arrow_spaces));
+        output.push_str(&format!("{}Output\n", spaces));
+
+        output
     }
 }

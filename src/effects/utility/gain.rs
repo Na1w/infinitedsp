@@ -44,49 +44,36 @@ impl Gain {
 
 impl FrameProcessor for Gain {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        match &mut self.gain {
-            AudioParam::Static(val) => {
-                let gain_vec = f32x4::splat(*val);
-                let (chunks, remainder) = buffer.as_chunks_mut::<4>();
+        if self.gain_buffer.len() < buffer.len() {
+            self.gain_buffer.resize(buffer.len(), 0.0);
+        }
 
-                for chunk in chunks {
-                    let vec = f32x4::from(*chunk);
-                    let result = vec * gain_vec;
-                    *chunk = result.to_array();
-                }
+        let len = buffer.len();
+        let gain_slice = &mut self.gain_buffer[0..len];
+        self.gain.process(gain_slice, sample_index);
 
-                for sample in remainder {
-                    *sample *= *val;
-                }
-            },
-            _ => {
-                if self.gain_buffer.len() < buffer.len() {
-                    self.gain_buffer.resize(buffer.len(), 0.0);
-                }
+        let (in_chunks, in_rem) = buffer.as_chunks_mut::<4>();
+        let (gain_chunks, gain_rem) = gain_slice.as_chunks::<4>();
 
-                let len = buffer.len();
-                let gain_slice = &mut self.gain_buffer[0..len];
-                self.gain.process(gain_slice, sample_index);
+        for (in_c, gain_c) in in_chunks.iter_mut().zip(gain_chunks.iter()) {
+            let in_v = f32x4::from(*in_c);
+            let gain_v = f32x4::from(*gain_c);
+            let res = in_v * gain_v;
+            *in_c = res.to_array();
+        }
 
-                let (in_chunks, in_rem) = buffer.as_chunks_mut::<4>();
-                let (gain_chunks, gain_rem) = gain_slice.as_chunks::<4>();
-
-                for (in_c, gain_c) in in_chunks.iter_mut().zip(gain_chunks.iter()) {
-                    let in_v = f32x4::from(*in_c);
-                    let gain_v = f32x4::from(*gain_c);
-                    let res = in_v * gain_v;
-                    *in_c = res.to_array();
-                }
-
-                for (in_s, gain_s) in in_rem.iter_mut().zip(gain_rem.iter()) {
-                    *in_s *= *gain_s;
-                }
-            }
+        for (in_s, gain_s) in in_rem.iter_mut().zip(gain_rem.iter()) {
+            *in_s *= *gain_s;
         }
     }
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.gain.set_sample_rate(sample_rate);
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Gain"
     }
 }
 

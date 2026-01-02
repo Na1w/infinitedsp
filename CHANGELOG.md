@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-01-02
+
+### Added
+- **Graph Visualization:** Added `get_graph()` to `DspChain` and `visualize()` to `FrameProcessor` to generate ASCII diagrams of the signal chain.
+- **Feature Flag:** Added `debug_visualize` feature (disabled by default) to include visualization code.
+- **Modulation Demo:** Added `modulation_demo.rs` showcasing Tremolo, Chorus, and Tape Delay.
+- **PredictiveLadderFilter:** Added `PredictiveLadderFilter` which is faster implementation of `LadderFilter` using Linear Prediction ZDF.
+
+### Changed
+- **Performance:** Optimized `LadderFilter`, `Compressor`, `Gain`, and `LadderFilter` to skip expensive calculations when parameters are constant.
+- **AudioParam:** Added `get_constant()` to efficiently check for static values.
+- **Examples:** All examples now print their signal chain graph on startup.
+- **Edition:** Synchronized crate and examples to Rust 2021 edition.
+
 ## [0.3.0] - 2026-01-01
 
 ### Added

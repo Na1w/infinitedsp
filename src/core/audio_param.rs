@@ -29,6 +29,19 @@ impl AudioParam {
         }
     }
 
+    /// Returns the constant value if the parameter is Static or Linked.
+    /// Returns None if the parameter is Dynamic.
+    ///
+    /// This allows processors to optimize for the common case where parameters
+    /// are constant for the duration of a block.
+    pub fn get_constant(&self) -> Option<f32> {
+        match self {
+            AudioParam::Static(val) => Some(*val),
+            AudioParam::Linked(param) => Some(param.get()),
+            AudioParam::Dynamic(_) => None,
+        }
+    }
+
     /// Sets the sample rate for dynamic parameters.
     pub fn set_sample_rate(&mut self, sample_rate: f32) {
         if let AudioParam::Dynamic(p) = self {

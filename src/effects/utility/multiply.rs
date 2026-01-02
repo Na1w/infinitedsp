@@ -2,6 +2,10 @@ use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
 use wide::f32x4;
 use alloc::vec::Vec;
+#[cfg(feature = "debug_visualize")]
+use alloc::string::String;
+#[cfg(feature = "debug_visualize")]
+use alloc::format;
 
 /// Multiplies two signals together (ring modulation).
 /// This is functionally similar to Gain with a dynamic parameter, but can be clearer.
@@ -51,5 +55,40 @@ impl FrameProcessor for Multiply {
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.input_a.set_sample_rate(sample_rate);
         self.input_b.set_sample_rate(sample_rate);
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Multiply (Ring Mod)"
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn visualize(&self, indent: usize) -> String {
+        let spaces = " ".repeat(indent);
+        let mut output = String::new();
+
+        output.push_str(&format!("{}Multiply (Ring Mod)\n", spaces));
+
+        output.push_str(&format!("{}  |-- Input A:\n", spaces));
+        if let AudioParam::Dynamic(p) = &self.input_a {
+            let inner = p.visualize(0);
+            for line in inner.lines() {
+                output.push_str(&format!("{}  |    {}\n", spaces, line));
+            }
+        } else {
+            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+        }
+
+        output.push_str(&format!("{}  |-- Input B:\n", spaces));
+        if let AudioParam::Dynamic(p) = &self.input_b {
+            let inner = p.visualize(0);
+            for line in inner.lines() {
+                output.push_str(&format!("{}  |    {}\n", spaces, line));
+            }
+        } else {
+            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+        }
+
+        output
     }
 }

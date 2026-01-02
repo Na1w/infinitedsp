@@ -20,6 +20,11 @@ impl Default for Passthrough {
 
 impl FrameProcessor for Passthrough {
     fn process(&mut self, _buffer: &mut [f32], _sample_index: u64) {}
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Passthrough"
+    }
 }
 
 #[cfg(test)]

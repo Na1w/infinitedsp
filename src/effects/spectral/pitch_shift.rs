@@ -84,4 +84,9 @@ impl<const N: usize> SpectralProcessor for FftPitchShift<N> {
         self.pitch_shift();
         bins.copy_from_slice(&self.fft_buffer);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "FftPitchShift"
+    }
 }

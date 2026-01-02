@@ -1,8 +1,8 @@
 [package]
 name = "infinitedsp-core"
 authors = ["Fredrik Andersson <fredrikandersson@mac.com>"]
-version = "0.3.0"
-edition = "2024"
+version = "0.4.0"
+edition = "2021"
 license = "MIT"
 description = "A modular audio DSP library for synthesis and effects."
 repository = "https://github.com/Na1w/infinitedsp/"
@@ -16,6 +16,10 @@ members = [
     ".",
     "examples_app",
 ]
+
+[features]
+default = []
+debug_visualize = []
 
 [dependencies]
 wide = { version = "1.1.1", default-features = false }

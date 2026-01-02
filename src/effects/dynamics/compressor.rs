@@ -114,43 +114,85 @@ impl FrameProcessor for Compressor {
         self.release_ms.process(&mut self.release_buffer[0..len], sample_index);
         self.makeup_gain_db.process(&mut self.makeup_buffer[0..len], sample_index);
 
-        for (i, sample) in buffer.iter_mut().enumerate() {
-            let threshold_db = self.threshold_buffer[i];
-            let ratio = self.ratio_buffer[i];
-            let attack_ms = self.attack_buffer[i];
-            let release_ms = self.release_buffer[i];
-            let makeup_db = self.makeup_buffer[i];
-
-            let att_bits = attack_ms.to_bits();
-            let rel_bits = release_ms.to_bits();
+        if let (Some(thresh_db), Some(ratio), Some(att_ms), Some(rel_ms), Some(makeup_db)) = (
+            self.threshold_db.get_constant(),
+            self.ratio.get_constant(),
+            self.attack_ms.get_constant(),
+            self.release_ms.get_constant(),
+            self.makeup_gain_db.get_constant()
+        ) {
+            let att_bits = att_ms.to_bits();
+            let rel_bits = rel_ms.to_bits();
 
             if att_bits != self.last_attack_bits || rel_bits != self.last_release_bits {
-                self.recalc(attack_ms, release_ms);
+                self.recalc(att_ms, rel_ms);
                 self.last_attack_bits = att_bits;
                 self.last_release_bits = rel_bits;
             }
 
-            let threshold_linear = libm::powf(10.0, threshold_db / 20.0);
+            let threshold_linear = libm::powf(10.0, thresh_db / 20.0);
             let makeup = libm::powf(10.0, makeup_db / 20.0);
+            let inv_ratio_sub_one = 1.0 - 1.0 / ratio;
 
-            let input = *sample;
-            let abs_input = input.abs();
+            for sample in buffer.iter_mut() {
+                let input = *sample;
+                let abs_input = input.abs();
 
-            if abs_input > self.envelope {
-                self.envelope = self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
-            } else {
-                self.envelope = self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                if abs_input > self.envelope {
+                    self.envelope = self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                } else {
+                    self.envelope = self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                }
+
+                let mut gain = 1.0;
+                if self.envelope > threshold_linear {
+                    let env_db = 20.0 * libm::log10f(self.envelope);
+                    let over_db = env_db - thresh_db;
+                    let gain_db = -over_db * inv_ratio_sub_one;
+                    gain = libm::powf(10.0, gain_db / 20.0);
+                }
+
+                *sample = input * gain * makeup;
             }
+        } else {
+            for (i, sample) in buffer.iter_mut().enumerate() {
+                let threshold_db = self.threshold_buffer[i];
+                let ratio = self.ratio_buffer[i];
+                let attack_ms = self.attack_buffer[i];
+                let release_ms = self.release_buffer[i];
+                let makeup_db = self.makeup_buffer[i];
 
-            let mut gain = 1.0;
-            if self.envelope > threshold_linear {
-                let env_db = 20.0 * libm::log10f(self.envelope);
-                let over_db = env_db - threshold_db;
-                let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                gain = libm::powf(10.0, gain_db / 20.0);
+                let att_bits = attack_ms.to_bits();
+                let rel_bits = release_ms.to_bits();
+
+                if att_bits != self.last_attack_bits || rel_bits != self.last_release_bits {
+                    self.recalc(attack_ms, release_ms);
+                    self.last_attack_bits = att_bits;
+                    self.last_release_bits = rel_bits;
+                }
+
+                let threshold_linear = libm::powf(10.0, threshold_db / 20.0);
+                let makeup = libm::powf(10.0, makeup_db / 20.0);
+
+                let input = *sample;
+                let abs_input = input.abs();
+
+                if abs_input > self.envelope {
+                    self.envelope = self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                } else {
+                    self.envelope = self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                }
+
+                let mut gain = 1.0;
+                if self.envelope > threshold_linear {
+                    let env_db = 20.0 * libm::log10f(self.envelope);
+                    let over_db = env_db - threshold_db;
+                    let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                    gain = libm::powf(10.0, gain_db / 20.0);
+                }
+
+                *sample = input * gain * makeup;
             }
-
-            *sample = input * gain * makeup;
         }
     }
 
@@ -162,6 +204,11 @@ impl FrameProcessor for Compressor {
         self.release_ms.set_sample_rate(sample_rate);
         self.makeup_gain_db.set_sample_rate(sample_rate);
         self.last_attack_bits = u32::MAX;
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Compressor"
     }
 }
 

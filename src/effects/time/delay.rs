@@ -160,6 +160,11 @@ impl FrameProcessor for Delay {
             self.buffer.resize(new_size, 0.0);
         }
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Delay (Digital)"
+    }
 }
 
 #[cfg(test)]

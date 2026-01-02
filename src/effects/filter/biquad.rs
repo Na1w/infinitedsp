@@ -176,4 +176,14 @@ impl FrameProcessor for Biquad {
         self.gain_db.set_sample_rate(sample_rate);
         self.last_freq_bits = u32::MAX;
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        match self.filter_type {
+            FilterType::LowPass => "Biquad (LowPass)",
+            FilterType::HighPass => "Biquad (HighPass)",
+            FilterType::BandPass => "Biquad (BandPass)",
+            FilterType::Notch => "Biquad (Notch)",
+        }
+    }
 }

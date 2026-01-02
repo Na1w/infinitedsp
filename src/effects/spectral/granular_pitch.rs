@@ -113,4 +113,9 @@ impl FrameProcessor for GranularPitchShift {
             self.buffer.resize(needed, 0.0);
         }
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "GranularPitchShift"
+    }
 }

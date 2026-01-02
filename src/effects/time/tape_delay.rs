@@ -172,4 +172,9 @@ impl FrameProcessor for TapeDelay {
             self.buffer.resize(needed, 0.0);
         }
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "TapeDelay"
+    }
 }

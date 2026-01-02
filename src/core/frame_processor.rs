@@ -1,4 +1,7 @@
 use alloc::boxed::Box;
+use alloc::string::String;
+#[cfg(feature = "debug_visualize")]
+use alloc::format;
 
 /// The core trait for all audio processors.
 ///
@@ -20,6 +23,28 @@ pub trait FrameProcessor {
     ///
     /// Used for delay compensation.
     fn latency_samples(&self) -> u32 { 0 }
+
+    /// Returns the name of the processor.
+    fn name(&self) -> &str {
+        #[cfg(feature = "debug_visualize")]
+        { "Node" }
+        #[cfg(not(feature = "debug_visualize"))]
+        { "" }
+    }
+
+    /// Returns an ASCII visualization of the processor structure.
+    fn visualize(&self, indent: usize) -> String {
+        #[cfg(feature = "debug_visualize")]
+        {
+            let spaces = " ".repeat(indent);
+            format!("{}{}\n", spaces, self.name())
+        }
+        #[cfg(not(feature = "debug_visualize"))]
+        {
+            let _ = indent;
+            String::new()
+        }
+    }
 }
 
 impl<T: FrameProcessor + ?Sized> FrameProcessor for Box<T> {
@@ -33,5 +58,13 @@ impl<T: FrameProcessor + ?Sized> FrameProcessor for Box<T> {
 
     fn latency_samples(&self) -> u32 {
         (**self).latency_samples()
+    }
+
+    fn name(&self) -> &str {
+        (**self).name()
+    }
+
+    fn visualize(&self, indent: usize) -> String {
+        (**self).visualize(indent)
     }
 }

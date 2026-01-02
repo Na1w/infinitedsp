@@ -100,4 +100,15 @@ impl FrameProcessor for StateVariableFilter {
         self.cutoff.set_sample_rate(sample_rate);
         self.resonance.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        match self.filter_type {
+            SvfType::LowPass => "SVF (LowPass)",
+            SvfType::HighPass => "SVF (HighPass)",
+            SvfType::BandPass => "SVF (BandPass)",
+            SvfType::Notch => "SVF (Notch)",
+            SvfType::Peak => "SVF (Peak)",
+        }
+    }
 }

@@ -153,6 +153,9 @@ fn main() -> Result<()> {
     let delay_l = beat_sec * 0.75;
     let delay_r = beat_sec * 1.0;
 
+    let voice_chain = create_trance_voice(44100.0, pitch_param.clone(), gate_param.clone(), delay_l);
+    println!("Trance Voice Chain:\n{}", voice_chain.get_graph());
+
     let p_l = pitch_param.clone();
     let p_r = pitch_param_r.clone();
     let g = gate_param.clone();

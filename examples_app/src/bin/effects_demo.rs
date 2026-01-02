@@ -48,6 +48,9 @@ fn create_effects_chain(sample_rate: f32) -> DspChain {
 }
 
 fn main() -> Result<()> {
+    let chain = create_effects_chain(44100.0);
+    println!("Signal Chain:\n{}", chain.get_graph());
+
     let (stream, sample_rate) = init_audio_interleaved(|sr| create_effects_chain(sr))?;
 
     println!("Playing Effects Demo (Add, Multiply, Distortion, Panner) at {}Hz...", sample_rate);

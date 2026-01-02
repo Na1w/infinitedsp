@@ -131,4 +131,15 @@ impl FrameProcessor for Lfo {
         self.sample_rate = sample_rate;
         self.frequency.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        match self.waveform {
+            LfoWaveform::Sine => "Lfo (Sine)",
+            LfoWaveform::Triangle => "Lfo (Triangle)",
+            LfoWaveform::Saw => "Lfo (Saw)",
+            LfoWaveform::Square => "Lfo (Square)",
+            LfoWaveform::SampleAndHold => "Lfo (S&H)",
+        }
+    }
 }

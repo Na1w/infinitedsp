@@ -2,6 +2,10 @@ use crate::FrameProcessor;
 use crate::core::audio_param::AudioParam;
 use wide::f32x4;
 use alloc::vec::Vec;
+#[cfg(feature = "debug_visualize")]
+use alloc::string::String;
+#[cfg(feature = "debug_visualize")]
+use alloc::format;
 
 /// Adds two signals together.
 pub struct Add {
@@ -39,10 +43,6 @@ impl FrameProcessor for Add {
         for ((chunk, a_chunk), b_chunk) in chunks.iter_mut().zip(a_chunks).zip(b_chunks) {
             let a = f32x4::from(*a_chunk);
             let b = f32x4::from(*b_chunk);
-            // Note: We overwrite the input buffer with A + B.
-            // If the input buffer contained a signal, it is replaced.
-            // This acts as a source if A and B are sources.
-            // If you want to add to the input signal, use Offset with a dynamic param.
             *chunk = (a + b).to_array();
         }
 
@@ -54,5 +54,40 @@ impl FrameProcessor for Add {
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.input_a.set_sample_rate(sample_rate);
         self.input_b.set_sample_rate(sample_rate);
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Add (Signal Combiner)"
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn visualize(&self, indent: usize) -> String {
+        let spaces = " ".repeat(indent);
+        let mut output = String::new();
+
+        output.push_str(&format!("{}Add (Signal Combiner)\n", spaces));
+
+        output.push_str(&format!("{}  |-- Input A:\n", spaces));
+        if let AudioParam::Dynamic(p) = &self.input_a {
+            let inner = p.visualize(0);
+            for line in inner.lines() {
+                output.push_str(&format!("{}  |    {}\n", spaces, line));
+            }
+        } else {
+            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+        }
+
+        output.push_str(&format!("{}  |-- Input B:\n", spaces));
+        if let AudioParam::Dynamic(p) = &self.input_b {
+            let inner = p.visualize(0);
+            for line in inner.lines() {
+                output.push_str(&format!("{}  |    {}\n", spaces, line));
+            }
+        } else {
+            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+        }
+
+        output
     }
 }

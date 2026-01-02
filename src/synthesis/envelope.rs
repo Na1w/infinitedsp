@@ -232,4 +232,9 @@ impl FrameProcessor for Adsr {
         self.sustain_level.set_sample_rate(sample_rate);
         self.release_time.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "Adsr Envelope"
+    }
 }

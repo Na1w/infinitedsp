@@ -79,4 +79,9 @@ impl FrameProcessor for MapRange {
         self.min.set_sample_rate(sample_rate);
         self.max.set_sample_rate(sample_rate);
     }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "MapRange"
+    }
 }

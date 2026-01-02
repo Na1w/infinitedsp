@@ -34,6 +34,9 @@ fn create_spectral_chain(sample_rate: f32) -> DspChain {
 }
 
 fn main() -> Result<()> {
+    let chain = create_spectral_chain(44100.0);
+    println!("Signal Chain:\n{}", chain.get_graph());
+
     let (stream, sample_rate) = init_audio(create_spectral_chain)?;
 
     println!("Playing Spectral Pitch Shift Demo at {}Hz...", sample_rate);

@@ -176,6 +176,9 @@ fn create_thx_chain(sample_rate: f32) -> DspChain {
 }
 
 fn main() -> Result<()> {
+    let chain = create_thx_chain(44100.0);
+    println!("Signal Chain:\n{}", chain.get_graph());
+
     let (stream, sample_rate) = init_audio_interleaved(|sr| create_thx_chain(sr))?;
 
     println!("Playing InfiniteDSP Demo at {}Hz...", sample_rate);

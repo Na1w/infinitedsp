@@ -60,7 +60,7 @@ fn create_fm_brass(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspCh
 
     let vca = Gain::new(AudioParam::Dynamic(Box::new(amp_env)));
 
-    let reverb = Reverb::new(AudioParam::linear(0.015));
+    let reverb = Reverb::new();
 
     DspChain::new(carrier, sample_rate)
         .and(vca)

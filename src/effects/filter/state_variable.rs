@@ -72,17 +72,20 @@ impl FrameProcessor for StateVariableFilter {
         self.resonance
             .process(&mut self.res_buffer[0..len], sample_index);
 
+        let pi_sr = PI / self.sample_rate;
+
         for (i, sample) in buffer.iter_mut().enumerate() {
             let cutoff_hz = self.cutoff_buffer[i];
             let res = self.res_buffer[i];
 
-            let g = libm::tanf(PI * cutoff_hz / self.sample_rate);
-            let k = 1.0 / res.max(0.1);
+            let g = libm::tanf(pi_sr * cutoff_hz.clamp(10.0, self.sample_rate * 0.49));
+            let k = 1.0 / res.max(0.01);
 
             let input = *sample;
 
-            let denom = 1.0 + g * (g + k);
-            let hp = (input - self.s1 * (g + k) - self.s2) / denom;
+            let denom = 1.0 / (1.0 + g * (g + k));
+
+            let hp = (input - self.s1 * (g + k) - self.s2) * denom;
             let bp = g * hp + self.s1;
             let lp = g * bp + self.s2;
 

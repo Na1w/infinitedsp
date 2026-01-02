@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-01-02
+
+### Added
+- **Reverb Demo:** Added `reverb_demo.rs`.
+
+### Changed
+- **Reverb Overhaul (Breaking):**
+  - Removed `gain` parameter from `Reverb` (now uses fixed internal scaling).
+  - Added `room_size` and `damping` as modulatable `AudioParam`s.
+  - Tuned comb filter lengths for better sound quality.
+  - Optimized `DelayLine` implementation for better performance.
+- **StateVariableFilter:** Minor optimizations for constant parameters and cutoff clamping.
+
 ## [0.5.0] - 2026-01-02
 
 ### Added

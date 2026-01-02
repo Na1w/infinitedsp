@@ -164,7 +164,7 @@ fn create_thx_chain(sample_rate: f32) -> DspChain {
     DspChain::new(summed, sample_rate)
         .and(Compressor::new_limiter())
         .and(StereoWidener::new(AudioParam::Static(1.5)))
-        .and(Reverb::new(AudioParam::linear(0.3)))
+        .and_mix(0.5, Reverb::new_with_params(AudioParam::Static(0.9), AudioParam::Static(0.4), 0))
 }
 
 fn main() -> Result<()> {

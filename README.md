@@ -14,14 +14,15 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 *   **AudioParam System:** All parameters can be static, linked to thread-safe controls (atomics), or modulated by other audio signals (e.g., LFOs, Envelopes) at sample rate.
 *   **Signal Math:** Combine signals easily with `Add` and `Multiply` processors.
 *   **SIMD Optimization:** Uses `wide` for SIMD-accelerated processing where applicable.
+*   **Graph Visualization:** Generate ASCII diagrams of your signal chain for easy debugging (`chain.get_graph()`).
 *   **Spectral Processing:** Includes a robust Overlap-Add (OLA) engine for FFT-based effects.
 *   **Comprehensive Effect Suite:**
     *   **Time:** Delay, Tape Delay (with saturation & flutter), Reverb (Schroeder).
-    *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style), State Variable Filter (TPT/ZDF).
+    *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style, both Iterative and Predictive ZDF), State Variable Filter (TPT/ZDF).
     *   **Dynamics:** Compressor, Limiter, Distortion (Soft/Hard Clip, BitCrush, Foldback).
     *   **Modulation:** Phaser, Tremolo, Ring Modulator, Chorus, Flanger.
     *   **Spectral:** FFT Pitch Shift, Granular Pitch Shift, Spectral Filter.
-    *   **Utility:** Gain, Offset, Stereo Panner.
+    *   **Utility:** Gain, Offset, Stereo Panner, Stereo Widener, MapRange, TimedGate.
 *   **Synthesis:**
     *   **Oscillators:** Sine, Triangle, Saw, Square (PolyBLEP anti-aliased), Noise.
     *   **Physical Modeling:** Karplus-Strong (String), Brass Model.
@@ -66,10 +67,17 @@ let delay = Delay::new(
 // Chain them together
 let mut chain = DspChain::new(osc, 44100.0).and(delay);
 
+// Print the signal chain (requires 'debug_visualize' feature)
+println!("{}", chain.get_graph());
+
 // Process a buffer
 let mut buffer = [0.0; 512];
 chain.process(&mut buffer, 0);
 ```
+
+### Feature Flags
+
+*   **`debug_visualize`**: Enables `get_graph()` and `visualize()` methods for debugging signal chains. Disabled by default to minimize binary size for embedded targets.
 
 ## Running Examples
 
@@ -82,13 +90,16 @@ cargo run --release -p infinitedsp-examples --bin <example_name>
 
 ### Available Examples:
 
-*   **`filter_sweep`**: A subtractive synth patch with an LFO modulating a Ladder Filter cutoff.
+*   **`infinitedsp_demo`**: A complex polyphonic demo showcasing 30 voices, filters, envelopes, and effects.
+*   **`filter_sweep`**: Compares `PredictiveLadderFilter` vs `LadderFilter` with an LFO sweep.
 *   **`fm_brass`**: FM synthesis demonstration with envelopes controlling modulation index.
 *   **`trance_synth`**: A massive stereo supersaw trance pluck with delay, reverb, and a sequencer.
 *   **`karplus_demo`**: Physical modeling of a guitar string (Karplus-Strong algorithm).
 *   **`svf_demo`**: State Variable Filter demonstration (BandPass sweep).
 *   **`spectral_demo`**: FFT-based Pitch Shifting using the Overlap-Add (OLA) engine.
 *   **`granular_demo`**: Time-domain Granular Pitch Shifting.
+*   **`modulation_demo`**: Showcases Tremolo, Chorus, and Tape Delay.
+*   **`effects_demo`**: Demonstrates signal math (Add/Multiply) and distortion.
 
 ## Documentation
 

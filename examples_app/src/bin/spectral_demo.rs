@@ -1,17 +1,18 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::ola::Ola;
 use infinitedsp_core::effects::spectral::pitch_shift::FftPitchShift;
 use infinitedsp_core::effects::utility::gain::Gain;
 use infinitedsp_core::synthesis::lfo::{Lfo, LfoWaveform};
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
-use infinitedsp_examples::audio_backend::init_audio;
+use infinitedsp_examples::audio_backend::init_audio_interleaved;
 use std::thread;
 use std::time::Duration;
 
-fn create_spectral_chain(sample_rate: f32) -> DspChain {
+fn create_spectral_chain(sample_rate: f32) -> DspChain<Stereo> {
     let osc = Oscillator::new(AudioParam::hz(220.0), Waveform::Saw);
 
     let lfo = Lfo::new(AudioParam::hz(0.2), LfoWaveform::Sine);
@@ -30,13 +31,14 @@ fn create_spectral_chain(sample_rate: f32) -> DspChain {
     DspChain::new(osc, sample_rate)
         .and(ola_processor)
         .and(Gain::new_db(-6.0))
+        .to_stereo()
 }
 
 fn main() -> Result<()> {
     let chain = create_spectral_chain(44100.0);
     println!("Signal Chain:\n{}", chain.get_graph());
 
-    let (stream, sample_rate) = init_audio(create_spectral_chain)?;
+    let (stream, sample_rate) = init_audio_interleaved(create_spectral_chain)?;
 
     println!("Playing Spectral Pitch Shift Demo at {}Hz...", sample_rate);
 

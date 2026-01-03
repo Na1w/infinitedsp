@@ -5,10 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - 2026-??-??
+## [0.6.0] - 2026-01-03
 
 ### Added
-- **Reverb Demo:** Added `reverb_demo.rs`.
+- **Type-Safe Channel System (Breaking):** Introduced `Mono` and `Stereo` marker types and made `FrameProcessor` generic over `ChannelConfig`.
+- **Stereo Processing:** Added `DualMono`, `MonoToStereo`, and `StereoToMono` processors for explicit channel management.
+- **DspChain Conversion:** Added `.to_stereo()` and `.to_mono()` methods to `DspChain` for fluent channel conversion.
+- **New Demos:**
+  - `dual_mono_demo`: Demonstrates independent L/R processing (Ping-Pong Delay).
+  - `phaser_demo`: 6-stage Phaser effect.
 
 ### Changed
 - **Reverb Overhaul (Breaking):**
@@ -16,16 +21,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `room_size` and `damping` as modulatable `AudioParam`s.
   - Tuned comb filter lengths for better sound quality.
   - Optimized `DelayLine` implementation for better performance.
-- **StateVariableFilter:** Minor optimizations for constant parameters and cutoff clamping.
+  - `Reverb` is now a "Wet-only" insert effect. This allows it to be used correctly with `ParallelMixer` (Dry/Wet) and in manual mix topologies.
+- **BrassModel Overhaul:** Still work in progress..
+- **DspChain Visualization:** `get_graph()` now indicates whether the chain is Mono or Stereo.
+- **Examples:** All examples updated to use the new type-safe channel system.
 
 ## [0.5.0] - 2026-01-02
 
 ### Added
 - **SummingMixer:** Added `gain` and `soft_clip` (saturation) parameters to `SummingMixer` for better mixing control.
+- **Reverb Demo:** Added `reverb_demo.rs`.
 
 ### Changed
 - **Renaming (Breaking):** Renamed `Mixer` to `ParallelMixer` to better reflect its purpose (Dry/Wet blending).
+- **Reverb Overhaul (Breaking):**
+  - Removed `gain` parameter from `Reverb` (now uses fixed internal scaling).
+  - Added `room_size` and `damping` as modulatable `AudioParam`s.
+  - Tuned comb filter lengths for better sound quality.
+  - Optimized `DelayLine` implementation for better performance.
 - **Demo:** Updated `infinitedsp_demo` to use `SummingMixer` with saturation instead of a recursive tree of `Add` nodes.
+- **StateVariableFilter:** Minor optimizations for constant parameters and cutoff clamping.
 
 ## [0.4.0] - 2026-01-02
 

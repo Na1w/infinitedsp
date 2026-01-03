@@ -1,26 +1,27 @@
 use super::frame_processor::FrameProcessor;
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::ChannelConfig;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
 #[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 use alloc::vec::Vec;
-use wide::f32x4;
 
 /// A Parallel Mixer (Dry/Wet).
 ///
 /// Mixes the processed signal (wet) with the original signal (dry).
 /// Handles latency compensation if the processor reports latency.
-pub struct ParallelMixer<P> {
+pub struct ParallelMixer<P, C: ChannelConfig> {
     processor: P,
     mix: AudioParam,
     dry_buffer: Vec<f32>,
     delay_line: Vec<f32>,
     write_ptr: usize,
     mix_buffer: Vec<f32>,
+    _marker: core::marker::PhantomData<C>,
 }
 
-impl<P: FrameProcessor> ParallelMixer<P> {
+impl<P: FrameProcessor<C>, C: ChannelConfig> ParallelMixer<P, C> {
     /// Creates a new ParallelMixer.
     ///
     /// # Arguments
@@ -34,6 +35,7 @@ impl<P: FrameProcessor> ParallelMixer<P> {
             delay_line: Vec::new(),
             write_ptr: 0,
             mix_buffer: Vec::new(),
+            _marker: core::marker::PhantomData,
         }
     }
 
@@ -43,12 +45,13 @@ impl<P: FrameProcessor> ParallelMixer<P> {
     }
 }
 
-impl<P: FrameProcessor> FrameProcessor for ParallelMixer<P> {
+impl<P: FrameProcessor<C>, C: ChannelConfig> FrameProcessor<C> for ParallelMixer<P, C> {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let latency = self.processor.latency_samples() as usize;
+        let channels = C::num_channels();
 
         if latency > 0 {
-            let needed = latency + 4096;
+            let needed = (latency + 4096) * channels;
             if self.delay_line.len() < needed {
                 self.delay_line.resize(needed, 0.0);
             }
@@ -59,10 +62,12 @@ impl<P: FrameProcessor> FrameProcessor for ParallelMixer<P> {
         }
         self.dry_buffer.copy_from_slice(buffer);
 
-        if self.mix_buffer.len() != buffer.len() {
-            self.mix_buffer.resize(buffer.len(), 0.0);
+        let frames = buffer.len() / channels;
+        if self.mix_buffer.len() < frames {
+            self.mix_buffer.resize(frames, 0.0);
         }
-        self.mix.process(&mut self.mix_buffer, sample_index);
+        self.mix
+            .process(&mut self.mix_buffer[0..frames], sample_index);
 
         if latency > 0 {
             let len = self.delay_line.len();
@@ -76,41 +81,27 @@ impl<P: FrameProcessor> FrameProcessor for ParallelMixer<P> {
 
         if latency > 0 {
             let len = self.delay_line.len();
-            let start_read = (self.write_ptr + len - buffer.len() - latency) % len;
+            let total_latency_samples = latency * channels;
+            let start_read = (self.write_ptr + len - buffer.len() - total_latency_samples) % len;
 
             for (i, sample) in buffer.iter_mut().enumerate() {
                 let read_idx = (start_read + i) % len;
                 let dry = self.delay_line[read_idx];
-                let wet_gain = self.mix_buffer[i];
+
+                let frame_idx = i / channels;
+                let wet_gain = self.mix_buffer[frame_idx];
                 let dry_gain = 1.0 - wet_gain;
+
                 *sample = dry * dry_gain + *sample * wet_gain;
             }
         } else {
-            let (dry_chunks, dry_rem) = self.dry_buffer.as_chunks::<4>();
-            let (wet_chunks, wet_rem) = buffer.as_chunks_mut::<4>();
-            let (mix_chunks, mix_rem) = self.mix_buffer.as_chunks::<4>();
-
-            let one_vec = f32x4::splat(1.0);
-
-            for ((dry_chunk, wet_chunk), mix_chunk) in dry_chunks
-                .iter()
-                .zip(wet_chunks.iter_mut())
-                .zip(mix_chunks.iter())
-            {
-                let d = f32x4::from(*dry_chunk);
-                let w = f32x4::from(*wet_chunk);
-                let wet_gain = f32x4::from(*mix_chunk);
-                let dry_gain = one_vec - wet_gain;
-
-                let res = d * dry_gain + w * wet_gain;
-                *wet_chunk = res.to_array();
-            }
-
-            for ((dry, wet), &wet_gain) in
-                dry_rem.iter().zip(wet_rem.iter_mut()).zip(mix_rem.iter())
-            {
+            for (i, sample) in buffer.iter_mut().enumerate() {
+                let dry = self.dry_buffer[i];
+                let frame_idx = i / channels;
+                let wet_gain = self.mix_buffer[frame_idx];
                 let dry_gain = 1.0 - wet_gain;
-                *wet = *dry * dry_gain + *wet * wet_gain;
+
+                *sample = dry * dry_gain + *sample * wet_gain;
             }
         }
     }

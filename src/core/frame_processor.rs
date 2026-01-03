@@ -1,3 +1,4 @@
+use crate::core::channels::ChannelConfig;
 use alloc::boxed::Box;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
@@ -6,7 +7,8 @@ use alloc::string::String;
 /// The core trait for all audio processors.
 ///
 /// Implementors must handle processing a block of audio samples.
-pub trait FrameProcessor {
+/// The generic parameter `C` defines the channel configuration (Mono/Stereo).
+pub trait FrameProcessor<C: ChannelConfig> {
     /// Processes a block of audio samples.
     ///
     /// # Arguments
@@ -53,7 +55,7 @@ pub trait FrameProcessor {
     }
 }
 
-impl<T: FrameProcessor + ?Sized> FrameProcessor for Box<T> {
+impl<C: ChannelConfig, T: FrameProcessor<C> + ?Sized> FrameProcessor<C> for Box<T> {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         (**self).process(buffer, sample_index);
     }

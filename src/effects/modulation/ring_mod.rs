@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
@@ -47,7 +48,7 @@ impl RingMod {
     }
 }
 
-impl FrameProcessor for RingMod {
+impl FrameProcessor<Mono> for RingMod {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
         if self.freq_buffer.len() < len {

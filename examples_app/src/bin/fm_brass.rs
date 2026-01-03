@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::parameter::Parameter;
 use infinitedsp_core::effects::time::reverb::Reverb;
@@ -9,7 +10,7 @@ use infinitedsp_core::effects::utility::gain::Gain;
 use infinitedsp_core::effects::utility::offset::Offset;
 use infinitedsp_core::synthesis::envelope::Adsr;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
-use infinitedsp_examples::audio_backend::init_audio;
+use infinitedsp_examples::audio_backend::init_audio_interleaved;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -19,7 +20,7 @@ struct Note {
     freq: f32,
 }
 
-fn create_fm_brass(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspChain {
+fn create_fm_brass(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspChain<Stereo> {
     let mod_freq_source = DcSource::new(AudioParam::Linked(pitch.clone()));
 
     let mod_env = Adsr::new(
@@ -65,6 +66,7 @@ fn create_fm_brass(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspCh
     DspChain::new(carrier, sample_rate)
         .and(vca)
         .and(Gain::new_db(-3.0))
+        .to_stereo()
         .and_mix(0.2, reverb)
 }
 
@@ -79,7 +81,7 @@ fn main() -> Result<()> {
     let gate_clone = gate_param.clone();
 
     let (stream, _sample_rate) =
-        init_audio(move |sr| create_fm_brass(sr, pitch_clone, gate_clone))?;
+        init_audio_interleaved(move |sr| create_fm_brass(sr, pitch_clone, gate_clone))?;
 
     stream.play()?;
     println!("Playing FM Brass Melody (Run with --release)...");

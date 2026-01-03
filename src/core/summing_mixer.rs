@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::ChannelConfig;
 use crate::core::frame_processor::FrameProcessor;
 use alloc::boxed::Box;
 #[cfg(feature = "debug_visualize")]
@@ -10,17 +11,17 @@ use wide::f32x4;
 /// Sums multiple audio signals together, with optional gain and soft clipping.
 ///
 /// Useful for mixing multiple voices or signals.
-pub struct SummingMixer {
-    inputs: Vec<Box<dyn FrameProcessor + Send>>,
+pub struct SummingMixer<C: ChannelConfig> {
+    inputs: Vec<Box<dyn FrameProcessor<C> + Send>>,
     gain: AudioParam,
     soft_clip: bool,
     temp_buffer: Vec<f32>,
     gain_buffer: Vec<f32>,
 }
 
-impl SummingMixer {
+impl<C: ChannelConfig> SummingMixer<C> {
     /// Creates a new SummingMixer with the given inputs.
-    pub fn new(inputs: Vec<Box<dyn FrameProcessor + Send>>) -> Self {
+    pub fn new(inputs: Vec<Box<dyn FrameProcessor<C> + Send>>) -> Self {
         SummingMixer {
             inputs,
             gain: AudioParam::Static(1.0),
@@ -53,7 +54,7 @@ impl SummingMixer {
     }
 }
 
-impl FrameProcessor for SummingMixer {
+impl<C: ChannelConfig> FrameProcessor<C> for SummingMixer<C> {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         if self.inputs.is_empty() {
             buffer.fill(0.0);
@@ -93,40 +94,29 @@ impl FrameProcessor for SummingMixer {
         let skip_processing = !self.soft_clip && constant_gain == Some(1.0);
 
         if !skip_processing {
-            if self.gain_buffer.len() < buffer.len() {
-                self.gain_buffer.resize(buffer.len(), 0.0);
+            let channels = C::num_channels();
+            let frames = buffer.len() / channels;
+
+            if self.gain_buffer.len() < frames {
+                self.gain_buffer.resize(frames, 0.0);
             }
 
-            let len = buffer.len();
-            let gain_slice = &mut self.gain_buffer[0..len];
+            let gain_slice = &mut self.gain_buffer[0..frames];
             self.gain.process(gain_slice, sample_index);
 
-            let (buf_chunks, buf_rem) = buffer.as_chunks_mut::<4>();
-            let (gain_chunks, gain_rem) = gain_slice.as_chunks::<4>();
+            // Apply gain (and soft clip)
+            // We need to iterate samples and map them to the correct gain frame
 
-            for (buf_c, gain_c) in buf_chunks.iter_mut().zip(gain_chunks.iter()) {
-                let mut val = f32x4::from(*buf_c);
-                let g = f32x4::from(*gain_c);
+            for (i, sample) in buffer.iter_mut().enumerate() {
+                let frame_idx = i / channels;
+                let g = gain_slice[frame_idx];
 
-                val *= g;
+                let mut val = *sample * g;
 
-                if self.soft_clip {
-                    let mut arr = val.to_array();
-                    for x in &mut arr {
-                        *x = libm::tanhf(*x);
-                    }
-                    *buf_c = arr;
-                } else {
-                    *buf_c = val.to_array();
-                }
-            }
-
-            for (buf_s, gain_s) in buf_rem.iter_mut().zip(gain_rem.iter()) {
-                let mut val = *buf_s * *gain_s;
                 if self.soft_clip {
                     val = libm::tanhf(val);
                 }
-                *buf_s = val;
+                *sample = val;
             }
         }
     }

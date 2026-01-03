@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
@@ -65,7 +66,7 @@ impl Lfo {
     }
 }
 
-impl FrameProcessor for Lfo {
+impl FrameProcessor<Mono> for Lfo {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         if self.freq_buffer.len() < buffer.len() {
             self.freq_buffer.resize(buffer.len(), 0.0);

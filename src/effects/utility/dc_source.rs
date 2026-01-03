@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 
 /// Generates a constant DC signal.
@@ -18,7 +19,7 @@ impl DcSource {
     }
 }
 
-impl FrameProcessor for DcSource {
+impl FrameProcessor<Mono> for DcSource {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         self.value.process(buffer, sample_index);
     }

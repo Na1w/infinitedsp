@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
@@ -106,7 +107,7 @@ fn fast_tanh(x: f32) -> f32 {
     x_clamped * (27.0 + x2_c) / (27.0 + 9.0 * x2_c)
 }
 
-impl FrameProcessor for PredictiveLadderFilter {
+impl FrameProcessor<Mono> for PredictiveLadderFilter {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
 

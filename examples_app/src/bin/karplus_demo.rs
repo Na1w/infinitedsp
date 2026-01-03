@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Mono;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::parameter::Parameter;
 use infinitedsp_core::effects::utility::gain::Gain;
@@ -15,7 +16,7 @@ struct Note {
     freq: f32,
 }
 
-fn create_karplus_chain(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspChain {
+fn create_karplus_chain(sample_rate: f32, pitch: Parameter, gate: Parameter) -> DspChain<Mono> {
     let string = KarplusStrong::new(
         AudioParam::Linked(pitch),
         AudioParam::Linked(gate),
@@ -31,14 +32,15 @@ fn main() -> Result<()> {
     let gate_param = Parameter::new(0.0);
 
     let chain = create_karplus_chain(44100.0, pitch_param.clone(), gate_param.clone());
-    println!("Signal Chain:\n{}", chain.get_graph());
+    println!("Signal Chain (Mono):\n{}", chain.get_graph());
 
     let p = pitch_param.clone();
     let g = gate_param.clone();
 
+    // Use init_audio which expects DspChain<Mono>
     let (stream, _sample_rate) = init_audio(move |sr| create_karplus_chain(sr, p, g))?;
 
-    println!("Playing Karplus-Strong Guitar Demo (Dry)...");
+    println!("Playing Karplus-Strong Guitar Demo (Mono)...");
     stream.play()?;
 
     let e2 = 82.41;

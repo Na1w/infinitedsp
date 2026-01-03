@@ -1,4 +1,5 @@
 pub mod audio_param;
+pub mod channels;
 pub mod dsp_chain;
 pub mod frame_processor;
 pub mod ola;

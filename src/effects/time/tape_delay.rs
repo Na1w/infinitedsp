@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -104,7 +105,7 @@ impl TapeDelay {
     }
 }
 
-impl FrameProcessor for TapeDelay {
+impl FrameProcessor<Mono> for TapeDelay {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         if self.lowpass_coeff == 0.0 {
             self.recalc_filter();

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::effects::time::reverb::Reverb;
 use infinitedsp_core::effects::utility::gain::Gain;
@@ -13,7 +14,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 struct ReverbDemo {
-    chain: DspChain,
+    chain: DspChain<Stereo>,
     trigger: Trigger,
 }
 
@@ -38,6 +39,7 @@ impl ReverbDemo {
         let reverb = Reverb::new();
 
         let chain = DspChain::new(source, sample_rate)
+            .to_stereo()
             .and_mix(0.5, reverb)
             .and(Gain::new_db(-6.0));
 

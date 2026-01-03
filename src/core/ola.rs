@@ -1,4 +1,5 @@
 use super::frame_processor::FrameProcessor;
+use crate::core::channels::Mono;
 use alloc::collections::VecDeque;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
@@ -101,6 +102,8 @@ impl FftHelper for [Complex32; 2048] {
 ///
 /// Handles windowing, FFT, processing, IFFT, and overlap-add reconstruction.
 /// Supports block sizes independent of FFT size.
+///
+/// This processor operates on Mono signals only
 pub struct Ola<P: SpectralProcessor, const N: usize> {
     processor: P,
     window: [f32; N],
@@ -146,7 +149,7 @@ where
     }
 }
 
-impl<P: SpectralProcessor, const N: usize> FrameProcessor for Ola<P, N>
+impl<P: SpectralProcessor, const N: usize> FrameProcessor<Mono> for Ola<P, N>
 where
     [Complex32; N]: FftHelper,
 {

@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -6,19 +7,29 @@ use core::f32::consts::PI;
 
 #[derive(Clone, Copy)]
 struct PhysBiQuad {
-    b0: f32, b1: f32, b2: f32,
-    a1: f32, a2: f32,
-    x1: f32, x2: f32,
-    y1: f32, y2: f32,
+    b0: f32,
+    b1: f32,
+    b2: f32,
+    a1: f32,
+    a2: f32,
+    x1: f32,
+    x2: f32,
+    y1: f32,
+    y2: f32,
 }
 
 impl PhysBiQuad {
     fn new() -> Self {
         PhysBiQuad {
-            b0: 0.0, b1: 0.0, b2: 0.0,
-            a1: 0.0, a2: 0.0,
-            x1: 0.0, x2: 0.0,
-            y1: 0.0, y2: 0.0,
+            b0: 0.0,
+            b1: 0.0,
+            b2: 0.0,
+            a1: 0.0,
+            a2: 0.0,
+            x1: 0.0,
+            x2: 0.0,
+            y1: 0.0,
+            y2: 0.0,
         }
     }
 
@@ -34,7 +45,8 @@ impl PhysBiQuad {
 
     fn process(&mut self, input: f32) -> f32 {
         let out = self.b0 * input + self.b1 * self.x1 + self.b2 * self.x2
-            - self.a1 * self.y1 - self.a2 * self.y2;
+            - self.a1 * self.y1
+            - self.a2 * self.y2;
 
         self.x2 = self.x1;
         self.x1 = input;
@@ -102,7 +114,7 @@ impl BrassModel {
     }
 }
 
-impl FrameProcessor for BrassModel {
+impl FrameProcessor<Mono> for BrassModel {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
         if self.pitch_buffer.len() < len {
@@ -115,12 +127,17 @@ impl FrameProcessor for BrassModel {
             self.tension_buffer.resize(len, 0.0);
         }
 
-        self.pitch.process(&mut self.pitch_buffer[0..len], sample_index);
-        self.breath_pressure.process(&mut self.breath_buffer[0..len], sample_index);
-        self.lip_tension.process(&mut self.tension_buffer[0..len], sample_index);
+        self.pitch
+            .process(&mut self.pitch_buffer[0..len], sample_index);
+        self.breath_pressure
+            .process(&mut self.breath_buffer[0..len], sample_index);
+        self.lip_tension
+            .process(&mut self.tension_buffer[0..len], sample_index);
 
         let delay_len = self.delay_line.len();
-        if delay_len == 0 { return; }
+        if delay_len == 0 {
+            return;
+        }
 
         let inv_sr = 1.0 / self.sample_rate;
 
@@ -130,7 +147,9 @@ impl FrameProcessor for BrassModel {
             let tension = self.tension_buffer[i];
 
             self.vibrato_phase += 5.0 * inv_sr;
-            if self.vibrato_phase > 1.0 { self.vibrato_phase -= 1.0; }
+            if self.vibrato_phase > 1.0 {
+                self.vibrato_phase -= 1.0;
+            }
 
             let vib_depth = 0.005 * breath;
             let vibrato = libm::sinf(self.vibrato_phase * 2.0 * PI) * vib_depth;
@@ -138,7 +157,8 @@ impl FrameProcessor for BrassModel {
             let pitch_val = base_pitch * (1.0 + vibrato);
 
             let lip_freq = pitch_val * (1.01 + 0.05 * tension);
-            self.lip_filter.set_resonance_lowpass(lip_freq, 0.996, self.sample_rate);
+            self.lip_filter
+                .set_resonance_lowpass(lip_freq, 0.996, self.sample_rate);
 
             let period = (self.sample_rate / pitch_val).max(2.0);
             let read_pos = (self.write_ptr as f32 - period + delay_len as f32) % delay_len as f32;

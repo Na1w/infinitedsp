@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::effects::dynamics::distortion::{Distortion, DistortionType};
 use infinitedsp_core::effects::utility::add::Add;
@@ -13,7 +14,7 @@ use infinitedsp_examples::audio_backend::init_audio_interleaved;
 use std::thread;
 use std::time::Duration;
 
-fn create_effects_chain(sample_rate: f32) -> DspChain {
+fn create_effects_chain(sample_rate: f32) -> DspChain<Stereo> {
     let osc1 = Oscillator::new(AudioParam::hz(110.0), Waveform::Sine);
     let osc2 = Oscillator::new(AudioParam::hz(220.0), Waveform::Triangle);
 
@@ -44,6 +45,7 @@ fn create_effects_chain(sample_rate: f32) -> DspChain {
     DspChain::new(modulated, sample_rate)
         .and(dist)
         .and(Gain::new_db(-6.0))
+        .to_stereo()
         .and(panner)
 }
 

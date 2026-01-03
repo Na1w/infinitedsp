@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Stereo;
 use crate::FrameProcessor;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -170,13 +171,8 @@ impl Comb {
     }
 
     fn process_block(&mut self, input: &[f32], output: &mut [f32], feedback: f32, damp: f32) {
-        self.delay.process_comb_block(
-            input,
-            output,
-            feedback,
-            damp,
-            &mut self.filter_store,
-        );
+        self.delay
+            .process_comb_block(input, output, feedback, damp, &mut self.filter_store);
     }
 }
 
@@ -201,13 +197,17 @@ impl Allpass {
 /// A Schroeder-style algorithmic reverb.
 ///
 /// Uses parallel comb filters and series allpass filters to create a dense reverberation tail.
+/// This is a Stereo effect.
+///
+/// Note: This processor outputs 100% Wet signal. Use `ParallelMixer` or `and_mix` to blend with dry signal.
 pub struct Reverb {
     combs: [Comb; 8],
     allpasses: [Allpass; 8],
     room_size: AudioParam,
     damping: AudioParam,
     sample_rate: f32,
-    input_buffer: Vec<f32>,
+    mono_input: Vec<f32>,
+    reverb_out: Vec<f32>,
     room_size_buffer: Vec<f32>,
     damping_buffer: Vec<f32>,
     seed: usize,
@@ -233,11 +233,7 @@ impl Reverb {
     /// * `room_size` - Room size (feedback amount for comb filters).
     /// * `damping` - Damping amount (lowpass filter for comb filters).
     /// * `seed` - Seed for filter length randomization.
-    pub fn new_with_params(
-        room_size: AudioParam,
-        damping: AudioParam,
-        seed: usize,
-    ) -> Self {
+    pub fn new_with_params(room_size: AudioParam, damping: AudioParam, seed: usize) -> Self {
         let sample_rate = 44100.0;
         let (combs, allpasses) = Self::create_filters(sample_rate, seed);
 
@@ -247,7 +243,8 @@ impl Reverb {
             room_size,
             damping,
             sample_rate,
-            input_buffer: Vec::new(),
+            mono_input: Vec::new(),
+            reverb_out: Vec::new(),
             room_size_buffer: Vec::new(),
             damping_buffer: Vec::new(),
             seed,
@@ -297,52 +294,55 @@ impl Reverb {
     }
 }
 
-impl FrameProcessor for Reverb {
+impl FrameProcessor<Stereo> for Reverb {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        let len = buffer.len();
-        if self.input_buffer.len() < len {
-            self.input_buffer.resize(len, 0.0);
+        let frames = buffer.len() / 2;
+
+        if self.mono_input.len() < frames {
+            self.mono_input.resize(frames, 0.0);
         }
-        if self.room_size_buffer.len() < len {
-            self.room_size_buffer.resize(len, 0.0);
+        if self.reverb_out.len() < frames {
+            self.reverb_out.resize(frames, 0.0);
         }
-        if self.damping_buffer.len() < len {
-            self.damping_buffer.resize(len, 0.0);
+        if self.room_size_buffer.len() < frames {
+            self.room_size_buffer.resize(frames, 0.0);
+        }
+        if self.damping_buffer.len() < frames {
+            self.damping_buffer.resize(frames, 0.0);
         }
 
         self.room_size
-            .process(&mut self.room_size_buffer[0..len], sample_index);
+            .process(&mut self.room_size_buffer[0..frames], sample_index);
         self.damping
-            .process(&mut self.damping_buffer[0..len], sample_index);
+            .process(&mut self.damping_buffer[0..frames], sample_index);
 
         let room_size_val = self.room_size_buffer[0].clamp(0.0, 0.98);
         let damping_val = self.damping_buffer[0].clamp(0.0, 1.0);
 
-        let (in_chunks, in_rem) = buffer.as_chunks::<4>();
-        let (tmp_chunks, tmp_rem) = self.input_buffer.as_chunks_mut::<4>();
-
-        let scale = 0.015;
-        let scale_vec = f32x4::splat(scale);
-
-        for (in_c, tmp_c) in in_chunks.iter().zip(tmp_chunks.iter_mut()) {
-            let v = f32x4::from(*in_c);
-            *tmp_c = (v * scale_vec).to_array();
-        }
-        for (in_s, tmp_s) in in_rem.iter().zip(tmp_rem.iter_mut()) {
-            *tmp_s = *in_s * scale;
+        for (i, frame) in buffer.chunks(2).enumerate() {
+            if frame.len() == 2 {
+                self.mono_input[i] = (frame[0] + frame[1]) * 0.5 * 0.015; // Scale down
+            }
         }
 
-        buffer.fill(0.0);
-
-        let slice_len = buffer.len();
-        let input_slice = &self.input_buffer[0..slice_len];
+        self.reverb_out.fill(0.0);
+        let input_slice = &self.mono_input[0..frames];
+        let output_slice = &mut self.reverb_out[0..frames];
 
         for comb in &mut self.combs {
-            comb.process_block(input_slice, buffer, room_size_val, damping_val);
+            comb.process_block(input_slice, output_slice, room_size_val, damping_val);
         }
 
         for allpass in &mut self.allpasses {
-            allpass.process_block(buffer);
+            allpass.process_block(output_slice);
+        }
+
+        for (i, frame) in buffer.chunks_mut(2).enumerate() {
+            if frame.len() == 2 {
+                let wet = self.reverb_out[i];
+                frame[0] = wet;
+                frame[1] = wet;
+            }
         }
     }
 
@@ -360,5 +360,11 @@ impl FrameProcessor for Reverb {
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Reverb (Schroeder)"
+    }
+}
+
+impl Default for Reverb {
+    fn default() -> Self {
+        Self::new()
     }
 }

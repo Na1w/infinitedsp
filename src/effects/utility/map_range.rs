@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::ChannelConfig;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 
@@ -44,27 +45,33 @@ impl MapRange {
     }
 }
 
-impl FrameProcessor for MapRange {
+impl<C: ChannelConfig> FrameProcessor<C> for MapRange {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        let len = buffer.len();
-        if self.input_buffer.len() < len {
-            self.input_buffer.resize(len, 0.0);
+        let channels = C::num_channels();
+        let frames = buffer.len() / channels;
+
+        if self.input_buffer.len() < frames {
+            self.input_buffer.resize(frames, 0.0);
         }
-        if self.min_buffer.len() < len {
-            self.min_buffer.resize(len, 0.0);
+        if self.min_buffer.len() < frames {
+            self.min_buffer.resize(frames, 0.0);
         }
-        if self.max_buffer.len() < len {
-            self.max_buffer.resize(len, 0.0);
+        if self.max_buffer.len() < frames {
+            self.max_buffer.resize(frames, 0.0);
         }
 
-        self.input.process(&mut self.input_buffer, sample_index);
-        self.min.process(&mut self.min_buffer, sample_index);
-        self.max.process(&mut self.max_buffer, sample_index);
+        self.input
+            .process(&mut self.input_buffer[0..frames], sample_index);
+        self.min
+            .process(&mut self.min_buffer[0..frames], sample_index);
+        self.max
+            .process(&mut self.max_buffer[0..frames], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
-            let t = self.input_buffer[i].clamp(0.0, 1.0);
-            let min_val = self.min_buffer[i];
-            let max_val = self.max_buffer[i];
+            let frame_idx = i / channels;
+            let t = self.input_buffer[frame_idx].clamp(0.0, 1.0);
+            let min_val = self.min_buffer[frame_idx];
+            let max_val = self.max_buffer[frame_idx];
 
             *sample = match self.curve {
                 CurveType::Linear => min_val + (max_val - min_val) * t,

@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
@@ -163,7 +164,7 @@ impl Adsr {
     }
 }
 
-impl FrameProcessor for Adsr {
+impl FrameProcessor<Mono> for Adsr {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
 

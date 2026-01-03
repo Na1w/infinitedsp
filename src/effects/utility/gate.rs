@@ -1,3 +1,4 @@
+use crate::core::channels::ChannelConfig;
 use crate::FrameProcessor;
 
 /// A gate signal generator that stays high for a specific duration.
@@ -19,10 +20,13 @@ impl TimedGate {
     }
 }
 
-impl FrameProcessor for TimedGate {
+impl<C: ChannelConfig> FrameProcessor<C> for TimedGate {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
+        let channels = C::num_channels();
+
         for (i, sample) in buffer.iter_mut().enumerate() {
-            let current_sample = sample_index + i as u64;
+            let frame_idx = i / channels;
+            let current_sample = sample_index + frame_idx as u64;
             if current_sample < self.duration_samples {
                 *sample = 1.0;
             } else {

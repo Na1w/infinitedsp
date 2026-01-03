@@ -1,11 +1,12 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Stereo;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
 
 /// A stereo panner.
 ///
-/// Pans a stereo signal (interleaved) or mono signal (if L=R) between left and right channels.
+/// Pans a stereo signal (interleaved) between left and right channels.
 /// Uses constant power panning law.
 pub struct StereoPanner {
     pan: AudioParam,
@@ -30,7 +31,7 @@ impl StereoPanner {
     }
 }
 
-impl FrameProcessor for StereoPanner {
+impl FrameProcessor<Stereo> for StereoPanner {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let frames = buffer.len() / 2;
 

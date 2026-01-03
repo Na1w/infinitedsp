@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 use wide::f32x4;
@@ -54,7 +55,7 @@ impl Distortion {
     }
 }
 
-impl FrameProcessor for Distortion {
+impl FrameProcessor<Mono> for Distortion {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
         if self.drive_buffer.len() < len {

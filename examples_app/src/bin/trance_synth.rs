@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Mono;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
 use infinitedsp_core::core::parameter::Parameter;
@@ -15,6 +16,7 @@ use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 use infinitedsp_examples::audio_backend::{init_audio_stereo, StereoProcessor};
 use std::thread;
 use std::time::{Duration, Instant};
+use std::vec::Vec;
 
 struct Note {
     start_beat: f32,
@@ -31,7 +33,7 @@ fn create_trance_voice(
     pitch: Parameter,
     gate: Parameter,
     delay_time_s: f32,
-) -> DspChain {
+) -> DspChain<Mono> {
     let osc = Oscillator::new(AudioParam::Linked(pitch.clone()), Waveform::Saw);
     let noise = Oscillator::new(AudioParam::Static(0.0), Waveform::WhiteNoise);
 
@@ -77,7 +79,7 @@ fn create_trance_voice(
         .and(Gain::new_db(-3.0))
 }
 
-fn create_riser_voice(sample_rate: f32, cutoff: Parameter, gain: Parameter) -> DspChain {
+fn create_riser_voice(sample_rate: f32, cutoff: Parameter, gain: Parameter) -> DspChain<Mono> {
     let noise = Oscillator::new(AudioParam::Static(0.0), Waveform::WhiteNoise);
 
     let filter = LadderFilter::new(AudioParam::Linked(cutoff), AudioParam::Static(0.7));
@@ -89,19 +91,17 @@ fn create_riser_voice(sample_rate: f32, cutoff: Parameter, gain: Parameter) -> D
 }
 
 struct StereoEngine {
-    left_voice: DspChain,
-    right_voice: DspChain,
-    riser_voice: DspChain,
+    left_voice: DspChain<Mono>,
+    right_voice: DspChain<Mono>,
+    riser_voice: DspChain<Mono>,
     master_filter_l: LadderFilter,
     master_filter_r: LadderFilter,
-    reverb_l: Reverb,
-    reverb_r: Reverb,
+    reverb: Reverb,
     master_comp_l: Compressor,
     master_comp_r: Compressor,
 
     riser_buffer: Vec<f32>,
-    reverb_buf_l: Vec<f32>,
-    reverb_buf_r: Vec<f32>,
+    stereo_buffer: Vec<f32>,
 }
 
 impl StereoProcessor for StereoEngine {
@@ -110,11 +110,8 @@ impl StereoProcessor for StereoEngine {
         if self.riser_buffer.len() < len {
             self.riser_buffer.resize(len, 0.0);
         }
-        if self.reverb_buf_l.len() < len {
-            self.reverb_buf_l.resize(len, 0.0);
-        }
-        if self.reverb_buf_r.len() < len {
-            self.reverb_buf_r.resize(len, 0.0);
+        if self.stereo_buffer.len() < len * 2 {
+            self.stereo_buffer.resize(len * 2, 0.0);
         }
 
         self.left_voice.process(left, sample_index);
@@ -133,21 +130,22 @@ impl StereoProcessor for StereoEngine {
         self.master_filter_l.process(left, sample_index);
         self.master_filter_r.process(right, sample_index);
 
-        self.reverb_buf_l[0..len].copy_from_slice(left);
-        self.reverb_buf_r[0..len].copy_from_slice(right);
-
-        self.reverb_l
-            .process(&mut self.reverb_buf_l[0..len], sample_index);
-        self.reverb_r
-            .process(&mut self.reverb_buf_r[0..len], sample_index);
-
         for i in 0..len {
-            let wet_l = self.reverb_buf_l[i] * 0.2;
-            let wet_r = self.reverb_buf_r[i] * 0.2;
-            left[i] += wet_l;
-            right[i] += wet_r;
+            self.stereo_buffer[2 * i] = left[i];
+            self.stereo_buffer[2 * i + 1] = right[i];
         }
 
+        self.reverb.process(&mut self.stereo_buffer, sample_index);
+
+        for i in 0..len {
+            let wet_l = self.stereo_buffer[2 * i];
+            let wet_r = self.stereo_buffer[2 * i + 1];
+
+            left[i] += wet_l * 0.2;
+            right[i] += wet_r * 0.2;
+        }
+
+        // 5. Master Compressor (Dual Mono)
         self.master_comp_l.process(left, sample_index);
         self.master_comp_r.process(right, sample_index);
     }
@@ -183,13 +181,11 @@ fn main() -> Result<()> {
         riser_voice: create_riser_voice(sr, rc.clone(), rg.clone()),
         master_filter_l: LadderFilter::new(AudioParam::Linked(mc.clone()), AudioParam::Static(0.2)),
         master_filter_r: LadderFilter::new(AudioParam::Linked(mc.clone()), AudioParam::Static(0.2)),
-        reverb_l: Reverb::new(),
-        reverb_r: Reverb::new_with_seed(1),
+        reverb: Reverb::new(),
         master_comp_l: Compressor::new_limiter(),
         master_comp_r: Compressor::new_limiter(),
         riser_buffer: Vec::new(),
-        reverb_buf_l: Vec::new(),
-        reverb_buf_r: Vec::new(),
+        stereo_buffer: Vec::new(),
     })?;
 
     println!(

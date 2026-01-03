@@ -10,6 +10,7 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 ## Features
 
 *   **`no_std` Compatible:** Built for portability using `libm` and `alloc`.
+*   **Type-Safe Channel System:** Explicit `Mono` and `Stereo` types prevent routing errors.
 *   **Modular Architecture:** Build complex audio chains using `DspChain` and `Mixer`.
 *   **AudioParam System:** All parameters can be static, linked to thread-safe controls (atomics), or modulated by other audio signals (e.g., LFOs, Envelopes) at sample rate.
 *   **Signal Math:** Combine signals easily with `Add` and `Multiply` processors.
@@ -38,7 +39,7 @@ Listen to some of the examples generated with this library:
 
 ## Project Structure
 
-*   `src/core`: Core traits and infrastructure (`FrameProcessor`, `AudioParam`, `DspChain`, `Ola`, `ParallelMixer`, `SummingMixer`).
+*   `src/core`: Core traits and infrastructure (`FrameProcessor`, `AudioParam`, `DspChain`, `Ola`, `ParallelMixer`, `SummingMixer`, `Stereo`).
 *   `src/effects`: Audio effects implementations.
 *   `src/synthesis`: Sound generators and control signals.
 *   `examples_app`: A separate workspace member containing runnable examples using `cpal`.
@@ -50,13 +51,14 @@ Add `infinitedsp-core` to your dependencies.
 ```rust
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Mono;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 use infinitedsp_core::effects::time::delay::Delay;
 
-// Create an oscillator
+// Create an oscillator (Mono source)
 let osc = Oscillator::new(AudioParam::hz(440.0), Waveform::Saw);
 
-// Create a delay effect
+// Create a delay effect (Mono effect)
 let delay = Delay::new(
     1.0, // Max delay time in seconds
     AudioParam::ms(350.0),   // Delay time
@@ -64,7 +66,7 @@ let delay = Delay::new(
     AudioParam::linear(0.3)  // Mix
 );
 
-// Chain them together
+// Chain them together. The chain is typed as DspChain<Mono>.
 let mut chain = DspChain::new(osc, 44100.0).and(delay);
 
 // Print the signal chain (requires 'debug_visualize' feature)
@@ -90,15 +92,16 @@ cargo run --release -p infinitedsp-examples --bin <example_name>
 
 ### Available Examples:
 
-*   **`infinitedsp_demo`**: A complex polyphonic demo showcasing 30 voices, filters, envelopes, and effects.
-*   **`filter_sweep`**: Compares `PredictiveLadderFilter` vs `LadderFilter` with an LFO sweep.
-*   **`fm_brass`**: FM synthesis demonstration with envelopes controlling modulation index.
+*   **`infinitedsp_demo`**: A complex polyphonic demo showcasing 30 voices, filters, envelopes, and effects (Stereo).
+*   **`filter_sweep`**: Compares `PredictiveLadderFilter` vs `LadderFilter` with an LFO sweep (Mono).
+*   **`dual_mono_demo`**: Demonstrates independent processing of Left/Right channels (Ping-Pong Delay).
 *   **`trance_synth`**: A massive stereo supersaw trance pluck with delay, reverb, and a sequencer.
-*   **`karplus_demo`**: Physical modeling of a guitar string (Karplus-Strong algorithm).
+*   **`karplus_demo`**: Physical modeling of a guitar string (Karplus-Strong algorithm) (Mono).
 *   **`svf_demo`**: State Variable Filter demonstration (BandPass sweep).
 *   **`spectral_demo`**: FFT-based Pitch Shifting using the Overlap-Add (OLA) engine.
 *   **`granular_demo`**: Time-domain Granular Pitch Shifting.
 *   **`modulation_demo`**: Showcases Tremolo, Chorus, and Tape Delay.
+*   **`phaser_demo`**: 6-stage Phaser effect.
 *   **`effects_demo`**: Demonstrates signal math (Add/Multiply) and distortion.
 
 ## Documentation

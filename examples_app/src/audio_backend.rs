@@ -1,5 +1,6 @@
 use anyhow::Result;
 use cpal::traits::{DeviceTrait, HostTrait};
+use infinitedsp_core::core::channels::{Mono, Stereo};
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
 use std::sync::{Arc, Mutex};
@@ -10,7 +11,7 @@ pub trait StereoProcessor: Send {
 
 pub fn init_audio<F>(create_processor: F) -> Result<(cpal::Stream, f32)>
 where
-    F: FnOnce(f32) -> DspChain,
+    F: FnOnce(f32) -> DspChain<Mono>,
 {
     let host = cpal::default_host();
     let device = host
@@ -69,7 +70,7 @@ where
 
 pub fn init_audio_interleaved<F>(create_processor: F) -> Result<(cpal::Stream, f32)>
 where
-    F: FnOnce(f32) -> DspChain,
+    F: FnOnce(f32) -> DspChain<Stereo>,
 {
     let host = cpal::default_host();
     let device = host
@@ -102,7 +103,7 @@ where
 fn run_mono<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    processor: Arc<Mutex<DspChain>>,
+    processor: Arc<Mutex<DspChain<Mono>>>,
     err_fn: impl Fn(cpal::StreamError) + Send + 'static,
 ) -> Result<cpal::Stream>
 where
@@ -198,7 +199,7 @@ where
 fn run_interleaved<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    processor: Arc<Mutex<DspChain>>,
+    processor: Arc<Mutex<DspChain<Stereo>>>,
     err_fn: impl Fn(cpal::StreamError) + Send + 'static,
 ) -> Result<cpal::Stream>
 where
@@ -213,17 +214,27 @@ where
         move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
             let mut proc = processor.lock().unwrap();
 
-            if process_buffer.len() < data.len() {
-                process_buffer.resize(data.len(), 0.0);
+            let frames = data.len() / channels;
+            let stereo_samples = frames * 2;
+
+            if process_buffer.len() < stereo_samples {
+                process_buffer.resize(stereo_samples, 0.0);
             }
 
-            let proc_slice = &mut process_buffer[0..data.len()];
+            let proc_slice = &mut process_buffer[0..stereo_samples];
 
             proc.process(proc_slice, sample_clock);
-            sample_clock += (data.len() / channels) as u64;
+            sample_clock += frames as u64;
 
-            for (i, sample) in data.iter_mut().enumerate() {
-                *sample = T::from_sample(proc_slice[i]);
+            for (i, frame) in data.chunks_mut(channels).enumerate() {
+                if channels >= 2 {
+                    frame[0] = T::from_sample(proc_slice[2 * i]);
+                    frame[1] = T::from_sample(proc_slice[2 * i + 1]);
+                } else {
+                    let l = proc_slice[2 * i];
+                    let r = proc_slice[2 * i + 1];
+                    frame[0] = T::from_sample((l + r) * 0.5);
+                }
             }
         },
         err_fn,

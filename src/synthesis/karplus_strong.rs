@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -66,7 +67,7 @@ impl KarplusStrong {
     }
 }
 
-impl FrameProcessor for KarplusStrong {
+impl FrameProcessor<Mono> for KarplusStrong {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
         if self.pitch_buffer.len() < len {

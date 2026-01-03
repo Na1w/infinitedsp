@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::effects::modulation::modulated_delay::ModulatedDelay;
 use infinitedsp_core::effects::modulation::tremolo::Tremolo;
@@ -9,11 +10,11 @@ use infinitedsp_core::effects::utility::gain::Gain;
 use infinitedsp_core::effects::utility::passthrough::Passthrough;
 use infinitedsp_core::synthesis::envelope::Adsr;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
-use infinitedsp_examples::audio_backend::init_audio;
+use infinitedsp_examples::audio_backend::init_audio_interleaved;
 use std::thread;
 use std::time::{Duration, Instant};
 
-fn create_modulation_chain(sample_rate: f32, gate: AudioParam) -> DspChain {
+fn create_modulation_chain(sample_rate: f32, gate: AudioParam) -> DspChain<Stereo> {
     let osc = Oscillator::new(AudioParam::hz(110.0), Waveform::Saw);
 
     let env = Adsr::new(
@@ -46,6 +47,7 @@ fn create_modulation_chain(sample_rate: f32, gate: AudioParam) -> DspChain {
         .and(tape_delay)
         .and(passthrough)
         .and(Gain::new_db(-3.0))
+        .to_stereo()
 }
 
 fn main() -> Result<()> {
@@ -57,8 +59,9 @@ fn main() -> Result<()> {
     let chain = create_modulation_chain(44100.0, AudioParam::Linked(gate_param.clone()));
     println!("Signal Chain:\n{}", chain.get_graph());
 
-    let (stream, _sample_rate) =
-        init_audio(move |sr| create_modulation_chain(sr, AudioParam::Linked(g.clone())))?;
+    let (stream, _sample_rate) = init_audio_interleaved(move |sr| {
+        create_modulation_chain(sr, AudioParam::Linked(g.clone()))
+    })?;
 
     println!("Playing Modulation Demo (Tremolo -> Chorus -> TapeDelay)...");
     stream.play()?;

@@ -1,6 +1,8 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::DualMono;
+use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
 use infinitedsp_core::core::summing_mixer::SummingMixer;
@@ -64,7 +66,7 @@ fn create_envelope(
     AudioParam::Dynamic(Box::new(DspChain::new(env, sample_rate)))
 }
 
-fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor + Send> {
+fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor<Stereo> + Send> {
     let pitch_param = create_envelope(
         AudioParam::Static(1.0),
         config.attack_time,
@@ -105,7 +107,7 @@ fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor + Send> {
         AudioParam::linear(0.1),
     );
 
-    let gate_proc = TimedGate::new(7.0, config.sample_rate);
+    let gate_proc = TimedGate::new(12.0, config.sample_rate);
     let amp_gate = AudioParam::Dynamic(Box::new(gate_proc));
 
     let amp_param = create_envelope(amp_gate, 0.5, 0.1, 0.04, 2.5, config.sample_rate);
@@ -116,12 +118,13 @@ fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor + Send> {
     Box::new(
         DspChain::new(osc, config.sample_rate)
             .and(filter)
+            .to_stereo()
             .and(panner)
             .and(gain),
     )
 }
 
-fn create_thx_chain(sample_rate: f32) -> DspChain {
+fn create_thx_chain(sample_rate: f32) -> DspChain<Stereo> {
     let mut rng = SimpleRng::new(12345);
     let mut voices = Vec::new();
 
@@ -158,13 +161,20 @@ fn create_thx_chain(sample_rate: f32) -> DspChain {
     }
 
     let summed = SummingMixer::new(voices)
-        .with_gain(AudioParam::linear(0.8))
+        .with_gain(AudioParam::linear(1.2))
         .with_soft_clip(true);
 
+    let limiter_l = Compressor::new_limiter();
+    let limiter_r = Compressor::new_limiter();
+    let stereo_limiter = DualMono::new(limiter_l, limiter_r);
+
     DspChain::new(summed, sample_rate)
-        .and(Compressor::new_limiter())
+        .and(stereo_limiter)
         .and(StereoWidener::new(AudioParam::Static(1.5)))
-        .and_mix(0.5, Reverb::new_with_params(AudioParam::Static(0.9), AudioParam::Static(0.4), 0))
+        .and_mix(
+            0.5,
+            Reverb::new_with_params(AudioParam::Static(0.9), AudioParam::Static(0.4), 0),
+        )
 }
 
 fn main() -> Result<()> {
@@ -178,7 +188,7 @@ fn main() -> Result<()> {
 
     stream.play()?;
 
-    thread::sleep(Duration::from_secs(10));
+    thread::sleep(Duration::from_secs(16));
 
     Ok(())
 }

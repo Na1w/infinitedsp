@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::effects::modulation::phaser::Phaser;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
@@ -8,7 +9,7 @@ use infinitedsp_examples::audio_backend::init_audio_interleaved;
 use std::thread;
 use std::time::Duration;
 
-fn create_phaser_chain(sample_rate: f32) -> DspChain {
+fn create_phaser_chain(sample_rate: f32) -> DspChain<Stereo> {
     let osc = Oscillator::new(AudioParam::hz(55.0), Waveform::Saw);
 
     let phaser = Phaser::new(
@@ -18,7 +19,7 @@ fn create_phaser_chain(sample_rate: f32) -> DspChain {
         AudioParam::linear(0.5),
     );
 
-    DspChain::new(osc, sample_rate).and(phaser)
+    DspChain::new(osc, sample_rate).and(phaser).to_stereo()
 }
 
 fn main() -> Result<()> {

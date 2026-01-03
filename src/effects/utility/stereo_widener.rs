@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Stereo;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 
@@ -24,9 +25,8 @@ impl StereoWidener {
     }
 }
 
-impl FrameProcessor for StereoWidener {
+impl FrameProcessor<Stereo> for StereoWidener {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        // Buffer is interleaved stereo: [L, R, L, R, ...]
         let frames = buffer.len() / 2;
         if self.width_buffer.len() < frames {
             self.width_buffer.resize(frames, 0.0);

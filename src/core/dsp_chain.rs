@@ -1,6 +1,8 @@
 use super::frame_processor::FrameProcessor;
 use super::parallel_mixer::ParallelMixer;
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::{ChannelConfig, Mono, Stereo};
+use crate::core::channels::{MonoToStereo, StereoToMono};
 use alloc::boxed::Box;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
@@ -11,14 +13,15 @@ use alloc::vec::Vec;
 /// A chain of DSP processors.
 ///
 /// Processes audio sequentially through a list of processors.
-pub struct DspChain {
-    processors: Vec<Box<dyn FrameProcessor + Send>>,
+/// The chain has a fixed channel configuration (Mono or Stereo).
+pub struct DspChain<C: ChannelConfig> {
+    processors: Vec<Box<dyn FrameProcessor<C> + Send>>,
     sample_rate: f32,
 }
 
-impl DspChain {
+impl<C: ChannelConfig + 'static> DspChain<C> {
     /// Creates a new DspChain starting with the given processor.
-    pub fn new(mut first: impl FrameProcessor + Send + 'static, sample_rate: f32) -> Self {
+    pub fn new(mut first: impl FrameProcessor<C> + Send + 'static, sample_rate: f32) -> Self {
         first.set_sample_rate(sample_rate);
         DspChain {
             processors: vec![Box::new(first)],
@@ -27,7 +30,7 @@ impl DspChain {
     }
 
     /// Appends a processor to the chain.
-    pub fn and(mut self, mut processor: impl FrameProcessor + Send + 'static) -> Self {
+    pub fn and(mut self, mut processor: impl FrameProcessor<C> + Send + 'static) -> Self {
         processor.set_sample_rate(self.sample_rate);
         self.processors.push(Box::new(processor));
         self
@@ -37,7 +40,7 @@ impl DspChain {
     pub fn and_mix(
         mut self,
         mix: f32,
-        mut processor: impl FrameProcessor + Send + 'static,
+        mut processor: impl FrameProcessor<C> + Send + 'static,
     ) -> Self {
         processor.set_sample_rate(self.sample_rate);
         let mixed = ParallelMixer::new(mix, processor);
@@ -49,7 +52,7 @@ impl DspChain {
     pub fn and_mix_param(
         mut self,
         mix: AudioParam,
-        mut processor: impl FrameProcessor + Send + 'static,
+        mut processor: impl FrameProcessor<C> + Send + 'static,
     ) -> Self {
         processor.set_sample_rate(self.sample_rate);
         let mut mixed = ParallelMixer::new(0.0, processor);
@@ -64,7 +67,32 @@ impl DspChain {
     }
 }
 
-impl FrameProcessor for DspChain {
+impl DspChain<Mono> {
+    /// Converts the Mono chain into a Stereo chain.
+    ///
+    /// This wraps the entire current chain in a `MonoToStereo` converter.
+    /// Subsequent processors added with `.and()` must be Stereo.
+    pub fn to_stereo(self) -> DspChain<Stereo> {
+        let sample_rate = self.sample_rate;
+        let converter = MonoToStereo::new(self);
+        DspChain::new(converter, sample_rate)
+    }
+}
+
+impl DspChain<Stereo> {
+    /// Converts the Stereo chain into a Mono chain.
+    ///
+    /// This wraps the entire current chain in a `StereoToMono` converter.
+    /// The output will be mixed down (L+R)/2.
+    /// Subsequent processors added with `.and()` must be Mono.
+    pub fn to_mono(self) -> DspChain<Mono> {
+        let sample_rate = self.sample_rate;
+        let converter = StereoToMono::new(self);
+        DspChain::new(converter, sample_rate)
+    }
+}
+
+impl<C: ChannelConfig> FrameProcessor<C> for DspChain<C> {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         for p in &mut self.processors {
             p.process(buffer, sample_index);
@@ -91,9 +119,15 @@ impl FrameProcessor for DspChain {
     fn visualize(&self, indent: usize) -> String {
         let mut output = String::new();
         let spaces = " ".repeat(indent);
-        let arrow_spaces = " ".repeat(indent + 2); // Indent arrows slightly
+        let arrow_spaces = " ".repeat(indent + 2);
 
-        output.push_str(&format!("{}DspChain Start\n", spaces));
+        let channel_type = if C::num_channels() == 1 {
+            "Mono"
+        } else {
+            "Stereo"
+        };
+
+        output.push_str(&format!("{}DspChain ({})\n", spaces, channel_type));
         output.push_str(&format!("{}|\n", arrow_spaces));
         output.push_str(&format!("{}v\n", arrow_spaces));
 

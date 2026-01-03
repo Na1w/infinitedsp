@@ -1,6 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
+use infinitedsp_core::core::channels::Mono;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
 use infinitedsp_core::effects::filter::ladder_filter::LadderFilter;
@@ -29,7 +30,10 @@ fn create_cutoff_mod(sample_rate: f32) -> AudioParam {
     AudioParam::Dynamic(Box::new(mod_chain))
 }
 
-fn create_common_chain(sample_rate: f32, filter: impl FrameProcessor + Send + 'static) -> DspChain {
+fn create_common_chain(
+    sample_rate: f32,
+    filter: impl FrameProcessor<Mono> + Send + 'static,
+) -> DspChain<Mono> {
     let osc = Oscillator::new(AudioParam::hz(60.0), Waveform::Saw);
 
     let delay = Delay::new(
@@ -46,23 +50,24 @@ fn create_common_chain(sample_rate: f32, filter: impl FrameProcessor + Send + 's
         .and(gain)
 }
 
-fn create_predictive_chain(sample_rate: f32) -> DspChain {
+fn create_predictive_chain(sample_rate: f32) -> DspChain<Mono> {
     let cutoff_param = create_cutoff_mod(sample_rate);
     let filter = PredictiveLadderFilter::new(cutoff_param, AudioParam::linear(0.9));
     create_common_chain(sample_rate, filter)
 }
 
-fn create_standard_chain(sample_rate: f32) -> DspChain {
+fn create_standard_chain(sample_rate: f32) -> DspChain<Mono> {
     let cutoff_param = create_cutoff_mod(sample_rate);
     let filter = LadderFilter::new(cutoff_param, AudioParam::linear(0.9));
     create_common_chain(sample_rate, filter)
 }
 
-fn run_demo(name: &str, factory: impl Fn(f32) -> DspChain + Send + 'static) -> Result<()> {
+fn run_demo(name: &str, factory: impl Fn(f32) -> DspChain<Mono> + Send + 'static) -> Result<()> {
     let chain = factory(44100.0);
     println!("\n--- {} ---", name);
     println!("Signal Chain:\n{}", chain.get_graph());
 
+    // Use init_audio for Mono chains
     let (stream, sample_rate) = init_audio(factory)?;
     println!("Playing {} at {}Hz...", name, sample_rate);
     stream.play()?;

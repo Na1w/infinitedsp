@@ -11,6 +11,7 @@
 //! use infinitedsp_core::core::dsp_chain::DspChain;
 //! use infinitedsp_core::core::audio_param::AudioParam;
 //! use infinitedsp_core::core::frame_processor::FrameProcessor;
+//! use infinitedsp_core::core::channels::Mono;
 //! use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 //! use infinitedsp_core::effects::utility::gain::Gain;
 //!
@@ -34,4 +35,5 @@ pub mod core;
 pub mod effects;
 pub mod synthesis;
 
+pub use crate::core::channels::{ChannelConfig, Mono, Stereo};
 pub use crate::core::frame_processor::FrameProcessor;

@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
@@ -101,7 +102,7 @@ impl Phaser {
     }
 }
 
-impl FrameProcessor for Phaser {
+impl FrameProcessor<Mono> for Phaser {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
         if self.min_freq_buffer.len() < len {

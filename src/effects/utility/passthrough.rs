@@ -1,3 +1,4 @@
+use crate::core::channels::ChannelConfig;
 use crate::FrameProcessor;
 
 /// A processor that does nothing.
@@ -18,7 +19,7 @@ impl Default for Passthrough {
     }
 }
 
-impl FrameProcessor for Passthrough {
+impl<C: ChannelConfig> FrameProcessor<C> for Passthrough {
     fn process(&mut self, _buffer: &mut [f32], _sample_index: u64) {}
 
     #[cfg(feature = "debug_visualize")]
@@ -30,13 +31,14 @@ impl FrameProcessor for Passthrough {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::channels::Mono;
 
     #[test]
     fn test_passthrough() {
         let mut pt = Passthrough::new();
         let mut buffer = [1.0, -0.5, 0.0];
         let original = buffer;
-        pt.process(&mut buffer, 0);
+        FrameProcessor::<Mono>::process(&mut pt, &mut buffer, 0);
         assert_eq!(buffer, original);
     }
 }

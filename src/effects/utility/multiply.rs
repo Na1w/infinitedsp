@@ -1,4 +1,5 @@
 use crate::core::audio_param::AudioParam;
+use crate::core::channels::ChannelConfig;
 use crate::FrameProcessor;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
@@ -28,33 +29,42 @@ impl Multiply {
     }
 }
 
-impl FrameProcessor for Multiply {
+impl<C: ChannelConfig> FrameProcessor<C> for Multiply {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        let len = buffer.len();
-        if self.buffer_a.len() < len {
-            self.buffer_a.resize(len, 0.0);
+        let channels = C::num_channels();
+        let frames = buffer.len() / channels;
+
+        if self.buffer_a.len() < frames {
+            self.buffer_a.resize(frames, 0.0);
         }
-        if self.buffer_b.len() < len {
-            self.buffer_b.resize(len, 0.0);
+        if self.buffer_b.len() < frames {
+            self.buffer_b.resize(frames, 0.0);
         }
 
         self.input_a
-            .process(&mut self.buffer_a[0..len], sample_index);
+            .process(&mut self.buffer_a[0..frames], sample_index);
         self.input_b
-            .process(&mut self.buffer_b[0..len], sample_index);
+            .process(&mut self.buffer_b[0..frames], sample_index);
 
-        let (chunks, remainder) = buffer.as_chunks_mut::<4>();
-        let (a_chunks, a_rem) = self.buffer_a[0..len].as_chunks::<4>();
-        let (b_chunks, b_rem) = self.buffer_b[0..len].as_chunks::<4>();
+        if channels == 1 {
+            let (chunks, remainder) = buffer.as_chunks_mut::<4>();
+            let (a_chunks, a_rem) = self.buffer_a[0..frames].as_chunks::<4>();
+            let (b_chunks, b_rem) = self.buffer_b[0..frames].as_chunks::<4>();
 
-        for ((chunk, a_chunk), b_chunk) in chunks.iter_mut().zip(a_chunks).zip(b_chunks) {
-            let a = f32x4::from(*a_chunk);
-            let b = f32x4::from(*b_chunk);
-            *chunk = (a * b).to_array();
-        }
+            for ((chunk, a_chunk), b_chunk) in chunks.iter_mut().zip(a_chunks).zip(b_chunks) {
+                let a = f32x4::from(*a_chunk);
+                let b = f32x4::from(*b_chunk);
+                *chunk = (a * b).to_array();
+            }
 
-        for ((sample, a), b) in remainder.iter_mut().zip(a_rem).zip(b_rem) {
-            *sample = *a * *b;
+            for ((sample, a), b) in remainder.iter_mut().zip(a_rem).zip(b_rem) {
+                *sample = *a * *b;
+            }
+        } else {
+            for (i, sample) in buffer.iter_mut().enumerate() {
+                let frame_idx = i / channels;
+                *sample = self.buffer_a[frame_idx] * self.buffer_b[frame_idx];
+            }
         }
     }
 

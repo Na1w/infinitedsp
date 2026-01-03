@@ -2,10 +2,51 @@ use crate::core::audio_param::AudioParam;
 use crate::FrameProcessor;
 use alloc::vec;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
+
+#[derive(Clone, Copy)]
+struct PhysBiQuad {
+    b0: f32, b1: f32, b2: f32,
+    a1: f32, a2: f32,
+    x1: f32, x2: f32,
+    y1: f32, y2: f32,
+}
+
+impl PhysBiQuad {
+    fn new() -> Self {
+        PhysBiQuad {
+            b0: 0.0, b1: 0.0, b2: 0.0,
+            a1: 0.0, a2: 0.0,
+            x1: 0.0, x2: 0.0,
+            y1: 0.0, y2: 0.0,
+        }
+    }
+
+    fn set_resonance_lowpass(&mut self, freq: f32, radius: f32, sample_rate: f32) {
+        let norm_freq = (2.0 * PI * freq / sample_rate).clamp(0.0, PI);
+
+        self.a2 = radius * radius;
+        self.a1 = -2.0 * radius * libm::cosf(norm_freq);
+        self.b0 = 1.0 + self.a1 + self.a2;
+        self.b1 = 0.0;
+        self.b2 = 0.0;
+    }
+
+    fn process(&mut self, input: f32) -> f32 {
+        let out = self.b0 * input + self.b1 * self.x1 + self.b2 * self.x2
+            - self.a1 * self.y1 - self.a2 * self.y2;
+
+        self.x2 = self.x1;
+        self.x1 = input;
+        self.y2 = self.y1;
+        self.y1 = out;
+
+        out
+    }
+}
 
 /// A physical model of a brass instrument.
-///
-/// Uses a waveguide synthesis approach with a non-linear lip valve model.
+/// This is very much WIP and will continue to be tweaked over time...
 pub struct BrassModel {
     pitch: AudioParam,
     breath_pressure: AudioParam,
@@ -15,7 +56,12 @@ pub struct BrassModel {
     write_ptr: usize,
     sample_rate: f32,
 
-    dc_block: f32,
+    lip_filter: PhysBiQuad,
+    dc_blocker: f32,
+    lp_state: f32,
+    bell_state: f32,
+    last_out: f32,
+    vibrato_phase: f32,
 
     pitch_buffer: Vec<f32>,
     breath_buffer: Vec<f32>,
@@ -25,12 +71,6 @@ pub struct BrassModel {
 }
 
 impl BrassModel {
-    /// Creates a new BrassModel.
-    ///
-    /// # Arguments
-    /// * `pitch` - Fundamental frequency in Hz.
-    /// * `breath` - Breath pressure (0.0 - 1.0).
-    /// * `tension` - Lip tension (0.0 - 1.0).
     pub fn new(pitch: AudioParam, breath: AudioParam, tension: AudioParam) -> Self {
         let sample_rate = 44100.0;
         let buffer_size = (sample_rate / 20.0) as usize;
@@ -42,7 +82,12 @@ impl BrassModel {
             delay_line: vec![0.0; buffer_size],
             write_ptr: 0,
             sample_rate,
-            dc_block: 0.0,
+            lip_filter: PhysBiQuad::new(),
+            dc_blocker: 0.0,
+            lp_state: 0.0,
+            bell_state: 0.0,
+            last_out: 0.0,
+            vibrato_phase: 0.0,
             pitch_buffer: Vec::new(),
             breath_buffer: Vec::new(),
             tension_buffer: Vec::new(),
@@ -70,45 +115,65 @@ impl FrameProcessor for BrassModel {
             self.tension_buffer.resize(len, 0.0);
         }
 
-        self.pitch
-            .process(&mut self.pitch_buffer[0..len], sample_index);
-        self.breath_pressure
-            .process(&mut self.breath_buffer[0..len], sample_index);
-        self.lip_tension
-            .process(&mut self.tension_buffer[0..len], sample_index);
+        self.pitch.process(&mut self.pitch_buffer[0..len], sample_index);
+        self.breath_pressure.process(&mut self.breath_buffer[0..len], sample_index);
+        self.lip_tension.process(&mut self.tension_buffer[0..len], sample_index);
 
         let delay_len = self.delay_line.len();
-        if delay_len == 0 {
-            return;
-        }
+        if delay_len == 0 { return; }
+
+        let inv_sr = 1.0 / self.sample_rate;
 
         for (i, sample) in buffer.iter_mut().enumerate() {
-            let pitch_val = self.pitch_buffer[i];
+            let base_pitch = self.pitch_buffer[i];
             let breath = self.breath_buffer[i];
             let tension = self.tension_buffer[i];
 
-            let noise = Self::next_random(&mut self.rng_state) * 0.2 * breath;
+            self.vibrato_phase += 5.0 * inv_sr;
+            if self.vibrato_phase > 1.0 { self.vibrato_phase -= 1.0; }
+
+            let vib_depth = 0.005 * breath;
+            let vibrato = libm::sinf(self.vibrato_phase * 2.0 * PI) * vib_depth;
+
+            let pitch_val = base_pitch * (1.0 + vibrato);
+
+            let lip_freq = pitch_val * (1.01 + 0.05 * tension);
+            self.lip_filter.set_resonance_lowpass(lip_freq, 0.996, self.sample_rate);
 
             let period = (self.sample_rate / pitch_val).max(2.0);
-
             let read_pos = (self.write_ptr as f32 - period + delay_len as f32) % delay_len as f32;
             let idx_a = read_pos as usize;
             let idx_b = (idx_a + 1) % delay_len;
             let frac = read_pos - idx_a as f32;
-
             let bore_out = self.delay_line[idx_a] * (1.0 - frac) + self.delay_line[idx_b] * frac;
 
-            let feedback = -0.9 * bore_out;
+            let delta_p = breath - bore_out * 0.9;
+            let lip_pos = self.lip_filter.process(delta_p);
 
-            let input_signal = breath + noise + feedback;
-            // libm::tanhf
-            let excitation = libm::tanhf(input_signal * (1.0 + tension));
+            let threshold = 0.05;
+            let lip_opening = (lip_pos - threshold).max(0.0);
 
-            self.dc_block = excitation * 0.5 + self.dc_block * 0.5;
+            let noise = Self::next_random(&mut self.rng_state) * 0.02 * breath;
+            let airflow = (breath + noise) * lip_opening;
 
-            self.delay_line[self.write_ptr] = self.dc_block;
+            let saturated = libm::tanhf(airflow);
 
-            *sample = bore_out;
+            let lp_cutoff = 0.1 + 0.6 * breath;
+            self.lp_state += lp_cutoff * (saturated - self.lp_state);
+
+            let ac_signal = self.lp_state - self.dc_blocker + 0.995 * self.dc_blocker;
+            self.dc_blocker = self.lp_state;
+
+            self.delay_line[self.write_ptr] = ac_signal;
+
+            let rc = 1.0 / (2.0 * PI * 250.0);
+            let dt = 1.0 / self.sample_rate;
+            let alpha = rc / (rc + dt);
+            let bell_out = alpha * (self.bell_state + ac_signal - self.last_out);
+            self.bell_state = bell_out;
+            self.last_out = ac_signal;
+
+            *sample = bell_out * 3.0;
 
             self.write_ptr = (self.write_ptr + 1) % delay_len;
         }

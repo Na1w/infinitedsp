@@ -4,6 +4,10 @@ use alloc::vec;
 use alloc::vec::Vec;
 use wide::f32x4;
 
+/// A digital delay effect.
+///
+/// Provides a simple delay line with feedback and dry/wet mix control.
+/// For a more characterful delay with saturation and modulation, see `TapeDelay`.
 pub struct Delay {
     buffer: Vec<f32>,
     write_ptr: usize,
@@ -52,14 +56,17 @@ impl Delay {
         }
     }
 
+    /// Sets the delay time parameter.
     pub fn set_delay_time(&mut self, delay_time: AudioParam) {
         self.delay_time = delay_time;
     }
 
+    /// Sets the feedback parameter.
     pub fn set_feedback(&mut self, feedback: AudioParam) {
         self.feedback = feedback;
     }
 
+    /// Sets the mix parameter.
     pub fn set_mix(&mut self, mix: AudioParam) {
         self.mix = mix;
     }

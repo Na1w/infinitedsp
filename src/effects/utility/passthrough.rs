@@ -22,6 +22,8 @@ impl Default for Passthrough {
 impl<C: ChannelConfig> FrameProcessor<C> for Passthrough {
     fn process(&mut self, _buffer: &mut [f32], _sample_index: u64) {}
 
+    fn set_sample_rate(&mut self, _sample_rate: f32) {}
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Passthrough"

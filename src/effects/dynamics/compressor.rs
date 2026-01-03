@@ -12,6 +12,7 @@ pub struct Compressor {
     attack_ms: AudioParam,
     release_ms: AudioParam,
     makeup_gain_db: AudioParam,
+    knee_width_db: AudioParam,
     sample_rate: f32,
 
     attack_coeff: f32,
@@ -23,6 +24,7 @@ pub struct Compressor {
     attack_buffer: Vec<f32>,
     release_buffer: Vec<f32>,
     makeup_buffer: Vec<f32>,
+    knee_buffer: Vec<f32>,
 
     last_attack_bits: u32,
     last_release_bits: u32,
@@ -41,6 +43,7 @@ impl Compressor {
             attack_ms: AudioParam::Static(10.0),
             release_ms: AudioParam::Static(100.0),
             makeup_gain_db: AudioParam::Static(0.0),
+            knee_width_db: AudioParam::Static(0.0),
             sample_rate: 44100.0,
             attack_coeff: 0.0,
             release_coeff: 0.0,
@@ -50,6 +53,7 @@ impl Compressor {
             attack_buffer: Vec::new(),
             release_buffer: Vec::new(),
             makeup_buffer: Vec::new(),
+            knee_buffer: Vec::new(),
             last_attack_bits: u32::MAX,
             last_release_bits: u32::MAX,
         };
@@ -93,6 +97,11 @@ impl Compressor {
         self.makeup_gain_db = makeup;
     }
 
+    /// Sets the knee width parameter (in dB).
+    pub fn set_knee(&mut self, knee: AudioParam) {
+        self.knee_width_db = knee;
+    }
+
     fn recalc(&mut self, attack_ms: f32, release_ms: f32) {
         self.attack_coeff = libm::expf(-1.0 / (attack_ms * self.sample_rate * 0.001));
         self.release_coeff = libm::expf(-1.0 / (release_ms * self.sample_rate * 0.001));
@@ -118,6 +127,9 @@ impl FrameProcessor<Mono> for Compressor {
         if self.makeup_buffer.len() < len {
             self.makeup_buffer.resize(len, 0.0);
         }
+        if self.knee_buffer.len() < len {
+            self.knee_buffer.resize(len, 0.0);
+        }
 
         self.threshold_db
             .process(&mut self.threshold_buffer[0..len], sample_index);
@@ -129,13 +141,23 @@ impl FrameProcessor<Mono> for Compressor {
             .process(&mut self.release_buffer[0..len], sample_index);
         self.makeup_gain_db
             .process(&mut self.makeup_buffer[0..len], sample_index);
+        self.knee_width_db
+            .process(&mut self.knee_buffer[0..len], sample_index);
 
-        if let (Some(thresh_db), Some(ratio), Some(att_ms), Some(rel_ms), Some(makeup_db)) = (
+        if let (
+            Some(thresh_db),
+            Some(ratio),
+            Some(att_ms),
+            Some(rel_ms),
+            Some(makeup_db),
+            Some(knee_db),
+        ) = (
             self.threshold_db.get_constant(),
             self.ratio.get_constant(),
             self.attack_ms.get_constant(),
             self.release_ms.get_constant(),
             self.makeup_gain_db.get_constant(),
+            self.knee_width_db.get_constant(),
         ) {
             let att_bits = att_ms.to_bits();
             let rel_bits = rel_ms.to_bits();
@@ -146,7 +168,6 @@ impl FrameProcessor<Mono> for Compressor {
                 self.last_release_bits = rel_bits;
             }
 
-            let threshold_linear = libm::powf(10.0, thresh_db / 20.0);
             let makeup = libm::powf(10.0, makeup_db / 20.0);
             let inv_ratio_sub_one = 1.0 - 1.0 / ratio;
 
@@ -163,11 +184,25 @@ impl FrameProcessor<Mono> for Compressor {
                 }
 
                 let mut gain = 1.0;
-                if self.envelope > threshold_linear {
-                    let env_db = 20.0 * libm::log10f(self.envelope);
-                    let over_db = env_db - thresh_db;
-                    let gain_db = -over_db * inv_ratio_sub_one;
-                    gain = libm::powf(10.0, gain_db / 20.0);
+                let env_db = 20.0 * libm::log10f(self.envelope);
+
+                if knee_db > 0.0 {
+                    if env_db > (thresh_db + knee_db / 2.0) {
+                        let over_db = env_db - thresh_db;
+                        let gain_db = -over_db * inv_ratio_sub_one;
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    } else if env_db > (thresh_db - knee_db / 2.0) {
+                        let slope = inv_ratio_sub_one;
+                        let over_db = env_db - thresh_db + knee_db / 2.0;
+                        let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    }
+                } else {
+                    if env_db > thresh_db {
+                        let over_db = env_db - thresh_db;
+                        let gain_db = -over_db * inv_ratio_sub_one;
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    }
                 }
 
                 *sample = input * gain * makeup;
@@ -179,6 +214,7 @@ impl FrameProcessor<Mono> for Compressor {
                 let attack_ms = self.attack_buffer[i];
                 let release_ms = self.release_buffer[i];
                 let makeup_db = self.makeup_buffer[i];
+                let knee_db = self.knee_buffer[i];
 
                 let att_bits = attack_ms.to_bits();
                 let rel_bits = release_ms.to_bits();
@@ -189,7 +225,6 @@ impl FrameProcessor<Mono> for Compressor {
                     self.last_release_bits = rel_bits;
                 }
 
-                let threshold_linear = libm::powf(10.0, threshold_db / 20.0);
                 let makeup = libm::powf(10.0, makeup_db / 20.0);
 
                 let input = *sample;
@@ -204,11 +239,25 @@ impl FrameProcessor<Mono> for Compressor {
                 }
 
                 let mut gain = 1.0;
-                if self.envelope > threshold_linear {
-                    let env_db = 20.0 * libm::log10f(self.envelope);
-                    let over_db = env_db - threshold_db;
-                    let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                    gain = libm::powf(10.0, gain_db / 20.0);
+                let env_db = 20.0 * libm::log10f(self.envelope);
+
+                if knee_db > 0.0 {
+                    if env_db > (threshold_db + knee_db / 2.0) {
+                        let over_db = env_db - threshold_db;
+                        let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    } else if env_db > (threshold_db - knee_db / 2.0) {
+                        let slope = 1.0 - 1.0 / ratio;
+                        let over_db = env_db - threshold_db + knee_db / 2.0;
+                        let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    }
+                } else {
+                    if env_db > threshold_db {
+                        let over_db = env_db - threshold_db;
+                        let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    }
                 }
 
                 *sample = input * gain * makeup;
@@ -223,7 +272,12 @@ impl FrameProcessor<Mono> for Compressor {
         self.attack_ms.set_sample_rate(sample_rate);
         self.release_ms.set_sample_rate(sample_rate);
         self.makeup_gain_db.set_sample_rate(sample_rate);
+        self.knee_width_db.set_sample_rate(sample_rate);
         self.last_attack_bits = u32::MAX;
+    }
+
+    fn reset(&mut self) {
+        self.envelope = 0.0;
     }
 
     #[cfg(feature = "debug_visualize")]

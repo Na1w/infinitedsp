@@ -90,6 +90,10 @@ impl FrameProcessor<Mono> for Tremolo {
         self.rate.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        self.phase = 0.0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Tremolo"

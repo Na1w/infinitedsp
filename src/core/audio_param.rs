@@ -51,6 +51,13 @@ impl AudioParam {
         }
     }
 
+    /// Resets the state of dynamic parameters.
+    pub fn reset(&mut self) {
+        if let AudioParam::Dynamic(p) = self {
+            p.reset();
+        }
+    }
+
     /// Creates a static AudioParam representing a frequency in Hz.
     pub fn hz(hz: f32) -> Self {
         AudioParam::Static(hz)

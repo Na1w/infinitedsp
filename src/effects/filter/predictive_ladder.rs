@@ -203,6 +203,10 @@ impl FrameProcessor<Mono> for PredictiveLadderFilter {
         self.resonance.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        self.s = [0.0; 4];
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "PredictiveLadderFilter (Moog)"

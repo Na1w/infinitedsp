@@ -14,11 +14,17 @@ pub enum FilterType {
     BandPass,
     /// Notch filter.
     Notch,
+    /// Peaking EQ filter.
+    Peaking,
+    /// Low-shelf filter.
+    LowShelf,
+    /// High-shelf filter.
+    HighShelf,
 }
 
 /// A biquad filter implementation.
 ///
-/// Can be configured as LowPass, HighPass, BandPass, or Notch.
+/// Can be configured as LowPass, HighPass, BandPass, Notch, Peaking, LowShelf, or HighShelf.
 pub struct Biquad {
     filter_type: FilterType,
     frequency: AudioParam,
@@ -40,9 +46,11 @@ pub struct Biquad {
 
     freq_buffer: Vec<f32>,
     q_buffer: Vec<f32>,
+    gain_buffer: Vec<f32>,
 
     last_freq_bits: u32,
     last_q_bits: u32,
+    last_gain_bits: u32,
 }
 
 impl Biquad {
@@ -71,8 +79,10 @@ impl Biquad {
             y2: 0.0,
             freq_buffer: Vec::new(),
             q_buffer: Vec::new(),
+            gain_buffer: Vec::new(),
             last_freq_bits: u32::MAX,
             last_q_bits: u32::MAX,
+            last_gain_bits: u32::MAX,
         }
     }
 
@@ -90,15 +100,16 @@ impl Biquad {
         self.q = q;
     }
 
-    /// Sets the gain parameter (for shelving/peaking filters, currently unused in basic types).
+    /// Sets the gain parameter (for shelving/peaking filters).
     pub fn set_gain(&mut self, gain: AudioParam) {
         self.gain_db = gain;
     }
 
-    fn recalc(&mut self, freq: f32, q: f32) {
+    fn recalc(&mut self, freq: f32, q: f32, gain_db: f32) {
         let w0 = 2.0 * PI * freq / self.sample_rate;
         let alpha = libm::sinf(w0) / (2.0 * q);
         let cos_w0 = libm::cosf(w0);
+        let a = libm::powf(10.0, gain_db / 40.0); // For peaking/shelving
 
         match self.filter_type {
             FilterType::LowPass => {
@@ -133,6 +144,32 @@ impl Biquad {
                 self.a1 = -2.0 * cos_w0;
                 self.a2 = 1.0 - alpha;
             }
+            FilterType::Peaking => {
+                self.b0 = 1.0 + alpha * a;
+                self.b1 = -2.0 * cos_w0;
+                self.b2 = 1.0 - alpha * a;
+                self.a0 = 1.0 + alpha / a;
+                self.a1 = -2.0 * cos_w0;
+                self.a2 = 1.0 - alpha / a;
+            }
+            FilterType::LowShelf => {
+                let sqrt_a = libm::sqrtf(a);
+                self.b0 = a * ((a + 1.0) - (a - 1.0) * cos_w0 + 2.0 * sqrt_a * alpha);
+                self.b1 = 2.0 * a * ((a - 1.0) - (a + 1.0) * cos_w0);
+                self.b2 = a * ((a + 1.0) - (a - 1.0) * cos_w0 - 2.0 * sqrt_a * alpha);
+                self.a0 = (a + 1.0) + (a - 1.0) * cos_w0 + 2.0 * sqrt_a * alpha;
+                self.a1 = -2.0 * ((a - 1.0) + (a + 1.0) * cos_w0);
+                self.a2 = (a + 1.0) + (a - 1.0) * cos_w0 - 2.0 * sqrt_a * alpha;
+            }
+            FilterType::HighShelf => {
+                let sqrt_a = libm::sqrtf(a);
+                self.b0 = a * ((a + 1.0) + (a - 1.0) * cos_w0 + 2.0 * sqrt_a * alpha);
+                self.b1 = -2.0 * a * ((a - 1.0) + (a + 1.0) * cos_w0);
+                self.b2 = a * ((a + 1.0) + (a - 1.0) * cos_w0 - 2.0 * sqrt_a * alpha);
+                self.a0 = (a + 1.0) - (a - 1.0) * cos_w0 + 2.0 * sqrt_a * alpha;
+                self.a1 = 2.0 * ((a - 1.0) - (a + 1.0) * cos_w0);
+                self.a2 = (a + 1.0) - (a - 1.0) * cos_w0 - 2.0 * sqrt_a * alpha;
+            }
         }
 
         let inv_a0 = 1.0 / self.a0;
@@ -154,22 +191,33 @@ impl FrameProcessor<Mono> for Biquad {
         if self.q_buffer.len() < len {
             self.q_buffer.resize(len, 0.0);
         }
+        if self.gain_buffer.len() < len {
+            self.gain_buffer.resize(len, 0.0);
+        }
 
         self.frequency
             .process(&mut self.freq_buffer[0..len], sample_index);
         self.q.process(&mut self.q_buffer[0..len], sample_index);
+        self.gain_db
+            .process(&mut self.gain_buffer[0..len], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let freq = self.freq_buffer[i];
             let q = self.q_buffer[i];
+            let gain = self.gain_buffer[i];
 
             let freq_bits = freq.to_bits();
             let q_bits = q.to_bits();
+            let gain_bits = gain.to_bits();
 
-            if freq_bits != self.last_freq_bits || q_bits != self.last_q_bits {
-                self.recalc(freq, q);
+            if freq_bits != self.last_freq_bits
+                || q_bits != self.last_q_bits
+                || gain_bits != self.last_gain_bits
+            {
+                self.recalc(freq, q, gain);
                 self.last_freq_bits = freq_bits;
                 self.last_q_bits = q_bits;
+                self.last_gain_bits = gain_bits;
             }
 
             let x = *sample;
@@ -196,6 +244,13 @@ impl FrameProcessor<Mono> for Biquad {
         self.last_freq_bits = u32::MAX;
     }
 
+    fn reset(&mut self) {
+        self.x1 = 0.0;
+        self.x2 = 0.0;
+        self.y1 = 0.0;
+        self.y2 = 0.0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         match self.filter_type {
@@ -203,6 +258,9 @@ impl FrameProcessor<Mono> for Biquad {
             FilterType::HighPass => "Biquad (HighPass)",
             FilterType::BandPass => "Biquad (BandPass)",
             FilterType::Notch => "Biquad (Notch)",
+            FilterType::Peaking => "Biquad (Peaking)",
+            FilterType::LowShelf => "Biquad (LowShelf)",
+            FilterType::HighShelf => "Biquad (HighShelf)",
         }
     }
 }

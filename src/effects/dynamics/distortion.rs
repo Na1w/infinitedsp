@@ -14,6 +14,8 @@ pub enum DistortionType {
     BitCrush(f32),
     /// Foldback distortion using sine.
     Foldback,
+    /// Asymmetric distortion.
+    Asymmetric,
 }
 
 /// A distortion effect.
@@ -123,6 +125,13 @@ impl FrameProcessor<Mono> for Distortion {
                         let wet = match self.dist_type {
                             DistortionType::SoftClip => libm::tanhf(driven),
                             DistortionType::Foldback => libm::sinf(driven),
+                            DistortionType::Asymmetric => {
+                                if driven >= 0.0 {
+                                    libm::tanhf(driven)
+                                } else {
+                                    libm::tanhf(driven * 2.0) * 0.5
+                                }
+                            }
                             _ => unreachable!(),
                         };
                         chunk[i] = input * (1.0 - mix) + wet * mix;
@@ -143,6 +152,13 @@ impl FrameProcessor<Mono> for Distortion {
                     libm::roundf(driven * steps) / steps
                 }
                 DistortionType::Foldback => libm::sinf(driven),
+                DistortionType::Asymmetric => {
+                    if driven >= 0.0 {
+                        libm::tanhf(driven)
+                    } else {
+                        libm::tanhf(driven * 2.0) * 0.5
+                    }
+                }
             };
 
             *sample = input * (1.0 - mix) + wet * mix;
@@ -154,6 +170,10 @@ impl FrameProcessor<Mono> for Distortion {
         self.mix.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        // Distortion is stateless (memoryless), so nothing to reset
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         match self.dist_type {
@@ -161,6 +181,7 @@ impl FrameProcessor<Mono> for Distortion {
             DistortionType::HardClip => "Distortion (HardClip)",
             DistortionType::BitCrush(_) => "Distortion (BitCrush)",
             DistortionType::Foldback => "Distortion (Foldback)",
+            DistortionType::Asymmetric => "Distortion (Asymmetric)",
         }
     }
 }

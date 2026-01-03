@@ -111,6 +111,13 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> FrameProcessor<C> for ParallelMixer
         self.mix.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        self.processor.reset();
+        self.delay_line.fill(0.0);
+        self.write_ptr = 0;
+        self.mix.reset();
+    }
+
     fn latency_samples(&self) -> u32 {
         self.processor.latency_samples()
     }

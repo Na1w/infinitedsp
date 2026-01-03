@@ -21,6 +21,11 @@ pub trait FrameProcessor<C: ChannelConfig> {
     /// Should be called before processing starts or when sample rate changes.
     fn set_sample_rate(&mut self, _sample_rate: f32) {}
 
+    /// Resets the internal state of the processor.
+    ///
+    /// Clears delay lines, resets filters, envelopes, phases, etc.
+    fn reset(&mut self) {}
+
     /// Returns the latency of the processor in samples.
     ///
     /// Used for delay compensation.
@@ -62,6 +67,10 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + ?Sized> FrameProcessor<C> for Box<
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
         (**self).set_sample_rate(sample_rate);
+    }
+
+    fn reset(&mut self) {
+        (**self).reset();
     }
 
     fn latency_samples(&self) -> u32 {

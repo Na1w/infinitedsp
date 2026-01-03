@@ -53,11 +53,8 @@ impl FrameProcessor<Stereo> for StereoPanner {
             let gain_l = libm::cosf(angle);
             let gain_r = libm::sinf(angle);
 
-            let l = frame[0];
-            let r = frame[1];
-
-            frame[0] = l * gain_l;
-            frame[1] = r * gain_r;
+            frame[0] *= gain_l;
+            frame[1] *= gain_r;
         }
     }
 

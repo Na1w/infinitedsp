@@ -55,6 +55,13 @@ impl PhysBiQuad {
 
         out
     }
+
+    fn reset(&mut self) {
+        self.x1 = 0.0;
+        self.x2 = 0.0;
+        self.y1 = 0.0;
+        self.y2 = 0.0;
+    }
 }
 
 /// A physical model of a brass instrument.
@@ -209,6 +216,17 @@ impl FrameProcessor<Mono> for BrassModel {
         if buffer_size > self.delay_line.len() {
             self.delay_line.resize(buffer_size, 0.0);
         }
+    }
+
+    fn reset(&mut self) {
+        self.delay_line.fill(0.0);
+        self.write_ptr = 0;
+        self.lip_filter.reset();
+        self.dc_blocker = 0.0;
+        self.lp_state = 0.0;
+        self.bell_state = 0.0;
+        self.last_out = 0.0;
+        self.vibrato_phase = 0.0;
     }
 
     #[cfg(feature = "debug_visualize")]

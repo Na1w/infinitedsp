@@ -98,6 +98,11 @@ where
         self.right.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        self.left.reset();
+        self.right.reset();
+    }
+
     fn latency_samples(&self) -> u32 {
         self.left
             .latency_samples()
@@ -152,6 +157,10 @@ impl<P: FrameProcessor<Mono> + Send> FrameProcessor<Stereo> for MonoToStereo<P> 
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.inner.set_sample_rate(sample_rate);
+    }
+
+    fn reset(&mut self) {
+        self.inner.reset();
     }
 
     fn latency_samples(&self) -> u32 {
@@ -215,6 +224,10 @@ impl<P: FrameProcessor<Stereo> + Send> FrameProcessor<Mono> for StereoToMono<P> 
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.inner.set_sample_rate(sample_rate);
+    }
+
+    fn reset(&mut self) {
+        self.inner.reset();
     }
 
     fn latency_samples(&self) -> u32 {

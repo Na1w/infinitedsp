@@ -106,6 +106,12 @@ impl<C: ChannelConfig> FrameProcessor<C> for DspChain<C> {
         }
     }
 
+    fn reset(&mut self) {
+        for p in &mut self.processors {
+            p.reset();
+        }
+    }
+
     fn latency_samples(&self) -> u32 {
         self.processors.iter().map(|p| p.latency_samples()).sum()
     }

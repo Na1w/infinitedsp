@@ -6,9 +6,9 @@ use alloc::vec::Vec;
 /// The type of curve to use for mapping.
 #[derive(Clone, Copy)]
 pub enum CurveType {
-    /// Linear interpolation.
+    /// Linear mapping.
     Linear,
-    /// Exponential interpolation (suitable for frequency).
+    /// Exponential mapping.
     Exponential,
 }
 
@@ -18,7 +18,6 @@ pub struct MapRange {
     min: AudioParam,
     max: AudioParam,
     curve: CurveType,
-
     input_buffer: Vec<f32>,
     min_buffer: Vec<f32>,
     max_buffer: Vec<f32>,
@@ -28,10 +27,10 @@ impl MapRange {
     /// Creates a new MapRange processor.
     ///
     /// # Arguments
-    /// * `input` - The input signal (expected 0.0 - 1.0).
-    /// * `min` - The minimum output value.
-    /// * `max` - The maximum output value.
-    /// * `curve` - The interpolation curve.
+    /// * `input` - Input signal (expected 0.0 - 1.0).
+    /// * `min` - Minimum output value.
+    /// * `max` - Maximum output value.
+    /// * `curve` - Mapping curve.
     pub fn new(input: AudioParam, min: AudioParam, max: AudioParam, curve: CurveType) -> Self {
         MapRange {
             input,
@@ -69,21 +68,16 @@ impl<C: ChannelConfig> FrameProcessor<C> for MapRange {
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let frame_idx = i / channels;
-            let t = self.input_buffer[frame_idx].clamp(0.0, 1.0);
+            let input_val = self.input_buffer[frame_idx].clamp(0.0, 1.0);
             let min_val = self.min_buffer[frame_idx];
             let max_val = self.max_buffer[frame_idx];
 
-            *sample = match self.curve {
-                CurveType::Linear => min_val + (max_val - min_val) * t,
-                CurveType::Exponential => {
-                    if min_val.abs() < 1e-6 || (min_val < 0.0 && max_val > 0.0) {
-                        min_val + (max_val - min_val) * t
-                    } else {
-                        let ratio = max_val / min_val;
-                        min_val * libm::powf(ratio, t)
-                    }
-                }
+            let t = match self.curve {
+                CurveType::Linear => input_val,
+                CurveType::Exponential => input_val * input_val,
             };
+
+            *sample = min_val + t * (max_val - min_val);
         }
     }
 

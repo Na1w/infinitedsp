@@ -107,7 +107,8 @@ fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor<Stereo> + Send> {
         AudioParam::linear(0.1),
     );
 
-    let gate_proc = TimedGate::new(12.0, config.sample_rate);
+    let mut gate_proc = TimedGate::new(12.0, config.sample_rate);
+    gate_proc.trigger();
     let amp_gate = AudioParam::Dynamic(Box::new(gate_proc));
 
     let amp_param = create_envelope(amp_gate, 0.5, 0.1, 0.04, 2.5, config.sample_rate);

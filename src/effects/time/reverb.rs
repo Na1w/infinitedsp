@@ -3,176 +3,59 @@ use crate::core::channels::Stereo;
 use crate::FrameProcessor;
 use alloc::vec;
 use alloc::vec::Vec;
-use wide::f32x4;
 
 struct DelayLine {
     buffer: Vec<f32>,
-    index: usize,
+    pos: usize,
 }
 
 impl DelayLine {
     fn new(size: usize) -> Self {
         DelayLine {
             buffer: vec![0.0; size],
-            index: 0,
+            pos: 0,
         }
     }
 
-    fn process_comb_block(
-        &mut self,
-        input: &[f32],
-        output: &mut [f32],
-        feedback: f32,
-        damp: f32,
-        filter_store: &mut f32,
-    ) {
-        let len = self.buffer.len();
-        let block_size = input.len();
-        let inv_damp = 1.0 - damp;
-
-        if self.index + block_size <= len {
-            let (in_chunks, in_rem) = input.as_chunks::<4>();
-            let (out_chunks, out_rem) = output.as_chunks_mut::<4>();
-
-            let mut buf_ptr = self.index;
-            let mut current_store = *filter_store;
-
-            for (in_chunk, out_chunk) in in_chunks.iter().zip(out_chunks.iter_mut()) {
-                let in_vals = *in_chunk;
-                let mut out_vals = [0.0; 4];
-
-                let buf_slice = &mut self.buffer[buf_ptr..buf_ptr + 4];
-                let mut buf_vals = [0.0; 4];
-                buf_vals.copy_from_slice(buf_slice);
-
-                for i in 0..4 {
-                    let buf_val = buf_vals[i];
-                    out_vals[i] = buf_val;
-
-                    current_store = buf_val * inv_damp + current_store * damp;
-
-                    let to_write = in_vals[i] + current_store * feedback;
-                    buf_vals[i] = to_write;
-                }
-
-                buf_slice.copy_from_slice(&buf_vals);
-
-                let out_vec = f32x4::from(*out_chunk);
-                let res_vec = f32x4::from(out_vals);
-                *out_chunk = (out_vec + res_vec).to_array();
-
-                buf_ptr += 4;
-            }
-
-            *filter_store = current_store;
-
-            self.index += block_size;
-            if self.index == len {
-                self.index = 0;
-            }
-
-            for (in_val, out_val) in in_rem.iter().zip(out_rem.iter_mut()) {
-                let buf_val = self.buffer[self.index];
-                *out_val += buf_val;
-
-                *filter_store = buf_val * inv_damp + *filter_store * damp;
-
-                self.buffer[self.index] = *in_val + *filter_store * feedback;
-                self.index += 1;
-            }
-        } else {
-            for (in_val, out_val) in input.iter().zip(output.iter_mut()) {
-                let buf_val = self.buffer[self.index];
-                *out_val += buf_val;
-
-                *filter_store = buf_val * inv_damp + *filter_store * damp;
-
-                self.buffer[self.index] = *in_val + *filter_store * feedback;
-
-                self.index += 1;
-                if self.index >= len {
-                    self.index = 0;
-                }
-            }
-        }
+    fn process(&mut self, input: f32) -> f32 {
+        let output = self.buffer[self.pos];
+        self.buffer[self.pos] = input;
+        self.pos = (self.pos + 1) % self.buffer.len();
+        output
     }
 
-    fn process_allpass_block(&mut self, buffer: &mut [f32], feedback: f32) {
-        let len = self.buffer.len();
-        let block_size = buffer.len();
-
-        if self.index + block_size <= len {
-            let feedback_vec = f32x4::splat(feedback);
-            let (chunks, remainder) = buffer.as_chunks_mut::<4>();
-            let mut buf_ptr = self.index;
-
-            for chunk in chunks {
-                let input = f32x4::from(*chunk);
-
-                let buf_slice = &mut self.buffer[buf_ptr..buf_ptr + 4];
-                let mut buf_arr = [0.0; 4];
-                buf_arr.copy_from_slice(buf_slice);
-                let buf_out = f32x4::from(buf_arr);
-
-                let new_buf = input + buf_out * feedback_vec;
-                let output = buf_out - new_buf * feedback_vec;
-
-                let to_write_arr = new_buf.to_array();
-                buf_slice.copy_from_slice(&to_write_arr);
-
-                *chunk = output.to_array();
-                buf_ptr += 4;
-            }
-
-            self.index += block_size;
-            if self.index == len {
-                self.index = 0;
-            }
-
-            for sample in remainder {
-                let input = *sample;
-                let buf_out = self.buffer[self.index];
-
-                let new_buf = input + buf_out * feedback;
-                *sample = buf_out - new_buf * feedback;
-                self.buffer[self.index] = new_buf;
-
-                self.index += 1;
-            }
-        } else {
-            for sample in buffer.iter_mut() {
-                let input = *sample;
-                let buf_out = self.buffer[self.index];
-
-                let new_buf = input + buf_out * feedback;
-                *sample = buf_out - new_buf * feedback;
-                self.buffer[self.index] = new_buf;
-
-                self.index += 1;
-                if self.index >= len {
-                    self.index = 0;
-                }
-            }
-        }
+    fn reset(&mut self) {
+        self.buffer.fill(0.0);
+        self.pos = 0;
     }
 }
 
 struct Comb {
     delay: DelayLine,
-    filter_store: f32,
+    feedback: f32,
+    damp: f32,
+    filter_state: f32,
 }
 
 impl Comb {
-    fn new(size: usize) -> Self {
+    fn new(size: usize, feedback: f32, damp: f32) -> Self {
         Comb {
             delay: DelayLine::new(size),
-            filter_store: 0.0,
+            feedback,
+            damp,
+            filter_state: 0.0,
         }
     }
 
-    fn process_block(&mut self, input: &[f32], output: &mut [f32], feedback: f32, damp: f32) {
-        self.delay
-            .process_comb_block(input, output, feedback, damp, &mut self.filter_store);
+    fn process(&mut self, input: f32) -> f32 {
+        let output = self.delay.process(input + self.filter_state * self.feedback);
+        self.filter_state = output * (1.0 - self.damp) + self.filter_state * self.damp;
+        output
+    }
+
+    fn reset(&mut self) {
+        self.delay.reset();
+        self.filter_state = 0.0;
     }
 }
 
@@ -189,8 +72,20 @@ impl Allpass {
         }
     }
 
-    fn process_block(&mut self, buffer: &mut [f32]) {
-        self.delay.process_allpass_block(buffer, self.feedback);
+    fn process(&mut self, input: f32) -> f32 {
+        let delayed = self.delay.process(input);
+        let output = -input + delayed;
+
+        let buf_len = self.delay.buffer.len();
+        let write_pos = (self.delay.pos + buf_len - 1) % buf_len;
+
+        self.delay.buffer[write_pos] += output * self.feedback;
+
+        output
+    }
+
+    fn reset(&mut self) {
+        self.delay.reset();
     }
 }
 
@@ -201,53 +96,59 @@ impl Allpass {
 ///
 /// Note: This processor outputs 100% Wet signal. Use `ParallelMixer` or `and_mix` to blend with dry signal.
 pub struct Reverb {
-    combs: [Comb; 8],
-    allpasses: [Allpass; 8],
+    combs_l: Vec<Comb>,
+    combs_r: Vec<Comb>,
+    allpasses_l: Vec<Allpass>,
+    allpasses_r: Vec<Allpass>,
     room_size: AudioParam,
     damping: AudioParam,
-    sample_rate: f32,
-    mono_input: Vec<f32>,
-    reverb_out: Vec<f32>,
     room_size_buffer: Vec<f32>,
     damping_buffer: Vec<f32>,
-    seed: usize,
+    sample_rate: f32,
 }
 
 impl Reverb {
-    /// Creates a new Reverb with default seed.
+    /// Creates a new Reverb with default settings.
     pub fn new() -> Self {
-        Self::new_with_seed(0)
+        Self::new_with_params(AudioParam::Static(0.8), AudioParam::Static(0.2), 0)
     }
 
-    /// Creates a new Reverb with a specific seed for randomizing filter lengths.
-    ///
-    /// # Arguments
-    /// * `seed` - Seed for filter length randomization.
+    /// Creates a new Reverb with a specific seed for delay lengths.
     pub fn new_with_seed(seed: usize) -> Self {
-        Self::new_with_params(AudioParam::linear(0.8), AudioParam::linear(0.2), seed)
+        Self::new_with_params(AudioParam::Static(0.8), AudioParam::Static(0.2), seed)
     }
 
-    /// Creates a new Reverb with configurable parameters.
-    ///
-    /// # Arguments
-    /// * `room_size` - Room size (feedback amount for comb filters).
-    /// * `damping` - Damping amount (lowpass filter for comb filters).
-    /// * `seed` - Seed for filter length randomization.
+    /// Creates a new Reverb with custom parameters.
     pub fn new_with_params(room_size: AudioParam, damping: AudioParam, seed: usize) -> Self {
-        let sample_rate = 44100.0;
-        let (combs, allpasses) = Self::create_filters(sample_rate, seed);
+        let comb_tuning = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617];
+        let allpass_tuning = [556, 441, 341, 225];
+        let stereo_spread = 23;
+
+        let mut combs_l = Vec::new();
+        let mut combs_r = Vec::new();
+        let mut allpasses_l = Vec::new();
+        let mut allpasses_r = Vec::new();
+
+        for t in comb_tuning {
+            combs_l.push(Comb::new(t + seed, 0.8, 0.2));
+            combs_r.push(Comb::new(t + stereo_spread + seed, 0.8, 0.2));
+        }
+
+        for t in allpass_tuning {
+            allpasses_l.push(Allpass::new(t + seed));
+            allpasses_r.push(Allpass::new(t + stereo_spread + seed));
+        }
 
         Reverb {
-            combs,
-            allpasses,
+            combs_l,
+            combs_r,
+            allpasses_l,
+            allpasses_r,
             room_size,
             damping,
-            sample_rate,
-            mono_input: Vec::new(),
-            reverb_out: Vec::new(),
             room_size_buffer: Vec::new(),
             damping_buffer: Vec::new(),
-            seed,
+            sample_rate: 44100.0,
         }
     }
 
@@ -260,50 +161,11 @@ impl Reverb {
     pub fn set_damping(&mut self, damping: AudioParam) {
         self.damping = damping;
     }
-
-    fn create_filters(sample_rate: f32, seed: usize) -> ([Comb; 8], [Allpass; 8]) {
-        let sr_scale = sample_rate / 44100.0;
-        let offset = seed * 23;
-
-        let comb_lengths = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617];
-        let allpass_lengths = [225, 341, 441, 561, 689, 832, 971, 1083];
-
-        let combs = [
-            Comb::new(((comb_lengths[0] + offset) as f32 * sr_scale) as usize),
-            Comb::new(((comb_lengths[1] + offset) as f32 * sr_scale) as usize),
-            Comb::new(((comb_lengths[2] + offset) as f32 * sr_scale) as usize),
-            Comb::new(((comb_lengths[3] + offset) as f32 * sr_scale) as usize),
-            Comb::new(((comb_lengths[4] + offset) as f32 * sr_scale) as usize),
-            Comb::new(((comb_lengths[5] + offset) as f32 * sr_scale) as usize),
-            Comb::new(((comb_lengths[6] + offset) as f32 * sr_scale) as usize),
-            Comb::new(((comb_lengths[7] + offset) as f32 * sr_scale) as usize),
-        ];
-
-        let allpasses = [
-            Allpass::new(((allpass_lengths[0] + offset) as f32 * sr_scale) as usize),
-            Allpass::new(((allpass_lengths[1] + offset) as f32 * sr_scale) as usize),
-            Allpass::new(((allpass_lengths[2] + offset) as f32 * sr_scale) as usize),
-            Allpass::new(((allpass_lengths[3] + offset) as f32 * sr_scale) as usize),
-            Allpass::new(((allpass_lengths[4] + offset) as f32 * sr_scale) as usize),
-            Allpass::new(((allpass_lengths[5] + offset) as f32 * sr_scale) as usize),
-            Allpass::new(((allpass_lengths[6] + offset) as f32 * sr_scale) as usize),
-            Allpass::new(((allpass_lengths[7] + offset) as f32 * sr_scale) as usize),
-        ];
-
-        (combs, allpasses)
-    }
 }
 
 impl FrameProcessor<Stereo> for Reverb {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let frames = buffer.len() / 2;
-
-        if self.mono_input.len() < frames {
-            self.mono_input.resize(frames, 0.0);
-        }
-        if self.reverb_out.len() < frames {
-            self.reverb_out.resize(frames, 0.0);
-        }
         if self.room_size_buffer.len() < frames {
             self.room_size_buffer.resize(frames, 0.0);
         }
@@ -316,45 +178,64 @@ impl FrameProcessor<Stereo> for Reverb {
         self.damping
             .process(&mut self.damping_buffer[0..frames], sample_index);
 
-        let room_size_val = self.room_size_buffer[0].clamp(0.0, 0.98);
-        let damping_val = self.damping_buffer[0].clamp(0.0, 1.0);
+        let rs = self.room_size_buffer[0] * 0.28 + 0.7;
+        let dp = self.damping_buffer[0] * 0.4;
 
-        for (i, frame) in buffer.chunks(2).enumerate() {
-            if frame.len() == 2 {
-                self.mono_input[i] = (frame[0] + frame[1]) * 0.5 * 0.015; // Scale down
+        for comb in &mut self.combs_l {
+            comb.feedback = rs;
+            comb.damp = dp;
+        }
+        for comb in &mut self.combs_r {
+            comb.feedback = rs;
+            comb.damp = dp;
+        }
+
+        for frame in buffer.chunks_mut(2) {
+            let input = (frame[0] + frame[1]) * 0.5 * 0.015;
+
+            let mut out_l = 0.0;
+            let mut out_r = 0.0;
+
+            for comb in &mut self.combs_l {
+                out_l += comb.process(input);
             }
-        }
-
-        self.reverb_out.fill(0.0);
-        let input_slice = &self.mono_input[0..frames];
-        let output_slice = &mut self.reverb_out[0..frames];
-
-        for comb in &mut self.combs {
-            comb.process_block(input_slice, output_slice, room_size_val, damping_val);
-        }
-
-        for allpass in &mut self.allpasses {
-            allpass.process_block(output_slice);
-        }
-
-        for (i, frame) in buffer.chunks_mut(2).enumerate() {
-            if frame.len() == 2 {
-                let wet = self.reverb_out[i];
-                frame[0] = wet;
-                frame[1] = wet;
+            for comb in &mut self.combs_r {
+                out_r += comb.process(input);
             }
+
+            for ap in &mut self.allpasses_l {
+                out_l = ap.process(out_l);
+            }
+            for ap in &mut self.allpasses_r {
+                out_r = ap.process(out_r);
+            }
+
+            frame[0] = out_l;
+            frame[1] = out_r;
         }
     }
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
-        if (self.sample_rate - sample_rate).abs() > 1.0 {
-            self.sample_rate = sample_rate;
-            self.room_size.set_sample_rate(sample_rate);
-            self.damping.set_sample_rate(sample_rate);
-            let (combs, allpasses) = Self::create_filters(sample_rate, self.seed);
-            self.combs = combs;
-            self.allpasses = allpasses;
+        self.sample_rate = sample_rate;
+        self.room_size.set_sample_rate(sample_rate);
+        self.damping.set_sample_rate(sample_rate);
+    }
+
+    fn reset(&mut self) {
+        for comb in &mut self.combs_l {
+            comb.reset();
         }
+        for comb in &mut self.combs_r {
+            comb.reset();
+        }
+        for ap in &mut self.allpasses_l {
+            ap.reset();
+        }
+        for ap in &mut self.allpasses_r {
+            ap.reset();
+        }
+        self.room_size.reset();
+        self.damping.reset();
     }
 
     #[cfg(feature = "debug_visualize")]

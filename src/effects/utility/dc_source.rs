@@ -1,27 +1,39 @@
 use crate::core::audio_param::AudioParam;
 use crate::core::channels::Mono;
 use crate::FrameProcessor;
+use alloc::vec::Vec;
 
 /// Generates a constant DC signal.
 ///
 /// Useful for control signals or testing.
 pub struct DcSource {
     value: AudioParam,
+    buffer: Vec<f32>,
 }
 
 impl DcSource {
-    /// Creates a new DC source.
+    /// Creates a new DcSource.
     ///
     /// # Arguments
-    /// * `value` - The value to output.
+    /// * `value` - The DC value to output.
     pub fn new(value: AudioParam) -> Self {
-        DcSource { value }
+        DcSource {
+            value,
+            buffer: Vec::new(),
+        }
     }
 }
 
 impl FrameProcessor<Mono> for DcSource {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        self.value.process(buffer, sample_index);
+        let len = buffer.len();
+        if self.buffer.len() < len {
+            self.buffer.resize(len, 0.0);
+        }
+
+        self.value.process(&mut self.buffer[0..len], sample_index);
+
+        buffer.copy_from_slice(&self.buffer[0..len]);
     }
 
     fn set_sample_rate(&mut self, sample_rate: f32) {

@@ -184,6 +184,14 @@ impl FrameProcessor<Mono> for Delay {
         }
     }
 
+    fn reset(&mut self) {
+        self.buffer.fill(0.0);
+        self.write_ptr = 0;
+        self.delay_time.reset();
+        self.feedback.reset();
+        self.mix.reset();
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Delay (Digital)"

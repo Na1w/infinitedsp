@@ -111,6 +111,11 @@ impl FrameProcessor<Mono> for StateVariableFilter {
         self.resonance.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        self.s1 = 0.0;
+        self.s2 = 0.0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         match self.filter_type {

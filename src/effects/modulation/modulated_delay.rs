@@ -156,6 +156,12 @@ impl FrameProcessor<Mono> for ModulatedDelay {
         }
     }
 
+    fn reset(&mut self) {
+        self.buffer.fill(0.0);
+        self.write_ptr = 0;
+        self.lfo_phase = 0.0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "ModulatedDelay (Chorus/Flanger)"

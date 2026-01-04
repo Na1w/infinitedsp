@@ -19,7 +19,7 @@ impl Offset {
         }
     }
 
-    /// Creates a new Offset processor with a modulatable parameter.
+    /// Creates a new Offset processor with a parameter.
     pub fn new_param(offset: AudioParam) -> Self {
         Offset {
             offset,
@@ -33,48 +33,43 @@ impl<C: ChannelConfig> FrameProcessor<C> for Offset {
         let channels = C::num_channels();
         let frames = buffer.len() / channels;
 
-        match &mut self.offset {
-            AudioParam::Static(val) => {
-                let offset_vec = f32x4::splat(*val);
-                let (chunks, remainder) = buffer.as_chunks_mut::<4>();
+        if self.offset_buffer.len() < frames {
+            self.offset_buffer.resize(frames, 0.0);
+        }
 
-                for chunk in chunks {
-                    let vec = f32x4::from(*chunk);
-                    let result = vec + offset_vec;
-                    *chunk = result.to_array();
-                }
+        self.offset
+            .process(&mut self.offset_buffer[0..frames], sample_index);
 
-                for sample in remainder {
-                    *sample += *val;
-                }
+        if let Some(constant_offset) = self.offset.get_constant() {
+            let offset_vec = f32x4::splat(constant_offset);
+            let (chunks, remainder) = buffer.as_chunks_mut::<4>();
+
+            for chunk in chunks {
+                let input = f32x4::from(*chunk);
+                *chunk = (input + offset_vec).to_array();
             }
-            _ => {
-                if self.offset_buffer.len() < frames {
-                    self.offset_buffer.resize(frames, 0.0);
+
+            for sample in remainder {
+                *sample += constant_offset;
+            }
+        } else {
+            if channels == 1 {
+                let (chunks, remainder) = buffer.as_chunks_mut::<4>();
+                let (offset_chunks, offset_rem) = self.offset_buffer[0..frames].as_chunks::<4>();
+
+                for (chunk, offset_chunk) in chunks.iter_mut().zip(offset_chunks) {
+                    let input = f32x4::from(*chunk);
+                    let offset = f32x4::from(*offset_chunk);
+                    *chunk = (input + offset).to_array();
                 }
 
-                let offset_slice = &mut self.offset_buffer[0..frames];
-                self.offset.process(offset_slice, sample_index);
-
-                if channels == 1 {
-                    let (in_chunks, in_rem) = buffer.as_chunks_mut::<4>();
-                    let (off_chunks, off_rem) = offset_slice.as_chunks::<4>();
-
-                    for (in_c, off_c) in in_chunks.iter_mut().zip(off_chunks.iter()) {
-                        let in_v = f32x4::from(*in_c);
-                        let off_v = f32x4::from(*off_c);
-                        let res = in_v + off_v;
-                        *in_c = res.to_array();
-                    }
-
-                    for (in_s, off_s) in in_rem.iter_mut().zip(off_rem.iter()) {
-                        *in_s += *off_s;
-                    }
-                } else {
-                    for (i, sample) in buffer.iter_mut().enumerate() {
-                        let frame_idx = i / channels;
-                        *sample += offset_slice[frame_idx];
-                    }
+                for (sample, offset) in remainder.iter_mut().zip(offset_rem) {
+                    *sample += offset;
+                }
+            } else {
+                for (i, sample) in buffer.iter_mut().enumerate() {
+                    let frame_idx = i / channels;
+                    *sample += self.offset_buffer[frame_idx];
                 }
             }
         }

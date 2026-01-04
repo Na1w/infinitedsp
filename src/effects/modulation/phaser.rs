@@ -18,6 +18,10 @@ impl Allpass {
         self.zm1 = input + y * a1;
         y
     }
+
+    fn reset(&mut self) {
+        self.zm1 = 0.0;
+    }
 }
 
 /// A 6-stage phaser effect.
@@ -27,6 +31,7 @@ pub struct Phaser {
     filters: [Allpass; 6],
     lfo_phase: f32,
     lfo_inc: f32,
+    rate: AudioParam,
     min_freq: AudioParam,
     max_freq: AudioParam,
     feedback: AudioParam,
@@ -34,6 +39,7 @@ pub struct Phaser {
     sample_rate: f32,
     last_sample: f32,
 
+    rate_buffer: Vec<f32>,
     min_freq_buffer: Vec<f32>,
     max_freq_buffer: Vec<f32>,
     feedback_buffer: Vec<f32>,
@@ -44,11 +50,13 @@ impl Phaser {
     /// Creates a new Phaser.
     ///
     /// # Arguments
+    /// * `rate` - LFO rate (Hz).
     /// * `min_freq` - Minimum frequency of the sweep (Hz).
     /// * `max_freq` - Maximum frequency of the sweep (Hz).
     /// * `feedback` - Feedback amount (0.0 - 1.0).
     /// * `mix` - Dry/Wet mix (0.0 - 1.0).
     pub fn new(
+        rate: AudioParam,
         min_freq: AudioParam,
         max_freq: AudioParam,
         feedback: AudioParam,
@@ -67,18 +75,25 @@ impl Phaser {
         Phaser {
             filters,
             lfo_phase: 0.0,
-            lfo_inc: 2.0 * PI * 0.5 / sample_rate,
+            lfo_inc: 0.0,
+            rate,
             min_freq,
             max_freq,
             feedback,
             mix,
             sample_rate,
             last_sample: 0.0,
+            rate_buffer: Vec::new(),
             min_freq_buffer: Vec::new(),
             max_freq_buffer: Vec::new(),
             feedback_buffer: Vec::new(),
             mix_buffer: Vec::new(),
         }
+    }
+
+    /// Sets the rate parameter.
+    pub fn set_rate(&mut self, rate: AudioParam) {
+        self.rate = rate;
     }
 
     /// Sets the minimum frequency parameter.
@@ -105,6 +120,9 @@ impl Phaser {
 impl FrameProcessor<Mono> for Phaser {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
+        if self.rate_buffer.len() < len {
+            self.rate_buffer.resize(len, 0.0);
+        }
         if self.min_freq_buffer.len() < len {
             self.min_freq_buffer.resize(len, 0.0);
         }
@@ -118,6 +136,8 @@ impl FrameProcessor<Mono> for Phaser {
             self.mix_buffer.resize(len, 0.0);
         }
 
+        self.rate
+            .process(&mut self.rate_buffer[0..len], sample_index);
         self.min_freq
             .process(&mut self.min_freq_buffer[0..len], sample_index);
         self.max_freq
@@ -127,10 +147,13 @@ impl FrameProcessor<Mono> for Phaser {
         self.mix.process(&mut self.mix_buffer[0..len], sample_index);
 
         for (i, sample) in buffer.iter_mut().enumerate() {
+            let rate = self.rate_buffer[i];
             let min_freq = self.min_freq_buffer[i];
             let max_freq = self.max_freq_buffer[i];
             let feedback = self.feedback_buffer[i];
             let mix = self.mix_buffer[i];
+
+            self.lfo_inc = 2.0 * PI * rate / self.sample_rate;
 
             let input = *sample + self.last_sample * feedback;
 
@@ -158,13 +181,20 @@ impl FrameProcessor<Mono> for Phaser {
     }
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
-        let old_sr = self.sample_rate;
         self.sample_rate = sample_rate;
+        self.rate.set_sample_rate(sample_rate);
         self.min_freq.set_sample_rate(sample_rate);
         self.max_freq.set_sample_rate(sample_rate);
         self.feedback.set_sample_rate(sample_rate);
         self.mix.set_sample_rate(sample_rate);
-        self.lfo_inc = self.lfo_inc * old_sr / sample_rate;
+    }
+
+    fn reset(&mut self) {
+        for filter in &mut self.filters {
+            filter.reset();
+        }
+        self.last_sample = 0.0;
+        self.lfo_phase = 0.0;
     }
 
     #[cfg(feature = "debug_visualize")]
@@ -180,6 +210,7 @@ mod tests {
     #[test]
     fn test_phaser() {
         let mut phaser = Phaser::new(
+            AudioParam::Static(0.5),
             AudioParam::Static(200.0),
             AudioParam::Static(2000.0),
             AudioParam::Static(0.5),

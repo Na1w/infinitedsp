@@ -51,10 +51,12 @@ impl<const N: usize> FftPitchShift<N> {
                 let val_a = self.fft_buffer[idx_a];
                 let val_b = self.fft_buffer[idx_b];
 
-                let re = val_a.re * (1.0 - frac) + val_b.re * frac;
-                let im = val_a.im * (1.0 - frac) + val_b.im * frac;
+                let mag_a = val_a.abs();
+                let mag_b = val_b.abs();
+                let mag = mag_a * (1.0 - frac) + mag_b * frac;
 
-                let val = Complex32::new(re, im);
+                let phase = self.fft_buffer[k].arg();
+                let val = Complex32::from_polar(mag, phase);
 
                 self.scratch[k] = val;
 

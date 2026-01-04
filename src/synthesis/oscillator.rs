@@ -128,6 +128,10 @@ impl FrameProcessor<Mono> for Oscillator {
         self.frequency.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        self.phase = 0.0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         match self.waveform {

@@ -13,6 +13,7 @@ fn create_phaser_chain(sample_rate: f32) -> DspChain<Stereo> {
     let osc = Oscillator::new(AudioParam::hz(55.0), Waveform::Saw);
 
     let phaser = Phaser::new(
+        AudioParam::hz(0.5),
         AudioParam::hz(100.0),
         AudioParam::hz(8000.0),
         AudioParam::linear(0.85),

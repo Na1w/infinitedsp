@@ -128,6 +128,12 @@ impl<C: ChannelConfig> FrameProcessor<C> for SummingMixer<C> {
         self.gain.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        for input in &mut self.inputs {
+            input.reset();
+        }
+    }
+
     fn latency_samples(&self) -> u32 {
         self.inputs
             .iter()

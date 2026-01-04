@@ -118,6 +118,12 @@ impl FrameProcessor<Mono> for GranularPitchShift {
         }
     }
 
+    fn reset(&mut self) {
+        self.buffer.fill(0.0);
+        self.write_ptr = 0;
+        self.phasor = 0.0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "GranularPitchShift"

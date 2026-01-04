@@ -272,6 +272,12 @@ impl FrameProcessor<Mono> for Adsr {
         self.release_time.set_sample_rate(sample_rate);
     }
 
+    fn reset(&mut self) {
+        self.state = AdsrState::Idle;
+        self.current_level = 0.0;
+        self.last_gate = 0.0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Adsr Envelope"

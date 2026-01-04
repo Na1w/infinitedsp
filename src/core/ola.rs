@@ -202,6 +202,14 @@ where
 
     fn set_sample_rate(&mut self, _sample_rate: f32) {}
 
+    fn reset(&mut self) {
+        self.input_queue.clear();
+        self.output_queue.clear();
+        self.output_queue.extend(vec![0.0; N]);
+        self.ola_buffer.fill(0.0);
+        self.current_sample_index = 0;
+    }
+
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Ola (Spectral Wrapper)"

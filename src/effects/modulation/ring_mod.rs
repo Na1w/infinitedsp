@@ -87,6 +87,15 @@ impl FrameProcessor<Mono> for RingMod {
         self.freq.set_sample_rate(sample_rate);
         self.mix.set_sample_rate(sample_rate);
     }
+
+    fn reset(&mut self) {
+        self.phase = 0.0;
+    }
+
+    #[cfg(feature = "debug_visualize")]
+    fn name(&self) -> &str {
+        "RingMod"
+    }
 }
 
 #[cfg(test)]

@@ -18,7 +18,7 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 *   **Graph Visualization:** Generate ASCII diagrams of your signal chain for easy debugging (`chain.get_graph()`).
 *   **Spectral Processing:** Includes a robust Overlap-Add (OLA) engine for FFT-based effects.
 *   **Comprehensive Effect Suite:**
-    *   **Time:** Delay, Tape Delay (with saturation & flutter), Reverb (Schroeder).
+    *   **Time:** Delay, Tape Delay (with saturation & flutter), PingPongDelay, Reverb (Schroeder).
     *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style, both Iterative and Predictive ZDF), State Variable Filter (TPT/ZDF).
     *   **Dynamics:** Compressor, Limiter, Distortion (Soft/Hard Clip, BitCrush, Foldback).
     *   **Modulation:** Phaser, Tremolo, Ring Modulator, Chorus, Flanger.
@@ -95,6 +95,7 @@ cargo run --release -p infinitedsp-examples --bin <example_name>
 *   **`infinitedsp_demo`**: A complex polyphonic demo showcasing 30 voices, filters, envelopes, and effects (Stereo).
 *   **`filter_sweep`**: Compares `PredictiveLadderFilter` vs `LadderFilter` with an LFO sweep (Mono).
 *   **`dual_mono_demo`**: Demonstrates independent processing of Left/Right channels (Ping-Pong Delay).
+*   **`ping_pong_demo`**: Demonstrates the stereo PingPongDelay effect.
 *   **`trance_synth`**: A massive stereo supersaw trance pluck with delay, reverb, and a sequencer.
 *   **`karplus_demo`**: Physical modeling of a guitar string (Karplus-Strong algorithm) (Mono).
 *   **`svf_demo`**: State Variable Filter demonstration (BandPass sweep).

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-01-04
+
+### Added
+- **PingPongDelay:** Added a new stereo ping-pong delay effect (`src/effects/time/ping_pong_delay.rs`).
+- **New Demo:** Added `ping_pong_demo` showcasing the new PingPongDelay effect.
+- **Reset Functionality:** Added `reset()` method to `FrameProcessor` trait and all implementations, allowing for state clearing (e.g., delay lines, envelopes) without reallocation.
+
+### Changed
+- **TimedGate (Breaking):** TimedGate no longer starts in triggered state.
+
 ## [0.6.0] - 2026-01-03
 
 ### Added
@@ -22,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tuned comb filter lengths for better sound quality.
   - Optimized `DelayLine` implementation for better performance.
   - `Reverb` is now a "Wet-only" insert effect. This allows it to be used correctly with `ParallelMixer` (Dry/Wet) and in manual mix topologies.
+- **StateVariableFilter:** Minor optimizations for constant parameters and cutoff clamping.
 - **BrassModel Overhaul:** Still work in progress..
 - **DspChain Visualization:** `get_graph()` now indicates whether the chain is Mono or Stereo.
 - **Examples:** All examples updated to use the new type-safe channel system.

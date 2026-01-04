@@ -52,25 +52,23 @@ impl<C: ChannelConfig> FrameProcessor<C> for Offset {
             for sample in remainder {
                 *sample += constant_offset;
             }
+        } else if channels == 1 {
+            let (chunks, remainder) = buffer.as_chunks_mut::<4>();
+            let (offset_chunks, offset_rem) = self.offset_buffer[0..frames].as_chunks::<4>();
+
+            for (chunk, offset_chunk) in chunks.iter_mut().zip(offset_chunks) {
+                let input = f32x4::from(*chunk);
+                let offset = f32x4::from(*offset_chunk);
+                *chunk = (input + offset).to_array();
+            }
+
+            for (sample, offset) in remainder.iter_mut().zip(offset_rem) {
+                *sample += offset;
+            }
         } else {
-            if channels == 1 {
-                let (chunks, remainder) = buffer.as_chunks_mut::<4>();
-                let (offset_chunks, offset_rem) = self.offset_buffer[0..frames].as_chunks::<4>();
-
-                for (chunk, offset_chunk) in chunks.iter_mut().zip(offset_chunks) {
-                    let input = f32x4::from(*chunk);
-                    let offset = f32x4::from(*offset_chunk);
-                    *chunk = (input + offset).to_array();
-                }
-
-                for (sample, offset) in remainder.iter_mut().zip(offset_rem) {
-                    *sample += offset;
-                }
-            } else {
-                for (i, sample) in buffer.iter_mut().enumerate() {
-                    let frame_idx = i / channels;
-                    *sample += self.offset_buffer[frame_idx];
-                }
+            for (i, sample) in buffer.iter_mut().enumerate() {
+                let frame_idx = i / channels;
+                *sample += self.offset_buffer[frame_idx];
             }
         }
     }

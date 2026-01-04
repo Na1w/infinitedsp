@@ -197,12 +197,10 @@ impl FrameProcessor<Mono> for Compressor {
                         let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
                         gain = libm::powf(10.0, gain_db / 20.0);
                     }
-                } else {
-                    if env_db > thresh_db {
-                        let over_db = env_db - thresh_db;
-                        let gain_db = -over_db * inv_ratio_sub_one;
-                        gain = libm::powf(10.0, gain_db / 20.0);
-                    }
+                } else if env_db > thresh_db {
+                    let over_db = env_db - thresh_db;
+                    let gain_db = -over_db * inv_ratio_sub_one;
+                    gain = libm::powf(10.0, gain_db / 20.0);
                 }
 
                 *sample = input * gain * makeup;
@@ -252,12 +250,10 @@ impl FrameProcessor<Mono> for Compressor {
                         let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
                         gain = libm::powf(10.0, gain_db / 20.0);
                     }
-                } else {
-                    if env_db > threshold_db {
-                        let over_db = env_db - threshold_db;
-                        let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                        gain = libm::powf(10.0, gain_db / 20.0);
-                    }
+                } else if env_db > threshold_db {
+                    let over_db = env_db - threshold_db;
+                    let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                    gain = libm::powf(10.0, gain_db / 20.0);
                 }
 
                 *sample = input * gain * makeup;

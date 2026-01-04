@@ -122,7 +122,7 @@ impl FrameProcessor<Mono> for TapeDelay {
             if self.lfo_phase > 2.0 * PI {
                 self.lfo_phase -= 2.0 * PI;
             }
-            let flutter = libm::sinf(self.lfo_phase) * 0.0005; 
+            let flutter = libm::sinf(self.lfo_phase) * 0.0005;
 
             let current_delay_s = delay_s + flutter;
             let delay_samples = current_delay_s * self.sample_rate;

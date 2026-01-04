@@ -99,7 +99,11 @@ impl FrameProcessor<Stereo> for PingPongDelay {
         let current_delay_s = self.delay_buffer[0];
         let delay_samples = libm::roundf(current_delay_s * self.sample_rate as f32) as usize;
         let delay_samples = if delay_samples >= len {
-            if len > 0 { len - 1 } else { 0 }
+            if len > 0 {
+                len - 1
+            } else {
+                0
+            }
         } else {
             delay_samples
         };

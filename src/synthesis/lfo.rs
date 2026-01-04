@@ -83,7 +83,7 @@ impl FrameProcessor<Mono> for Lfo {
 
             if self.phase >= 1.0 {
                 self.phase -= 1.0;
-                self.sh_triggered = false; 
+                self.sh_triggered = false;
             }
 
             let mut val = match self.waveform {

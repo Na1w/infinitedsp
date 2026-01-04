@@ -48,7 +48,9 @@ impl Comb {
     }
 
     fn process(&mut self, input: f32) -> f32 {
-        let output = self.delay.process(input + self.filter_state * self.feedback);
+        let output = self
+            .delay
+            .process(input + self.filter_state * self.feedback);
         self.filter_state = output * (1.0 - self.damp) + self.filter_state * self.damp;
         output
     }

@@ -34,10 +34,7 @@ fn create_ping_pong_chain(sample_rate: f32) -> (DspChain<Stereo>, Trigger) {
         AudioParam::linear(0.5),
     );
 
-    let chain = source
-        .to_stereo()
-        .and(ping_pong)
-        .and(Gain::new_db(-3.0));
+    let chain = source.to_stereo().and(ping_pong).and(Gain::new_db(-3.0));
 
     (chain, trigger)
 }

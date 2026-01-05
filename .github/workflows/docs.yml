@@ -19,7 +19,11 @@ jobs:
       - name: Build Documentation
         run: cargo doc --no-deps --document-private-items
         env:
-          RUSTDOCFLAGS: --enable-index-page -D warnings
+          RUSTDOCFLAGS: -D warnings
+
+      - name: Create index.html redirect
+        run: |
+          echo '<meta http-equiv="refresh" content="0; url=infinitedsp_core/index.html">' > target/doc/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

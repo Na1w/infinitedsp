@@ -40,6 +40,9 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 Performance is tracked over time to ensure no regressions.
 [View Benchmark Charts](https://na1w.github.io/infinitedsp/dev/bench/)
 
+## Documentation
+[View Documentation](https://na1w.github.io/infinitedsp/docs/)
+
 ## Demos
 
 Listen to some of the examples generated with this library:

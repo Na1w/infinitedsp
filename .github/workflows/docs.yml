@@ -1,4 +1,4 @@
-name: Documentation
+name: Publish Site to GitHub Pages
 
 on:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  deploy-docs:
+  deploy-site:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,16 +21,20 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
-      - name: Create index.html redirect
+      - name: Prepare Site Structure
         run: |
-          echo '<meta http-equiv="refresh" content="0; url=infinitedsp_core/index.html">' > target/doc/index.html
+          mkdir -p public/docs
+          cp README.md public/index.md
+          cp -r target/doc/* public/docs/
+          echo '<meta http-equiv="refresh" content="0; url=infinitedsp_core/index.html">' > public/docs/index.html
+          echo "include: ['_implementors', '_static', '_sfnt']" > public/_config.yml
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/doc
+          publish_dir: ./public
           publish_branch: gh-pages
           destination_dir: ./
           keep_files: true
-          force_orphan: false
+          enable_jekyll: true

@@ -27,7 +27,8 @@ jobs:
       run: cargo install iai-callgrind-runner --version 0.16.1
 
     - name: Run benchmarks
-      run: cargo bench | tee output.txt
+      # Disable color output to make parsing easier
+      run: CARGO_TERM_COLOR=never cargo bench | tee output.txt
 
     - name: Parse benchmark results
       run: |
@@ -47,22 +48,28 @@ jobs:
                 lines = f.readlines()
                 
             for line in lines:
-                line = line.rstrip()
+                line = line.strip() # Remove leading/trailing whitespace including newline
                 
-                if name_pattern.match(line) and "::" in line:
+                # If line is empty, skip
+                if not line:
+                    continue
+
+                if "::" in line and name_pattern.match(line):
                     current_bench = line
                     continue
                 
                 if current_bench:
-                    match = inst_pattern.match(line)
-                    if match:
-                        instructions = int(match.group(1))
-                        results.append({
-                            "name": current_bench,
-                            "unit": "instructions",
-                            "value": instructions
-                        })
-                        current_bench = None 
+                    if line.startswith("Instructions:"):
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            val_str = parts[1].split("|")[0]
+                            if val_str.isdigit():
+                                results.append({
+                                    "name": current_bench,
+                                    "unit": "instructions",
+                                    "value": int(val_str)
+                                })
+                                current_bench = None 
         except FileNotFoundError:
             print("output.txt not found")
             sys.exit(1)
@@ -71,6 +78,13 @@ jobs:
             json.dump(results, f, indent=2)
         
         print(f"Parsed {len(results)} benchmarks")
+        
+        if len(results) == 0:
+             print("--- output.txt content ---")
+             with open("output.txt", "r") as f:
+                 print(f.read())
+             print("--------------------------")
+             sys.exit(1)
         '
       
     - name: Store benchmark result

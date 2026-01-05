@@ -23,15 +23,62 @@ jobs:
     - name: Install Valgrind
       run: sudo apt-get update && sudo apt-get install -y valgrind
 
+    - name: Install iai-callgrind-runner
+      run: cargo install iai-callgrind-runner --version 0.16.1
+
     - name: Run benchmarks
       run: cargo bench | tee output.txt
+
+    - name: Parse benchmark results
+      run: |
+        python3 -c '
+        import sys
+        import json
+        import re
+
+        results = []
+        current_bench = None
+        
+        name_pattern = re.compile(r"^([\w:]+)$")
+        inst_pattern = re.compile(r"^\s+Instructions:\s+(\d+)")
+
+        try:
+            with open("output.txt", "r") as f:
+                lines = f.readlines()
+                
+            for line in lines:
+                line = line.rstrip()
+                
+                if name_pattern.match(line) and "::" in line:
+                    current_bench = line
+                    continue
+                
+                if current_bench:
+                    match = inst_pattern.match(line)
+                    if match:
+                        instructions = int(match.group(1))
+                        results.append({
+                            "name": current_bench,
+                            "unit": "instructions",
+                            "value": instructions
+                        })
+                        current_bench = None 
+        except FileNotFoundError:
+            print("output.txt not found")
+            sys.exit(1)
+
+        with open("benchmark_result.json", "w") as f:
+            json.dump(results, f, indent=2)
+        
+        print(f"Parsed {len(results)} benchmarks")
+        '
       
     - name: Store benchmark result
       uses: benchmark-action/github-action-benchmark@v1
       with:
         name: Rust Benchmark
-        tool: 'iai-callgrind'
-        output-file-path: output.txt
+        tool: 'customSmallerIsBetter'
+        output-file-path: benchmark_result.json
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         alert-threshold: '105%'

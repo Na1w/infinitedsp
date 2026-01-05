@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["biquad","ladder_filter","predictive_ladder","state_variable"]};

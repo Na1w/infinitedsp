@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SvfType"],"struct":["StateVariableFilter"]};

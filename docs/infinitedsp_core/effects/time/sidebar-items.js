@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["delay","ping_pong_delay","reverb","tape_delay"]};

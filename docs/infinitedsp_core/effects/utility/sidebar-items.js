@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["add","dc_source","gain","gate","map_range","multiply","offset","panner","passthrough","stereo_widener"]};

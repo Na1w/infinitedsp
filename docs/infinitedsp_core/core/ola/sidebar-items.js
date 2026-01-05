@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Ola"],"trait":["FftHelper","SpectralProcessor"]};

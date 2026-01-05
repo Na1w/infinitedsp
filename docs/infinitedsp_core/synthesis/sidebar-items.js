@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["brass_model","envelope","karplus_strong","lfo","oscillator"]};

@@ -1,0 +1,101 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  deployments: write
+  pull-requests: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Valgrind
+      run: sudo apt-get update && sudo apt-get install -y valgrind
+
+    - name: Install iai-callgrind-runner
+      run: cargo install iai-callgrind-runner --version 0.16.1
+
+    - name: Run benchmarks
+      # Disable color output to make parsing easier
+      run: CARGO_TERM_COLOR=never cargo bench | tee output.txt
+
+    - name: Parse benchmark results
+      run: |
+        python3 -c '
+        import sys
+        import json
+        import re
+
+        results = []
+        current_bench = None
+        
+        name_pattern = re.compile(r"^([\w:]+)$")
+        inst_pattern = re.compile(r"^\s+Instructions:\s+(\d+)")
+
+        try:
+            with open("output.txt", "r") as f:
+                lines = f.readlines()
+                
+            for line in lines:
+                line = line.strip() # Remove leading/trailing whitespace including newline
+                
+                # If line is empty, skip
+                if not line:
+                    continue
+
+                if "::" in line and name_pattern.match(line):
+                    current_bench = line
+                    continue
+                
+                if current_bench:
+                    if line.startswith("Instructions:"):
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            val_str = parts[1].split("|")[0]
+                            if val_str.isdigit():
+                                results.append({
+                                    "name": current_bench,
+                                    "unit": "instructions",
+                                    "value": int(val_str)
+                                })
+                                current_bench = None 
+        except FileNotFoundError:
+            print("output.txt not found")
+            sys.exit(1)
+
+        with open("benchmark_result.json", "w") as f:
+            json.dump(results, f, indent=2)
+        
+        print(f"Parsed {len(results)} benchmarks")
+        
+        if len(results) == 0:
+             print("--- output.txt content ---")
+             with open("output.txt", "r") as f:
+                 print(f.read())
+             print("--------------------------")
+             sys.exit(1)
+        '
+      
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        name: Rust Benchmark
+        tool: 'customSmallerIsBetter'
+        output-file-path: benchmark_result.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        alert-threshold: '105%'
+        comment-on-alert: true
+        fail-on-alert: true
+        summary-always: true

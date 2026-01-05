@@ -1,1 +1,3 @@
+theme: jekyll-theme-slate
+title: InfiniteDSP
 include: ['_implementors', '_static', '_sfnt']

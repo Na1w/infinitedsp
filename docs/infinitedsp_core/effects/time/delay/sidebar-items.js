@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Delay"]};
+window.SIDEBAR_ITEMS = {"constant":["PARAM_CHUNK_SIZE"],"struct":["Delay"]};

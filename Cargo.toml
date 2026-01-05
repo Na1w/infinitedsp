@@ -26,3 +26,10 @@ wide = { version = "1.1.1", default-features = false }
 microfft = "0.6.0"
 num-complex = { version = "0.4", default-features = false, features = ["libm"] }
 libm = "0.2"
+
+[dev-dependencies]
+criterion = "0.8.1"
+
+[[bench]]
+name = "dsp_benchmarks"
+harness = false

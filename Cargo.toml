@@ -28,7 +28,7 @@ num-complex = { version = "0.4", default-features = false, features = ["libm"] }
 libm = "0.2"
 
 [dev-dependencies]
-criterion = "0.8.1"
+iai-callgrind = "0.16.1"
 
 [[bench]]
 name = "dsp_benchmarks"

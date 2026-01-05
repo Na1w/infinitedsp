@@ -4,6 +4,12 @@
 
 # InfiniteDSP Core
 
+[![Rust](https://github.com/Na1w/infinitedsp/actions/workflows/rust.yml/badge.svg)](https://github.com/Na1w/infinitedsp/actions/workflows/rust.yml)
+[![Benchmark](https://github.com/Na1w/infinitedsp/actions/workflows/benchmark.yml/badge.svg)](https://github.com/Na1w/infinitedsp/actions/workflows/benchmark.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/infinitedsp-core.svg)](https://crates.io/crates/infinitedsp-core)
+[![Documentation](https://docs.rs/infinitedsp-core/badge.svg)](https://docs.rs/infinitedsp-core)
+
 A modular, high-performance audio DSP library for Rust, designed for real-time synthesis and effects processing. 
 It is `no_std` compatible (requires `alloc`), making it suitable for embedded audio applications as well as desktop software.
 
@@ -29,6 +35,11 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
     *   **Physical Modeling:** Karplus-Strong (String), Brass Model.
     *   **Control:** LFO, ADSR Envelope (with retrigger support).
 
+## Benchmarks
+
+Performance is tracked over time to ensure no regressions.
+[View Benchmark Charts](https://na1w.github.io/infinitedsp/dev/bench/)
+
 ## Demos
 
 Listen to some of the examples generated with this library:
@@ -36,6 +47,14 @@ Listen to some of the examples generated with this library:
 [![Filter Sweep Demo](assets/player_filter_sweep.svg)](assets/audio/filter_sweep.wav)
 
 [![Trance Synth Demo](assets/player_trance_synth.svg)](assets/audio/trance_synth.wav)
+
+## Showcase
+
+Check out these projects built with `infinitedsp-core`:
+
+*   **[InfiniteTrak](https://github.com/Na1w/infinitetrak)**
+*   **[picoDSP](https://github.com/Na1w/picoDSP)**
+*   **[picoDSP-Edit](https://github.com/Na1w/picoDSP-Edit)**
 
 ## Project Structure
 

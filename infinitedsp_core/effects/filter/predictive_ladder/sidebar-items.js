@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["fast_tan","fast_tan_simd","fast_tanh"],"struct":["PredictiveLadderFilter"]};

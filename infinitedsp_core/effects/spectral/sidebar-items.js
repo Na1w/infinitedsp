@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["granular_pitch","pitch_shift"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["modulated_delay","phaser","ring_mod","tremolo"]};

@@ -24,6 +24,7 @@ jobs:
       - name: Prepare Site Structure
         run: |
           mkdir -p public/docs
+          cp -r assets public/ || true
           cp README.md public/index.md
           cp -r target/doc/* public/docs/
           echo '<meta http-equiv="refresh" content="0; url=infinitedsp_core/index.html">' > public/docs/index.html

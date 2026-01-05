@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767596289580,
+  "lastUpdate": 1767601511823,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -288,6 +288,55 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
             "value": 20775,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5dde9075e44e50d70553e66b46aada60961e23eb",
+          "message": "Enhance digital delay: add linear interpolation, optimize buffers, support sample-accurate modulation and add a delay modulation demo. (#5)",
+          "timestamp": "2026-01-05T09:23:37+01:00",
+          "tree_id": "b403c1545966bb29b3451503dff22f561af6c4b2",
+          "url": "https://github.com/Na1w/infinitedsp/commit/5dde9075e44e50d70553e66b46aada60961e23eb"
+        },
+        "date": 1767601510806,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 40219,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 21332,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 51905,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 20774,
             "unit": "instructions"
           },
           {

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767595055929,
+  "lastUpdate": 1767595563786,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -121,6 +121,55 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/773d41b1e3bf3769c2d7f3e165c8f74d5911371f"
         },
         "date": 1767595054932,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 40220,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 21333,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 51906,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 20775,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "distinct": true,
+          "id": "9d416431f47a51cbcbc79b27ded18a326cbc14c0",
+          "message": "Use jekyll again",
+          "timestamp": "2026-01-05T07:44:34+01:00",
+          "tree_id": "930089728e395f9f8f25267ffe5cf02888002605",
+          "url": "https://github.com/Na1w/infinitedsp/commit/9d416431f47a51cbcbc79b27ded18a326cbc14c0"
+        },
+        "date": 1767595563410,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

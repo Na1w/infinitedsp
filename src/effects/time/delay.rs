@@ -3,25 +3,24 @@ use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec;
 use alloc::vec::Vec;
-use wide::f32x4;
 
-/// A digital delay effect.
+const PARAM_CHUNK_SIZE: usize = 64;
+
+/// A digital delay effect with linear interpolation.
 ///
-/// Provides a simple delay line with feedback and dry/wet mix control.
-/// For a more characterful delay with saturation and modulation, see `TapeDelay`.
+/// Provides a clean delay line with feedback and dry/wet mix control.
+/// Supports sample-accurate modulation of delay time.
 pub struct Delay {
     buffer: Vec<f32>,
     write_ptr: usize,
-    delay_samples: usize,
     delay_time: AudioParam,
     feedback: AudioParam,
     mix: AudioParam,
     max_delay_seconds: f32,
-    sample_rate: usize,
-
-    delay_buffer: Vec<f32>,
-    feedback_buffer: Vec<f32>,
-    mix_buffer: Vec<f32>,
+    sample_rate: f32,
+    delay_buffer: [f32; PARAM_CHUNK_SIZE],
+    feedback_buffer: [f32; PARAM_CHUNK_SIZE],
+    mix_buffer: [f32; PARAM_CHUNK_SIZE],
 }
 
 impl Delay {
@@ -38,22 +37,20 @@ impl Delay {
         feedback: AudioParam,
         mix: AudioParam,
     ) -> Self {
-        let sample_rate = 44100;
-        let size = (max_delay_seconds * sample_rate as f32) as usize;
-        let default_delay = (sample_rate / 2).min(if size > 0 { size - 1 } else { 0 });
+        let sample_rate = 44100.0;
+        let size = (max_delay_seconds * sample_rate) as usize;
 
         Delay {
             buffer: vec![0.0; size],
             write_ptr: 0,
-            delay_samples: default_delay,
             delay_time,
             feedback,
             mix,
             max_delay_seconds,
             sample_rate,
-            delay_buffer: Vec::new(),
-            feedback_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
+            delay_buffer: [0.0; PARAM_CHUNK_SIZE],
+            feedback_buffer: [0.0; PARAM_CHUNK_SIZE],
+            mix_buffer: [0.0; PARAM_CHUNK_SIZE],
         }
     }
 
@@ -74,110 +71,67 @@ impl Delay {
 }
 
 impl FrameProcessor<Mono> for Delay {
-    fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
+    fn process(&mut self, buffer: &mut [f32], start_sample_index: u64) {
         let len = self.buffer.len();
         if len == 0 {
             return;
         }
+        let len_f = len as f32;
 
-        let block_size = buffer.len();
+        let mut current_sample_index = start_sample_index;
 
-        if self.delay_buffer.len() < block_size {
-            self.delay_buffer.resize(block_size, 0.0);
-        }
-        if self.feedback_buffer.len() < block_size {
-            self.feedback_buffer.resize(block_size, 0.0);
-        }
-        if self.mix_buffer.len() < block_size {
-            self.mix_buffer.resize(block_size, 0.0);
-        }
+        for chunk in buffer.chunks_mut(PARAM_CHUNK_SIZE) {
+            let chunk_len = chunk.len();
 
-        self.delay_time
-            .process(&mut self.delay_buffer[0..block_size], sample_index);
-        self.feedback
-            .process(&mut self.feedback_buffer[0..block_size], sample_index);
-        self.mix
-            .process(&mut self.mix_buffer[0..block_size], sample_index);
+            self.delay_time
+                .process(&mut self.delay_buffer[0..chunk_len], current_sample_index);
+            self.feedback.process(
+                &mut self.feedback_buffer[0..chunk_len],
+                current_sample_index,
+            );
+            self.mix
+                .process(&mut self.mix_buffer[0..chunk_len], current_sample_index);
 
-        // For Digital Delay, we use the first sample of delay_time for the whole block to keep SIMD optimization.
-        // If sample-accurate modulation is needed, TapeDelay should be used.
-        let current_delay_s = self.delay_buffer[0];
-        self.delay_samples = libm::roundf(current_delay_s * self.sample_rate as f32) as usize;
-        if self.delay_samples >= len {
-            self.delay_samples = if len > 0 { len - 1 } else { 0 };
-        }
-
-        let read_ptr_start = (self.write_ptr + len - self.delay_samples) % len;
-
-        let write_end = self.write_ptr + block_size;
-        let read_end = read_ptr_start + block_size;
-
-        if write_end <= len && read_end <= len {
-            let (chunks, remainder) = buffer.as_chunks_mut::<4>();
-            let (fb_chunks, fb_rem) = self.feedback_buffer[0..block_size].as_chunks::<4>();
-            let (mix_chunks, mix_rem) = self.mix_buffer[0..block_size].as_chunks::<4>();
-
-            let mut w_ptr = self.write_ptr;
-            let mut r_ptr = read_ptr_start;
-
-            for ((chunk, fb_chunk), mix_chunk) in chunks.iter_mut().zip(fb_chunks).zip(mix_chunks) {
-                let input = f32x4::from(*chunk);
-                let feedback_vec = f32x4::from(*fb_chunk);
-                let mix_vec = f32x4::from(*mix_chunk);
-                let dry_mix_vec = f32x4::splat(1.0) - mix_vec;
-
-                let delayed_slice = &self.buffer[r_ptr..r_ptr + 4];
-                let delayed = f32x4::from(unsafe { *(delayed_slice.as_ptr() as *const [f32; 4]) });
-
-                let next_val = input + delayed * feedback_vec;
-                let next_val_arr = next_val.to_array();
-                self.buffer[w_ptr..w_ptr + 4].copy_from_slice(&next_val_arr);
-
-                let output = input * dry_mix_vec + delayed * mix_vec;
-                *chunk = output.to_array();
-
-                w_ptr += 4;
-                r_ptr += 4;
-            }
-
-            for ((sample, &fb), &mix) in remainder.iter_mut().zip(fb_rem).zip(mix_rem) {
+            for (i, sample) in chunk.iter_mut().enumerate() {
                 let input = *sample;
-                let delayed = self.buffer[r_ptr];
 
-                let next_val = input + delayed * fb;
-                self.buffer[w_ptr] = next_val;
-
-                *sample = input * (1.0 - mix) + delayed * mix;
-
-                w_ptr += 1;
-                r_ptr += 1;
-            }
-
-            self.write_ptr = (self.write_ptr + block_size) % len;
-        } else {
-            for (i, sample) in buffer.iter_mut().enumerate() {
-                let input = *sample;
+                let delay_seconds = self.delay_buffer[i];
                 let fb = self.feedback_buffer[i];
                 let mix = self.mix_buffer[i];
 
-                let read_ptr = (self.write_ptr + len - self.delay_samples) % len;
-                let delayed = self.buffer[read_ptr];
+                let delay_samples = delay_seconds * self.sample_rate;
+                let read_ptr_f = self.write_ptr as f32 - delay_samples;
 
+                let mut read_ptr_norm = read_ptr_f;
+                while read_ptr_norm < 0.0 {
+                    read_ptr_norm += len_f;
+                }
+                while read_ptr_norm >= len_f {
+                    read_ptr_norm -= len_f;
+                }
+
+                let idx_a = read_ptr_norm as usize;
+                let idx_b = (idx_a + 1) % len;
+                let frac = read_ptr_norm - idx_a as f32;
+
+                let delayed = self.buffer[idx_a] * (1.0 - frac) + self.buffer[idx_b] * frac;
                 let next_val = input + delayed * fb;
                 self.buffer[self.write_ptr] = next_val;
 
                 *sample = input * (1.0 - mix) + delayed * mix;
-
                 self.write_ptr = (self.write_ptr + 1) % len;
             }
+
+            current_sample_index += chunk_len as u64;
         }
     }
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
-        self.sample_rate = sample_rate as usize;
+        self.sample_rate = sample_rate;
         self.delay_time.set_sample_rate(sample_rate);
         self.feedback.set_sample_rate(sample_rate);
         self.mix.set_sample_rate(sample_rate);
+
         let new_size = (self.max_delay_seconds * sample_rate) as usize;
         if new_size > self.buffer.len() {
             self.buffer.resize(new_size, 0.0);
@@ -203,20 +157,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_delay() {
+    fn test_delay_interpolation() {
         let mut delay = Delay::new(
             1.0,
-            AudioParam::seconds(0.01),
-            AudioParam::linear(0.5),
-            AudioParam::linear(0.5),
+            AudioParam::Static(0.5 / 100.0),
+            AudioParam::Static(0.0),
+            AudioParam::Static(1.0),
         );
         delay.set_sample_rate(100.0);
 
-        let mut buffer = [1.0, 0.0, 0.0];
+        let mut buffer = [1.0, 0.0, 0.0, 0.0];
         delay.process(&mut buffer, 0);
 
-        assert_eq!(buffer[0], 0.5);
-        assert_eq!(buffer[1], 0.5);
-        assert_eq!(buffer[2], 0.25);
+        assert_eq!(buffer[0], 0.0);
+        assert!((buffer[1] - 0.5).abs() < 1e-5);
     }
 }

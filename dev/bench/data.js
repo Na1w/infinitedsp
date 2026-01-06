@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767601511823,
+  "lastUpdate": 1767677352524,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -337,6 +337,55 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
             "value": 20774,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d1f3933254eea43494dd65adfa696bf9f2c77159",
+          "message": "Add low memory effects: `ReverbLowMem` and `DelayLowMem`, optimized for memory efficiency using `i16` storage and downsampling, with demo comparisons. (#6)",
+          "timestamp": "2026-01-06T06:27:22+01:00",
+          "tree_id": "fe1e693930574db790f36856563ff6edb54d9c34",
+          "url": "https://github.com/Na1w/infinitedsp/commit/d1f3933254eea43494dd65adfa696bf9f2c77159"
+        },
+        "date": 1767677351944,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 40220,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 21333,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 51906,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 20775,
             "unit": "instructions"
           },
           {

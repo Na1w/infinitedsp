@@ -34,6 +34,7 @@ extern crate alloc;
 pub mod core;
 pub mod effects;
 pub mod synthesis;
+pub mod low_mem;
 
 pub use crate::core::channels::{ChannelConfig, Mono, Stereo};
 pub use crate::core::frame_processor::FrameProcessor;

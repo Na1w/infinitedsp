@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["delay_low_mem","reverb_low_mem"]};

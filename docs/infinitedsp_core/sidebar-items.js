@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["core","effects","synthesis"]};
+window.SIDEBAR_ITEMS = {"mod":["core","effects","low_mem","synthesis"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["I16_SCALE","I16_SCALE_INV","PARAM_CHUNK_SIZE"],"struct":["DelayLowMem"]};

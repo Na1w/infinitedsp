@@ -184,12 +184,6 @@ impl FrameProcessor<Mono> for Adsr {
             self.release_buffer.resize(len, 0.0);
         }
 
-        self.gate_buffer.fill(0.0);
-        self.attack_buffer.fill(0.0);
-        self.decay_buffer.fill(0.0);
-        self.sustain_buffer.fill(0.0);
-        self.release_buffer.fill(0.0);
-
         self.gate
             .process(&mut self.gate_buffer[0..len], sample_index);
         self.attack_time
@@ -359,5 +353,48 @@ mod tests {
         // Sustain is 0.5.
         // It's hard to predict exact float values without running, but ensuring it's not 0 is a good start.
         assert!(last_val > 0.0);
+    }
+
+    #[test]
+    fn test_adsr_multiple_blocks_overwrites_internal_buffers() {
+        // This test ensures that running multiple blocks works correctly,
+        // implying that internal buffers are correctly handled (overwritten)
+        // even if we remove the explicit zero-fill.
+
+        let gate = AudioParam::Static(1.0);
+        let attack = AudioParam::Static(0.01);
+        let decay = AudioParam::Static(0.1);
+        let sustain = AudioParam::Static(0.5);
+        let release = AudioParam::Static(0.1);
+
+        let mut adsr = Adsr::new(gate, attack, decay, sustain, release);
+        adsr.set_sample_rate(100.0);
+
+        let mut buffer = [0.0; 10];
+
+        // Block 1: Gate is 1.0. Attack phase.
+        adsr.process(&mut buffer, 0);
+        assert!(buffer[0] > 0.0); // Should have started attacking
+
+        // Change gate to 0.0 for next block
+        adsr.gate = AudioParam::Static(0.0);
+
+        // Block 2: Gate is 0.0. Should switch to Release phase (since we were attacking/decaying)
+        // If the internal gate buffer wasn't overwritten (still had 1.0s), we wouldn't release correctly.
+        adsr.process(&mut buffer, 10);
+
+        // We should see values decreasing or being low.
+        // If gate buffer still had 1.0s, we would continue Attack/Decay.
+        // If gate buffer has 0.0s, we enter Release.
+        // Previous state was Attack. Gate 0 -> Release.
+        // Values should decrease towards 0.
+
+        let last_val_block_2 = buffer[9];
+
+        // Block 3: Continue Release
+        adsr.process(&mut buffer, 20);
+        let last_val_block_3 = buffer[9];
+
+        assert!(last_val_block_3 < last_val_block_2, "Should be releasing/decaying to 0");
     }
 }

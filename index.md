@@ -18,13 +18,14 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 *   **`no_std` Compatible:** Built for portability using `libm` and `alloc`.
 *   **Type-Safe Channel System:** Explicit `Mono` and `Stereo` types prevent routing errors.
 *   **Modular Architecture:** Build complex audio chains using `DspChain` and `Mixer`.
+*   **Static Dispatch:** Use `StaticDspChain` for zero-overhead composition of processors, allowing for aggressive compiler inlining.
 *   **AudioParam System:** All parameters can be static, linked to thread-safe controls (atomics), or modulated by other audio signals (e.g., LFOs, Envelopes) at sample rate.
 *   **Signal Math:** Combine signals easily with `Add` and `Multiply` processors.
 *   **SIMD Optimization:** Uses `wide` for SIMD-accelerated processing where applicable.
 *   **Graph Visualization:** Generate ASCII diagrams of your signal chain for easy debugging (`chain.get_graph()`).
 *   **Spectral Processing:** Includes a robust Overlap-Add (OLA) engine for FFT-based effects.
 *   **Comprehensive Effect Suite:**
-    *   **Time:** Delay, Tape Delay (with saturation & flutter), PingPongDelay, Reverb (Schroeder).
+    *   **Time:** Delay (Standard & LowMem), Tape Delay (with saturation & flutter), PingPongDelay, Reverb (Schroeder, Standard & LowMem).
     *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style, both Iterative and Predictive ZDF), State Variable Filter (TPT/ZDF).
     *   **Dynamics:** Compressor, Limiter, Distortion (Soft/Hard Clip, BitCrush, Foldback).
     *   **Modulation:** Phaser, Tremolo, Ring Modulator, Chorus, Flanger.
@@ -134,6 +135,12 @@ To generate and view the API documentation:
 ```sh
 cargo doc --open
 ```
+
+## AI Contribution Policy
+
+This project allows and encourages experimentation with AI agents for code generation and optimization. However, all AI-generated contributions must be strictly verified by a human maintainer. This verification includes:
+1.  **Code Review:** Ensuring the code is idiomatic, safe, and follows project standards.
+2.  **Audio Verification:** Listening to the output to ensure correctness and high audio quality (no artifacts, correct DSP behavior).
 
 ## License
 

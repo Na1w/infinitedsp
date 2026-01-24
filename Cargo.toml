@@ -1,7 +1,7 @@
 [package]
 name = "infinitedsp-core"
 authors = ["Fredrik Andersson <fredrikandersson@mac.com>"]
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 license = "MIT"
 description = "A modular audio DSP library for synthesis and effects."

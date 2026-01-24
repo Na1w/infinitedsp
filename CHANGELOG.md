@@ -5,13 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - xxxx-xx-xx
+## [0.8.0] - 2026-01-24
 
 ### Added
 - **LowMem Time Effects:** Added `DelayLowMem` and `ReverbLowMem` with low memory usage, these prioritize low memory usage over high quality and performance.
+- **Static Dispatch:** Added `StaticDspChain` a statically typed alternative to `DspChain` allowing the rust compiler to inline/optimize more aggressively.
 
 ### Changed
 - **Delay:** Improved the quality and performance of `Delay`, it now supports sample accurate modulation as well.
+- **SummingMixer:** Made `SummingMixer` generic to support both dynamic (`Box<dyn FrameProcessor>`) and static (`StaticDspChain`) inputs, enabling fully static mixing pipelines.
+- **Performance:** This release includes the first AI-contributed improvements to the library. Google Labs' "Jules" identified and implemented a significant optimization in the `Adsr` module. Additionally, it implemented the `StaticDspChain` struct for static dispatch optimization.
 
 ## [0.7.0] - 2026-01-04
 

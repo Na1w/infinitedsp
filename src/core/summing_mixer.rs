@@ -6,28 +6,34 @@ use alloc::boxed::Box;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::marker::PhantomData;
 use wide::f32x4;
 
 /// Sums multiple audio signals together, with optional gain and soft clipping.
 ///
 /// Useful for mixing multiple voices or signals.
-pub struct SummingMixer<C: ChannelConfig> {
-    inputs: Vec<Box<dyn FrameProcessor<C> + Send>>,
+pub struct SummingMixer<
+    C: ChannelConfig,
+    T: FrameProcessor<C> + Send = Box<dyn FrameProcessor<C> + Send>,
+> {
+    inputs: Vec<T>,
     gain: AudioParam,
     soft_clip: bool,
     temp_buffer: Vec<f32>,
     gain_buffer: Vec<f32>,
+    _marker: PhantomData<C>,
 }
 
-impl<C: ChannelConfig> SummingMixer<C> {
+impl<C: ChannelConfig, T: FrameProcessor<C> + Send> SummingMixer<C, T> {
     /// Creates a new SummingMixer with the given inputs.
-    pub fn new(inputs: Vec<Box<dyn FrameProcessor<C> + Send>>) -> Self {
+    pub fn new(inputs: Vec<T>) -> Self {
         SummingMixer {
             inputs,
             gain: AudioParam::Static(1.0),
             soft_clip: false,
             temp_buffer: Vec::new(),
             gain_buffer: Vec::new(),
+            _marker: PhantomData,
         }
     }
 
@@ -54,7 +60,7 @@ impl<C: ChannelConfig> SummingMixer<C> {
     }
 }
 
-impl<C: ChannelConfig> FrameProcessor<C> for SummingMixer<C> {
+impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for SummingMixer<C, T> {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         if self.inputs.is_empty() {
             buffer.fill(0.0);

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769265428344,
+  "lastUpdate": 1769267917636,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -494,6 +494,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::envelope::bench_adsr",
             "value": 31759,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "161369871+google-labs-jules[bot]@users.noreply.github.com",
+            "name": "google-labs-jules[bot]",
+            "username": "google-labs-jules[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "313dbede7d776e106ab47a7501c4ec7d7d239518",
+          "message": "perf: remove redundant buffer zero-filling in Adsr::process (#9)\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+          "timestamp": "2026-01-24T16:17:09+01:00",
+          "tree_id": "82dc7c5ff573fec1c56eee56eb874748212d23af",
+          "url": "https://github.com/Na1w/infinitedsp/commit/313dbede7d776e106ab47a7501c4ec7d7d239518"
+        },
+        "date": 1769267916979,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 40220,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 21333,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 51906,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 20775,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31075,
             "unit": "instructions"
           }
         ]

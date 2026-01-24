@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["audio_param","channels","dsp_chain","frame_processor","ola","parallel_mixer","parameter","summing_mixer"]};
+window.SIDEBAR_ITEMS = {"mod":["audio_param","channels","dsp_chain","frame_processor","ola","parallel_mixer","parameter","static_dsp_chain","summing_mixer"]};

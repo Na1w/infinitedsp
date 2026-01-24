@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769265062308,
+  "lastUpdate": 1769265428344,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -440,6 +440,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::reverb::bench_reverb",
             "value": 313818,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "161369871+google-labs-jules[bot]@users.noreply.github.com",
+            "name": "google-labs-jules[bot]",
+            "username": "google-labs-jules[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6f6b7b5e9d99d7ba8889c7abf649d00abe620b1f",
+          "message": "⚡ Optimize Adsr envelope processing with iterators (#8)\n\nReplaces indexed loop with zipped iterators to avoid bounds checking.\nInlines recalc logic to handle borrow checker constraints.\nAdds benchmark for Adsr.\nAdds unit test for Adsr verification.\nAchieves ~20% instruction reduction.\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+          "timestamp": "2026-01-24T15:35:35+01:00",
+          "tree_id": "d3c2d85367fa0dd6b48fedc9b87b1956f4f781e0",
+          "url": "https://github.com/Na1w/infinitedsp/commit/6f6b7b5e9d99d7ba8889c7abf649d00abe620b1f"
+        },
+        "date": 1769265427590,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 40219,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 21332,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 51905,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 20774,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31759,
             "unit": "instructions"
           }
         ]

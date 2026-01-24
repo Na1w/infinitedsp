@@ -2,9 +2,10 @@ use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
 use infinitedsp_core::core::channels::DualMono;
+use infinitedsp_core::core::channels::MonoToStereo;
 use infinitedsp_core::core::channels::Stereo;
-use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
+use infinitedsp_core::core::static_dsp_chain::{SerialProcessor, StaticDspChain};
 use infinitedsp_core::core::summing_mixer::SummingMixer;
 use infinitedsp_core::effects::dynamics::compressor::Compressor;
 use infinitedsp_core::effects::filter::state_variable::{StateVariableFilter, SvfType};
@@ -19,6 +20,7 @@ use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 use infinitedsp_examples::audio_backend::init_audio_interleaved;
 use std::thread;
 use std::time::Duration;
+use std::vec::Vec;
 
 struct SimpleRng {
     state: u32,
@@ -48,6 +50,17 @@ struct VoiceConfig {
     sample_rate: f32,
 }
 
+type VoiceChain = StaticDspChain<
+    Stereo,
+    SerialProcessor<
+        SerialProcessor<
+            MonoToStereo<SerialProcessor<Oscillator, StateVariableFilter>>,
+            StereoPanner,
+        >,
+        Gain,
+    >,
+>;
+
 fn create_envelope(
     gate: AudioParam,
     attack: f32,
@@ -63,10 +76,11 @@ fn create_envelope(
         AudioParam::linear(sustain),
         AudioParam::seconds(release),
     );
-    AudioParam::Dynamic(Box::new(DspChain::new(env, sample_rate)))
+    let chain = StaticDspChain::new(env, sample_rate);
+    AudioParam::Dynamic(Box::new(chain))
 }
 
-fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor<Stereo> + Send> {
+fn create_voice(config: VoiceConfig) -> VoiceChain {
     let pitch_param = create_envelope(
         AudioParam::Static(1.0),
         config.attack_time,
@@ -83,7 +97,11 @@ fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor<Stereo> + Send> {
         CurveType::Exponential,
     );
 
-    let osc = Oscillator::new(AudioParam::Dynamic(Box::new(sweep)), Waveform::Saw);
+    let sweep_chain = StaticDspChain::new(sweep, config.sample_rate);
+    let osc = Oscillator::new(
+        AudioParam::Dynamic(Box::new(sweep_chain)),
+        Waveform::Saw,
+    );
 
     let filter_param = create_envelope(
         AudioParam::Static(1.0),
@@ -100,32 +118,34 @@ fn create_voice(config: VoiceConfig) -> Box<dyn FrameProcessor<Stereo> + Send> {
         AudioParam::hz(15000.0),
         CurveType::Exponential,
     );
+    let cutoff_chain = StaticDspChain::new(cutoff_sweep, config.sample_rate);
 
     let filter = StateVariableFilter::new(
         SvfType::LowPass,
-        AudioParam::Dynamic(Box::new(cutoff_sweep)),
+        AudioParam::Dynamic(Box::new(cutoff_chain)),
         AudioParam::linear(0.1),
     );
 
     let mut gate_proc = TimedGate::new(12.0, config.sample_rate);
     gate_proc.trigger();
-    let amp_gate = AudioParam::Dynamic(Box::new(gate_proc));
+    let amp_gate = AudioParam::Dynamic(Box::new(StaticDspChain::new(
+        gate_proc,
+        config.sample_rate,
+    )));
 
     let amp_param = create_envelope(amp_gate, 0.5, 0.1, 0.04, 2.5, config.sample_rate);
 
     let panner = StereoPanner::new(AudioParam::Static(config.pan));
     let gain = Gain::new(amp_param);
 
-    Box::new(
-        DspChain::new(osc, config.sample_rate)
-            .and(filter)
-            .to_stereo()
-            .and(panner)
-            .and(gain),
-    )
+    StaticDspChain::new(osc, config.sample_rate)
+        .and(filter)
+        .to_stereo()
+        .and(panner)
+        .and(gain)
 }
 
-fn create_thx_chain(sample_rate: f32) -> DspChain<Stereo> {
+fn create_thx_chain(sample_rate: f32) -> Box<dyn FrameProcessor<Stereo> + Send> {
     let mut rng = SimpleRng::new(12345);
     let mut voices = Vec::new();
 
@@ -169,18 +189,20 @@ fn create_thx_chain(sample_rate: f32) -> DspChain<Stereo> {
     let limiter_r = Compressor::new_limiter();
     let stereo_limiter = DualMono::new(limiter_l, limiter_r);
 
-    DspChain::new(summed, sample_rate)
+    let master_chain = StaticDspChain::new(summed, sample_rate)
         .and(stereo_limiter)
         .and(StereoWidener::new(AudioParam::Static(1.5)))
         .and_mix(
             0.5,
             Reverb::new_with_params(AudioParam::Static(0.9), AudioParam::Static(0.4), 0),
-        )
+        );
+
+    Box::new(master_chain)
 }
 
 fn main() -> Result<()> {
     let chain = create_thx_chain(44100.0);
-    println!("Signal Chain:\n{}", chain.get_graph());
+    println!("Signal Chain:\n{}", chain.visualize(0));
 
     let (stream, sample_rate) = init_audio_interleaved(|sr| create_thx_chain(sr))?;
 

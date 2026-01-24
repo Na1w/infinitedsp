@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767677352524,
+  "lastUpdate": 1769265062308,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -366,6 +366,55 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/d1f3933254eea43494dd65adfa696bf9f2c77159"
         },
         "date": 1767677351944,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 40220,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 21333,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 51906,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 20775,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "161369871+google-labs-jules[bot]@users.noreply.github.com",
+            "name": "google-labs-jules[bot]",
+            "username": "google-labs-jules[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2998d0f21c87671ace72d5594dd16938b4aae3f6",
+          "message": "feat: Add StaticDspChain for compile-time optimization (#7)\n\n* Add StaticDspChain for static dispatch support\n\nIntroduces `StaticDspChain` and `SerialProcessor` to allow compile-time\ncomposition of DSP processors. This enables static dispatch and\npotential compiler optimizations (\"kernel fusion\") as an alternative to\nthe existing dynamic `DspChain`.\n\n- Added `src/core/static_dsp_chain.rs`.\n- Implemented `SerialProcessor` for chaining two processors.\n- Implemented `StaticDspChain` with builder pattern methods (`and`, `and_mix`, `to_stereo`, etc.).\n- Registered module in `src/core/mod.rs`.\n- Added tests for basic chaining and channel conversion.\n\n* Add static_chain_demo and genericize audio backend\n\n- Added `examples_app/src/bin/static_chain_demo.rs` to showcase `StaticDspChain`.\n- Updated `examples_app/src/audio_backend.rs` to allow initialization with any `FrameProcessor` (generic P), enabling the use of `StaticDspChain` in examples.\n- Addressed PR comment requesting an example.\n\n---------\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+          "timestamp": "2026-01-24T15:29:36+01:00",
+          "tree_id": "e95c934c77b72d13d2ce9bced51eeca1e1643125",
+          "url": "https://github.com/Na1w/infinitedsp/commit/2998d0f21c87671ace72d5594dd16938b4aae3f6"
+        },
+        "date": 1769265061739,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

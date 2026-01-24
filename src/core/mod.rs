@@ -5,4 +5,5 @@ pub mod frame_processor;
 pub mod ola;
 pub mod parallel_mixer;
 pub mod parameter;
+pub mod static_dsp_chain;
 pub mod summing_mixer;

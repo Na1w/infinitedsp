@@ -1,7 +1,6 @@
 use anyhow::Result;
 use cpal::traits::{DeviceTrait, HostTrait};
 use infinitedsp_core::core::channels::{Mono, Stereo};
-use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
 use std::sync::{Arc, Mutex};
 
@@ -9,9 +8,10 @@ pub trait StereoProcessor: Send {
     fn process(&mut self, left: &mut [f32], right: &mut [f32], sample_index: u64);
 }
 
-pub fn init_audio<F>(create_processor: F) -> Result<(cpal::Stream, f32)>
+pub fn init_audio<F, P>(create_processor: F) -> Result<(cpal::Stream, f32)>
 where
-    F: FnOnce(f32) -> DspChain<Mono>,
+    P: FrameProcessor<Mono> + Send + 'static,
+    F: FnOnce(f32) -> P,
 {
     let host = cpal::default_host();
     let device = host
@@ -26,9 +26,15 @@ where
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let stream = match config.sample_format() {
-        cpal::SampleFormat::F32 => run_mono::<f32>(&device, &config.into(), processor, err_fn)?,
-        cpal::SampleFormat::I16 => run_mono::<i16>(&device, &config.into(), processor, err_fn)?,
-        cpal::SampleFormat::U16 => run_mono::<u16>(&device, &config.into(), processor, err_fn)?,
+        cpal::SampleFormat::F32 => {
+            run_mono::<f32, P>(&device, &config.into(), processor, err_fn)?
+        }
+        cpal::SampleFormat::I16 => {
+            run_mono::<i16, P>(&device, &config.into(), processor, err_fn)?
+        }
+        cpal::SampleFormat::U16 => {
+            run_mono::<u16, P>(&device, &config.into(), processor, err_fn)?
+        }
         _ => return Err(anyhow::anyhow!("Unsupported sample format")),
     };
 
@@ -68,9 +74,10 @@ where
     Ok((stream, sample_rate))
 }
 
-pub fn init_audio_interleaved<F>(create_processor: F) -> Result<(cpal::Stream, f32)>
+pub fn init_audio_interleaved<F, P>(create_processor: F) -> Result<(cpal::Stream, f32)>
 where
-    F: FnOnce(f32) -> DspChain<Stereo>,
+    P: FrameProcessor<Stereo> + Send + 'static,
+    F: FnOnce(f32) -> P,
 {
     let host = cpal::default_host();
     let device = host
@@ -86,13 +93,13 @@ where
 
     let stream = match config.sample_format() {
         cpal::SampleFormat::F32 => {
-            run_interleaved::<f32>(&device, &config.into(), processor, err_fn)?
+            run_interleaved::<f32, P>(&device, &config.into(), processor, err_fn)?
         }
         cpal::SampleFormat::I16 => {
-            run_interleaved::<i16>(&device, &config.into(), processor, err_fn)?
+            run_interleaved::<i16, P>(&device, &config.into(), processor, err_fn)?
         }
         cpal::SampleFormat::U16 => {
-            run_interleaved::<u16>(&device, &config.into(), processor, err_fn)?
+            run_interleaved::<u16, P>(&device, &config.into(), processor, err_fn)?
         }
         _ => return Err(anyhow::anyhow!("Unsupported sample format")),
     };
@@ -100,14 +107,15 @@ where
     Ok((stream, sample_rate))
 }
 
-fn run_mono<T>(
+fn run_mono<T, P>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    processor: Arc<Mutex<DspChain<Mono>>>,
+    processor: Arc<Mutex<P>>,
     err_fn: impl Fn(cpal::StreamError) + Send + 'static,
 ) -> Result<cpal::Stream>
 where
     T: cpal::Sample + cpal::SizedSample + cpal::FromSample<f32>,
+    P: FrameProcessor<Mono> + Send + 'static,
 {
     let channels = config.channels as usize;
     let mut process_buffer = vec![0.0; 512];
@@ -196,14 +204,15 @@ where
     Ok(stream)
 }
 
-fn run_interleaved<T>(
+fn run_interleaved<T, P>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    processor: Arc<Mutex<DspChain<Stereo>>>,
+    processor: Arc<Mutex<P>>,
     err_fn: impl Fn(cpal::StreamError) + Send + 'static,
 ) -> Result<cpal::Stream>
 where
     T: cpal::Sample + cpal::SizedSample + cpal::FromSample<f32>,
+    P: FrameProcessor<Stereo> + Send + 'static,
 {
     let channels = config.channels as usize;
     let mut process_buffer = vec![0.0; 512];

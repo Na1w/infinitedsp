@@ -4,13 +4,13 @@ use infinitedsp_core::core::audio_param::AudioParam;
 use infinitedsp_core::core::channels::Stereo;
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::effects::time::reverb::Reverb;
-use infinitedsp_core::low_mem::effects::time::reverb_low_mem::ReverbLowMem;
 use infinitedsp_core::effects::utility::gain::Gain;
+use infinitedsp_core::effects::utility::gate::TimedGate;
+use infinitedsp_core::low_mem::effects::time::reverb_low_mem::ReverbLowMem;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 use infinitedsp_examples::audio_backend::init_audio_interleaved;
 use std::thread;
 use std::time::Duration;
-use infinitedsp_core::effects::utility::gate::TimedGate;
 
 fn create_noise_source(sample_rate: f32) -> DspChain<Stereo> {
     let noise = Oscillator::new(AudioParam::hz(0.0), Waveform::WhiteNoise);
@@ -32,7 +32,7 @@ fn create_standard_reverb_chain(sample_rate: f32) -> DspChain<Stereo> {
     let reverb = Reverb::new_with_params(
         AudioParam::Static(REVERB_SIZE),
         AudioParam::Static(REVERB_DAMPING),
-        REVERB_SEED
+        REVERB_SEED,
     );
 
     source.and(reverb).and(Gain::new_db(-3.0))
@@ -44,7 +44,7 @@ fn create_low_mem_reverb_chain(sample_rate: f32) -> DspChain<Stereo> {
     let reverb = ReverbLowMem::new_with_params(
         AudioParam::Static(REVERB_SIZE),
         AudioParam::Static(REVERB_DAMPING),
-        REVERB_SEED
+        REVERB_SEED,
     );
 
     source.and(reverb).and(Gain::new_db(-3.0))
@@ -65,7 +65,10 @@ fn run_demo(name: &str, factory: impl Fn(f32) -> DspChain<Stereo> + Send + 'stat
 fn main() -> Result<()> {
     println!("Comparing Standard Reverb vs Low Memory Reverb");
     run_demo("Standard Reverb (f32)", create_standard_reverb_chain)?;
-    run_demo("Low Mem Reverb (i16 + downsample)", create_low_mem_reverb_chain)?;
+    run_demo(
+        "Low Mem Reverb (i16 + downsample)",
+        create_low_mem_reverb_chain,
+    )?;
 
     Ok(())
 }

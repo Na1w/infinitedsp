@@ -26,12 +26,7 @@ impl Comb4LowMem {
             "Comb4LowMem: All filters must be at least 1 unit long."
         );
 
-        let sizes_downsampled = [
-            sizes[0] / 2,
-            sizes[1] / 2,
-            sizes[2] / 2,
-            sizes[3] / 2,
-        ];
+        let sizes_downsampled = [sizes[0] / 2, sizes[1] / 2, sizes[2] / 2, sizes[3] / 2];
 
         Comb4LowMem {
             buffers: [
@@ -185,8 +180,14 @@ impl ReverbLowMem {
             comb_tuning[7] + stereo_spread + seed,
         ];
 
-        let combs_l = [Comb4LowMem::new(c1_l, 0.8, 0.2), Comb4LowMem::new(c2_l, 0.8, 0.2)];
-        let combs_r = [Comb4LowMem::new(c1_r, 0.8, 0.2), Comb4LowMem::new(c2_r, 0.8, 0.2)];
+        let combs_l = [
+            Comb4LowMem::new(c1_l, 0.8, 0.2),
+            Comb4LowMem::new(c2_l, 0.8, 0.2),
+        ];
+        let combs_r = [
+            Comb4LowMem::new(c1_r, 0.8, 0.2),
+            Comb4LowMem::new(c2_r, 0.8, 0.2),
+        ];
 
         let mut allpasses_l = Vec::new();
         let mut allpasses_r = Vec::new();

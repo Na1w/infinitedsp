@@ -98,10 +98,7 @@ fn create_voice(config: VoiceConfig) -> VoiceChain {
     );
 
     let sweep_chain = StaticDspChain::new(sweep, config.sample_rate);
-    let osc = Oscillator::new(
-        AudioParam::Dynamic(Box::new(sweep_chain)),
-        Waveform::Saw,
-    );
+    let osc = Oscillator::new(AudioParam::Dynamic(Box::new(sweep_chain)), Waveform::Saw);
 
     let filter_param = create_envelope(
         AudioParam::Static(1.0),
@@ -128,10 +125,8 @@ fn create_voice(config: VoiceConfig) -> VoiceChain {
 
     let mut gate_proc = TimedGate::new(12.0, config.sample_rate);
     gate_proc.trigger();
-    let amp_gate = AudioParam::Dynamic(Box::new(StaticDspChain::new(
-        gate_proc,
-        config.sample_rate,
-    )));
+    let amp_gate =
+        AudioParam::Dynamic(Box::new(StaticDspChain::new(gate_proc, config.sample_rate)));
 
     let amp_param = create_envelope(amp_gate, 0.5, 0.1, 0.04, 2.5, config.sample_rate);
 

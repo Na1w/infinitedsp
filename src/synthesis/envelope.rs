@@ -395,6 +395,9 @@ mod tests {
         adsr.process(&mut buffer, 20);
         let last_val_block_3 = buffer[9];
 
-        assert!(last_val_block_3 < last_val_block_2, "Should be releasing/decaying to 0");
+        assert!(
+            last_val_block_3 < last_val_block_2,
+            "Should be releasing/decaying to 0"
+        );
     }
 }

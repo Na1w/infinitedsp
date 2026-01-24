@@ -1,11 +1,11 @@
+use super::channels::{ChannelConfig, Mono, MonoToStereo, Stereo, StereoToMono};
 use super::frame_processor::FrameProcessor;
-use super::channels::{ChannelConfig, Mono, Stereo, MonoToStereo, StereoToMono};
 use super::parallel_mixer::ParallelMixer;
 use crate::core::audio_param::AudioParam;
-use core::marker::PhantomData;
-use alloc::string::String;
 #[cfg(feature = "debug_visualize")]
 use alloc::format;
+use alloc::string::String;
+use core::marker::PhantomData;
 
 /// A processor that runs two processors in series.
 ///
@@ -102,7 +102,11 @@ impl<C: ChannelConfig, P: FrameProcessor<C>> StaticDspChain<C, P> {
     }
 
     /// Appends a processor to the chain with a dry/wet mix.
-    pub fn and_mix<P2>(self, mix: f32, mut next: P2) -> StaticDspChain<C, SerialProcessor<P, ParallelMixer<P2, C>>>
+    pub fn and_mix<P2>(
+        self,
+        mix: f32,
+        mut next: P2,
+    ) -> StaticDspChain<C, SerialProcessor<P, ParallelMixer<P2, C>>>
     where
         P2: FrameProcessor<C>,
     {
@@ -117,7 +121,11 @@ impl<C: ChannelConfig, P: FrameProcessor<C>> StaticDspChain<C, P> {
     }
 
     /// Appends a processor to the chain with a modulatable dry/wet mix.
-    pub fn and_mix_param<P2>(self, mix: AudioParam, mut next: P2) -> StaticDspChain<C, SerialProcessor<P, ParallelMixer<P2, C>>>
+    pub fn and_mix_param<P2>(
+        self,
+        mix: AudioParam,
+        mut next: P2,
+    ) -> StaticDspChain<C, SerialProcessor<P, ParallelMixer<P2, C>>>
     where
         P2: FrameProcessor<C>,
     {
@@ -224,8 +232,7 @@ mod tests {
         let g1 = Gain::new(AudioParam::Static(0.5));
         let g2 = Gain::new(AudioParam::Static(0.5));
 
-        let mut chain = StaticDspChain::<Mono, _>::new(g1, 44100.0)
-            .and(g2);
+        let mut chain = StaticDspChain::<Mono, _>::new(g1, 44100.0).and(g2);
 
         let mut buffer = [1.0; 4];
         chain.process(&mut buffer, 0);
@@ -238,8 +245,7 @@ mod tests {
     #[test]
     fn test_static_chain_stereo_conversion() {
         let g1 = Gain::new(AudioParam::Static(0.5));
-        let mut chain = StaticDspChain::<Mono, _>::new(g1, 44100.0)
-            .to_stereo();
+        let mut chain = StaticDspChain::<Mono, _>::new(g1, 44100.0).to_stereo();
 
         // Input stereo buffer (interleaved)
         let mut buffer = [1.0; 4]; // 2 frames stereo

@@ -118,8 +118,12 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 let delay_samples = delay_seconds * delay_sr;
                 let mut read_ptr_norm = current_pos - delay_samples;
 
-                if read_ptr_norm < 0.0 { read_ptr_norm += len_f; }
-                if read_ptr_norm >= len_f { read_ptr_norm -= len_f; }
+                if read_ptr_norm < 0.0 {
+                    read_ptr_norm += len_f;
+                }
+                if read_ptr_norm >= len_f {
+                    read_ptr_norm -= len_f;
+                }
 
                 let idx_a = read_ptr_norm as usize;
                 let idx_b = if idx_a + 1 == len { 0 } else { idx_a + 1 };
@@ -145,7 +149,9 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 let next_val_clamped = avg_val.clamp(-1.0, 1.0);
                 self.buffer[self.write_ptr] = (next_val_clamped * I16_SCALE) as i16;
                 self.write_ptr += 1;
-                if self.write_ptr == len { self.write_ptr = 0; }
+                if self.write_ptr == len {
+                    self.write_ptr = 0;
+                }
                 self.phase = 0;
 
                 chunk[i] = input * (1.0 - mix) + delayed * mix;
@@ -154,20 +160,24 @@ impl FrameProcessor<Mono> for DelayLowMem {
 
             while i + 4 <= chunk_len && self.write_ptr + 2 <= len {
                 let delay_seconds = f32x4::new([
-                    self.delay_buffer[i], self.delay_buffer[i+1],
-                    self.delay_buffer[i+2], self.delay_buffer[i+3]
+                    self.delay_buffer[i],
+                    self.delay_buffer[i + 1],
+                    self.delay_buffer[i + 2],
+                    self.delay_buffer[i + 3],
                 ]);
                 let fb = f32x4::new([
-                    self.feedback_buffer[i], self.feedback_buffer[i+1],
-                    self.feedback_buffer[i+2], self.feedback_buffer[i+3]
+                    self.feedback_buffer[i],
+                    self.feedback_buffer[i + 1],
+                    self.feedback_buffer[i + 2],
+                    self.feedback_buffer[i + 3],
                 ]);
                 let mix = f32x4::new([
-                    self.mix_buffer[i], self.mix_buffer[i+1],
-                    self.mix_buffer[i+2], self.mix_buffer[i+3]
+                    self.mix_buffer[i],
+                    self.mix_buffer[i + 1],
+                    self.mix_buffer[i + 2],
+                    self.mix_buffer[i + 3],
                 ]);
-                let input = f32x4::new([
-                    chunk[i], chunk[i+1], chunk[i+2], chunk[i+3]
-                ]);
+                let input = f32x4::new([chunk[i], chunk[i + 1], chunk[i + 2], chunk[i + 3]]);
 
                 let write_base = self.write_ptr as f32;
                 let current_pos = f32x4::splat(write_base) + f32x4::new([0.0, 0.5, 1.0, 1.5]);
@@ -210,34 +220,47 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 ];
 
                 let val_prev = f32x4::new([
-                    self.buffer[idx_prev[0]] as f32, self.buffer[idx_prev[1]] as f32,
-                    self.buffer[idx_prev[2]] as f32, self.buffer[idx_prev[3]] as f32,
+                    self.buffer[idx_prev[0]] as f32,
+                    self.buffer[idx_prev[1]] as f32,
+                    self.buffer[idx_prev[2]] as f32,
+                    self.buffer[idx_prev[3]] as f32,
                 ]) * i16_scale_inv_vec;
 
                 let val_a = f32x4::new([
-                    self.buffer[idx_a[0]] as f32, self.buffer[idx_a[1]] as f32,
-                    self.buffer[idx_a[2]] as f32, self.buffer[idx_a[3]] as f32,
+                    self.buffer[idx_a[0]] as f32,
+                    self.buffer[idx_a[1]] as f32,
+                    self.buffer[idx_a[2]] as f32,
+                    self.buffer[idx_a[3]] as f32,
                 ]) * i16_scale_inv_vec;
 
                 let val_b = f32x4::new([
-                    self.buffer[idx_b[0]] as f32, self.buffer[idx_b[1]] as f32,
-                    self.buffer[idx_b[2]] as f32, self.buffer[idx_b[3]] as f32,
+                    self.buffer[idx_b[0]] as f32,
+                    self.buffer[idx_b[1]] as f32,
+                    self.buffer[idx_b[2]] as f32,
+                    self.buffer[idx_b[3]] as f32,
                 ]) * i16_scale_inv_vec;
 
                 let val_next = f32x4::new([
-                    self.buffer[idx_next[0]] as f32, self.buffer[idx_next[1]] as f32,
-                    self.buffer[idx_next[2]] as f32, self.buffer[idx_next[3]] as f32,
+                    self.buffer[idx_next[0]] as f32,
+                    self.buffer[idx_next[1]] as f32,
+                    self.buffer[idx_next[2]] as f32,
+                    self.buffer[idx_next[3]] as f32,
                 ]) * i16_scale_inv_vec;
 
                 let idx_a_f = f32x4::new([
-                    idx_a[0] as f32, idx_a[1] as f32, idx_a[2] as f32, idx_a[3] as f32
+                    idx_a[0] as f32,
+                    idx_a[1] as f32,
+                    idx_a[2] as f32,
+                    idx_a[3] as f32,
                 ]);
                 let frac = read_ptr_norm - idx_a_f;
 
                 let c0 = val_a;
                 let c1 = f32x4::splat(0.5) * (val_b - val_prev);
-                let c2 = val_prev - f32x4::splat(2.5) * val_a + f32x4::splat(2.0) * val_b - f32x4::splat(0.5) * val_next;
-                let c3 = f32x4::splat(0.5) * (val_next - val_prev) + f32x4::splat(1.5) * (val_a - val_b);
+                let c2 = val_prev - f32x4::splat(2.5) * val_a + f32x4::splat(2.0) * val_b
+                    - f32x4::splat(0.5) * val_next;
+                let c3 =
+                    f32x4::splat(0.5) * (val_next - val_prev) + f32x4::splat(1.5) * (val_a - val_b);
 
                 let delayed = ((c3 * frac + c2) * frac + c1) * frac + c0;
 
@@ -253,14 +276,16 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 self.buffer[self.write_ptr] = (avg0_clamped * I16_SCALE) as i16;
                 self.buffer[self.write_ptr + 1] = (avg1_clamped * I16_SCALE) as i16;
                 self.write_ptr += 2;
-                if self.write_ptr == len { self.write_ptr = 0; }
+                if self.write_ptr == len {
+                    self.write_ptr = 0;
+                }
 
                 let out = input * (f32x4::ONE - mix) + delayed * mix;
                 let out_arr: [f32; 4] = out.into();
                 chunk[i] = out_arr[0];
-                chunk[i+1] = out_arr[1];
-                chunk[i+2] = out_arr[2];
-                chunk[i+3] = out_arr[3];
+                chunk[i + 1] = out_arr[1];
+                chunk[i + 2] = out_arr[2];
+                chunk[i + 3] = out_arr[3];
 
                 i += 4;
             }
@@ -275,8 +300,12 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 let delay_samples = delay_seconds * delay_sr;
                 let mut read_ptr_norm = current_pos - delay_samples;
 
-                if read_ptr_norm < 0.0 { read_ptr_norm += len_f; }
-                if read_ptr_norm >= len_f { read_ptr_norm -= len_f; }
+                if read_ptr_norm < 0.0 {
+                    read_ptr_norm += len_f;
+                }
+                if read_ptr_norm >= len_f {
+                    read_ptr_norm -= len_f;
+                }
 
                 let idx_a = read_ptr_norm as usize;
                 let idx_b = if idx_a + 1 == len { 0 } else { idx_a + 1 };
@@ -306,7 +335,9 @@ impl FrameProcessor<Mono> for DelayLowMem {
                     let next_val_clamped = avg_val.clamp(-1.0, 1.0);
                     self.buffer[self.write_ptr] = (next_val_clamped * I16_SCALE) as i16;
                     self.write_ptr += 1;
-                    if self.write_ptr == len { self.write_ptr = 0; }
+                    if self.write_ptr == len {
+                        self.write_ptr = 0;
+                    }
                     self.phase = 0;
                 }
 

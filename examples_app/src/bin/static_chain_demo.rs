@@ -44,7 +44,9 @@ fn main() -> Result<()> {
         "Playing Static Chain Demo (Saw -> Delay -> Gain) at {}Hz...",
         sample_rate
     );
-    println!("This chain is fully statically dispatched and candidate for 'kernel fusion' optimization.");
+    println!(
+        "This chain is fully statically dispatched and candidate for 'kernel fusion' optimization."
+    );
 
     stream.play()?;
 

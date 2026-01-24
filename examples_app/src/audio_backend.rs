@@ -26,15 +26,9 @@ where
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let stream = match config.sample_format() {
-        cpal::SampleFormat::F32 => {
-            run_mono::<f32, P>(&device, &config.into(), processor, err_fn)?
-        }
-        cpal::SampleFormat::I16 => {
-            run_mono::<i16, P>(&device, &config.into(), processor, err_fn)?
-        }
-        cpal::SampleFormat::U16 => {
-            run_mono::<u16, P>(&device, &config.into(), processor, err_fn)?
-        }
+        cpal::SampleFormat::F32 => run_mono::<f32, P>(&device, &config.into(), processor, err_fn)?,
+        cpal::SampleFormat::I16 => run_mono::<i16, P>(&device, &config.into(), processor, err_fn)?,
+        cpal::SampleFormat::U16 => run_mono::<u16, P>(&device, &config.into(), processor, err_fn)?,
         _ => return Err(anyhow::anyhow!("Unsupported sample format")),
     };
 

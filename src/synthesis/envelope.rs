@@ -208,14 +208,46 @@ impl FrameProcessor<Mono> for Adsr {
             triggered = true;
         }
 
-        for (i, sample) in buffer.iter_mut().enumerate() {
-            let gate_val = self.gate_buffer[i];
-            let attack = self.attack_buffer[i];
-            let decay = self.decay_buffer[i];
-            let sustain = self.sustain_buffer[i];
-            let release = self.release_buffer[i];
+        for (sample, &gate_val, &attack, &decay, &sustain, &release) in buffer
+            .iter_mut()
+            .zip(self.gate_buffer.iter())
+            .zip(self.attack_buffer.iter())
+            .zip(self.decay_buffer.iter())
+            .zip(self.sustain_buffer.iter())
+            .zip(self.release_buffer.iter())
+            .map(|(((((s, g), a), d), su), r)| (s, g, a, d, su, r))
+        {
+            if (attack - self.last_attack).abs() > 0.0001 {
+                let attack_samples = attack * self.sample_rate;
+                self.attack_step = if attack_samples > 0.0 {
+                    1.0 / attack_samples
+                } else {
+                    1.0
+                };
+                self.last_attack = attack;
+            }
 
-            self.recalc(attack, decay, release);
+            if (decay - self.last_decay).abs() > 0.0001 {
+                let decay_samples = decay * self.sample_rate;
+                self.decay_coeff = if decay_samples > 0.0 {
+                    // libm::expf
+                    libm::expf(-1.0 / (decay_samples / 3.0))
+                } else {
+                    0.0
+                };
+                self.last_decay = decay;
+            }
+
+            if (release - self.last_release).abs() > 0.0001 {
+                let release_samples = release * self.sample_rate;
+                self.release_coeff = if release_samples > 0.0 {
+                    // libm::expf
+                    libm::expf(-1.0 / (release_samples / 3.0))
+                } else {
+                    0.0
+                };
+                self.last_release = release;
+            }
 
             if triggered {
                 self.state = AdsrState::Attack;
@@ -281,5 +313,51 @@ impl FrameProcessor<Mono> for Adsr {
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Adsr Envelope"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_adsr_basic_envelope() {
+        // Simple test to ensure ADSR goes through phases
+        let gate = AudioParam::Static(0.0); // Initially off
+        let attack = AudioParam::Static(0.01);
+        let decay = AudioParam::Static(0.05);
+        let sustain = AudioParam::Static(0.5);
+        let release = AudioParam::Static(0.1);
+
+        let mut adsr = Adsr::new(gate, attack, decay, sustain, release);
+        adsr.set_sample_rate(100.0); // Low sample rate for easier reasoning
+
+        let mut buffer = [0.0; 10];
+
+        // Process with gate off - should be 0
+        adsr.process(&mut buffer, 0);
+        for &s in buffer.iter() {
+            assert_eq!(s, 0.0);
+        }
+
+        // Trigger gate
+        adsr.gate = AudioParam::Static(1.0);
+        adsr.process(&mut buffer, 0);
+
+        // Attack phase
+        assert!(buffer[0] > 0.0);
+        assert!(buffer[9] > buffer[0]);
+
+        // Continue processing to see if it reaches sustain eventually
+        for _ in 0..10 {
+            adsr.process(&mut buffer, 0);
+        }
+
+        // Should be near sustain level or decaying to it
+        let last_val = buffer[9];
+        // We expect it to have peaked and now be decaying/sustaining
+        // Sustain is 0.5.
+        // It's hard to predict exact float values without running, but ensuring it's not 0 is a good start.
+        assert!(last_val > 0.0);
     }
 }

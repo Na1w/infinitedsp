@@ -2,7 +2,6 @@ use crate::core::audio_param::AudioParam;
 use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
-use core::f32::consts::PI;
 
 /// The waveform shape for the LFO.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -26,7 +25,8 @@ pub struct Lfo {
     phase: f32,
     frequency: AudioParam,
     waveform: LfoWaveform,
-    unipolar: bool,
+    min: f32,
+    max: f32,
     sample_rate: f32,
     freq_buffer: Vec<f32>,
     rng_state: u32,
@@ -45,7 +45,8 @@ impl Lfo {
             phase: 0.0,
             frequency,
             waveform,
-            unipolar: false,
+            min: -1.0,
+            max: 1.0,
             sample_rate: 44100.0,
             freq_buffer: Vec::new(),
             rng_state: 12345,
@@ -54,9 +55,20 @@ impl Lfo {
         }
     }
 
+    /// Sets the output range of the LFO.
+    pub fn set_range(&mut self, min: f32, max: f32) {
+        self.min = min;
+        self.max = max;
+    }
+
     /// Sets whether the output is unipolar (0.0 to 1.0) or bipolar (-1.0 to 1.0).
+    /// This is a convenience wrapper around `set_range`.
     pub fn set_unipolar(&mut self, unipolar: bool) {
-        self.unipolar = unipolar;
+        if unipolar {
+            self.set_range(0.0, 1.0);
+        } else {
+            self.set_range(-1.0, 1.0);
+        }
     }
 
     fn next_random(&mut self) -> f32 {
@@ -74,6 +86,9 @@ impl FrameProcessor<Mono> for Lfo {
 
         self.frequency.process(&mut self.freq_buffer, sample_index);
 
+        let range = self.max - self.min;
+        let offset = self.min;
+
         for (i, sample) in buffer.iter_mut().enumerate() {
             let freq = self.freq_buffer[i];
             let inc = freq / self.sample_rate;
@@ -84,16 +99,19 @@ impl FrameProcessor<Mono> for Lfo {
             if self.phase >= 1.0 {
                 self.phase -= 1.0;
                 self.sh_triggered = false;
+            } else if self.phase < 0.0 {
+                self.phase += 1.0;
             }
 
-            let mut val = match self.waveform {
-                LfoWaveform::Sine => libm::sinf(current_phase * 2.0 * PI),
+            let raw = match self.waveform {
+                LfoWaveform::Sine => {
+                    let mut t = current_phase * 2.0 - 1.0;
+                    t = 2.0 * libm::fabsf(t) - 1.0;
+                    t * (1.5 - 0.5 * t * t)
+                }
                 LfoWaveform::Triangle => {
-                    if current_phase < 0.5 {
-                        4.0 * current_phase - 1.0
-                    } else {
-                        4.0 * (1.0 - current_phase) - 1.0
-                    }
+                    let t = current_phase * 2.0 - 1.0;
+                    2.0 * libm::fabsf(t) - 1.0
                 }
                 LfoWaveform::Saw => 2.0 * current_phase - 1.0,
                 LfoWaveform::Square => {
@@ -112,11 +130,8 @@ impl FrameProcessor<Mono> for Lfo {
                 }
             };
 
-            if self.unipolar {
-                val = val * 0.5 + 0.5;
-            }
-
-            *sample = val;
+            let normalized = (raw + 1.0) * 0.5;
+            *sample = offset + normalized * range;
         }
     }
 

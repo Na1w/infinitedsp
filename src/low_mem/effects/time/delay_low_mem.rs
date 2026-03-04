@@ -116,13 +116,9 @@ impl FrameProcessor<Mono> for DelayLowMem {
 
                 let current_pos = self.write_ptr as f32 + 0.5;
                 let delay_samples = delay_seconds * delay_sr;
-                let mut read_ptr_norm = current_pos - delay_samples;
-
+                let mut read_ptr_norm = (current_pos - delay_samples) % len_f;
                 if read_ptr_norm < 0.0 {
                     read_ptr_norm += len_f;
-                }
-                if read_ptr_norm >= len_f {
-                    read_ptr_norm -= len_f;
                 }
 
                 let idx_a = read_ptr_norm as usize;
@@ -185,17 +181,17 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 let delay_samples = delay_seconds * delay_sr_vec;
                 let read_ptr_f = current_pos - delay_samples;
 
-                let mask_under = read_ptr_f.sign_bit();
-                let read_ptr_1 = mask_under.blend(read_ptr_f + len_f_vec, read_ptr_f);
-                let mask_in_range = (read_ptr_1 - len_f_vec).sign_bit();
-                let read_ptr_norm = mask_in_range.blend(read_ptr_1, read_ptr_1 - len_f_vec);
+                let wraps = (read_ptr_f / len_f_vec).round();
+                let mut read_ptr_norm_v = read_ptr_f - wraps * len_f_vec;
+                let mask_under = read_ptr_norm_v.sign_bit();
+                read_ptr_norm_v = mask_under.blend(read_ptr_norm_v + len_f_vec, read_ptr_norm_v);
 
-                let idx_f: [f32; 4] = read_ptr_norm.into();
+                let idx_f: [f32; 4] = read_ptr_norm_v.into();
                 let idx_a = [
-                    idx_f[0] as usize,
-                    idx_f[1] as usize,
-                    idx_f[2] as usize,
-                    idx_f[3] as usize,
+                    idx_f[0] as usize % len,
+                    idx_f[1] as usize % len,
+                    idx_f[2] as usize % len,
+                    idx_f[3] as usize % len,
                 ];
 
                 let idx_prev = [
@@ -253,7 +249,7 @@ impl FrameProcessor<Mono> for DelayLowMem {
                     idx_a[2] as f32,
                     idx_a[3] as f32,
                 ]);
-                let frac = read_ptr_norm - idx_a_f;
+                let frac = read_ptr_norm_v - idx_a_f;
 
                 let c0 = val_a;
                 let c1 = f32x4::splat(0.5) * (val_b - val_prev);
@@ -298,16 +294,12 @@ impl FrameProcessor<Mono> for DelayLowMem {
 
                 let current_pos = self.write_ptr as f32 + (self.phase as f32 * 0.5);
                 let delay_samples = delay_seconds * delay_sr;
-                let mut read_ptr_norm = current_pos - delay_samples;
-
+                let mut read_ptr_norm = (current_pos - delay_samples) % len_f;
                 if read_ptr_norm < 0.0 {
                     read_ptr_norm += len_f;
                 }
-                if read_ptr_norm >= len_f {
-                    read_ptr_norm -= len_f;
-                }
 
-                let idx_a = read_ptr_norm as usize;
+                let idx_a = read_ptr_norm as usize % len;
                 let idx_b = if idx_a + 1 == len { 0 } else { idx_a + 1 };
                 let idx_prev = if idx_a == 0 { len - 1 } else { idx_a - 1 };
                 let idx_next = if idx_b + 1 == len { 0 } else { idx_b + 1 };

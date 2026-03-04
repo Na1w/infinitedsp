@@ -174,8 +174,9 @@ where
 
             self.fft_buffer.do_ifft();
 
+            let scale = (2.0 / 3.0) as f32; 
             for i in 0..N {
-                self.ola_buffer[i] += self.fft_buffer[i].re;
+                self.ola_buffer[i] += self.fft_buffer[i].re * self.window[i] * scale;
             }
 
             for i in 0..self.hop_size {

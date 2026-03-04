@@ -13,6 +13,7 @@ impl Allpass {
         Allpass { zm1: 0.0 }
     }
 
+    #[inline(always)]
     fn process(&mut self, input: f32, a1: f32) -> f32 {
         let y = input * -a1 + self.zm1;
         self.zm1 = input + y * a1;
@@ -148,27 +149,25 @@ impl FrameProcessor<Mono> for Phaser {
 
         for (i, sample) in buffer.iter_mut().enumerate() {
             let rate = self.rate_buffer[i];
-            let min_freq = self.min_freq_buffer[i];
-            let max_freq = self.max_freq_buffer[i];
-            let feedback = self.feedback_buffer[i];
+            let min_f = self.min_freq_buffer[i].clamp(10.0, self.sample_rate * 0.48);
+            let max_f = self.max_freq_buffer[i].clamp(min_f, self.sample_rate * 0.48);
+            let feedback = self.feedback_buffer[i].clamp(-0.98, 0.98);
             let mix = self.mix_buffer[i];
 
             self.lfo_inc = 2.0 * PI * rate / self.sample_rate;
-
-            let input = *sample + self.last_sample * feedback;
-
             self.lfo_phase += self.lfo_inc;
             if self.lfo_phase > 2.0 * PI {
                 self.lfo_phase -= 2.0 * PI;
             }
 
             let lfo = (libm::sinf(self.lfo_phase) + 1.0) * 0.5;
-            let freq = min_freq + lfo * (max_freq - min_freq);
+            let freq = min_f + lfo * (max_f - min_f);
 
             let w = 2.0 * PI * freq / self.sample_rate;
             let tan = libm::tanf(w * 0.5);
-
             let a1 = (1.0 - tan) / (1.0 + tan);
+
+            let input = *sample + libm::tanhf(self.last_sample * feedback);
 
             let mut out = input;
             for filter in &mut self.filters {

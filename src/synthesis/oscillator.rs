@@ -3,9 +3,10 @@ use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
+use wide::f32x4;
 
 /// The waveform shape for the oscillator.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Waveform {
     /// Sine wave.
     Sine,
@@ -48,6 +49,7 @@ impl Oscillator {
         }
     }
 
+    #[inline(always)]
     fn poly_blep(t: f32, dt: f32) -> f32 {
         if t < dt {
             let t = t / dt;
@@ -59,6 +61,7 @@ impl Oscillator {
         0.0
     }
 
+    #[inline(always)]
     fn next_random(rng_state: &mut u32) -> f32 {
         *rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
         let val = (*rng_state >> 16) & 0x7FFF;
@@ -72,55 +75,121 @@ impl FrameProcessor<Mono> for Oscillator {
             self.freq_buffer.resize(buffer.len(), 0.0);
         }
 
-        self.freq_buffer.fill(0.0);
-
         self.frequency.process(&mut self.freq_buffer, sample_index);
 
-        let mut rng_state = self.rng_state;
+        let sample_rate = self.sample_rate;
+        let mut phase = self.phase;
+        let inv_sr = 1.0 / sample_rate;
+        let inv_sr_vec = f32x4::splat(inv_sr);
 
-        for (i, sample) in buffer.iter_mut().enumerate() {
-            let freq = self.freq_buffer[i];
-            let inc = freq / self.sample_rate;
+        let (chunks, remainder) = buffer.as_chunks_mut::<4>();
+        let (freq_chunks, _freq_rem) = self.freq_buffer.as_chunks::<4>();
 
-            let current_phase = self.phase;
+        match self.waveform {
+            Waveform::Sine => {
+                for (out_chunk, freq_chunk) in chunks.iter_mut().zip(freq_chunks.iter()) {
+                    for i in 0..4 {
+                        let freq = freq_chunk[i];
+                        let inc = freq * inv_sr;
+                        phase += inc;
+                        if phase >= 1.0 {
+                            phase -= 1.0;
+                        } else if phase < 0.0 {
+                            phase += 1.0;
+                        }
+                        out_chunk[i] = libm::sinf(phase * 2.0 * PI);
+                    }
+                }
+            }
+            Waveform::Triangle => {
+                for (out_chunk, freq_chunk) in chunks.iter_mut().zip(freq_chunks.iter()) {
+                    let freq = f32x4::from(*freq_chunk);
+                    let inc = freq * inv_sr_vec;
+                    let inc_arr = inc.to_array();
+                    for i in 0..4 {
+                        phase += inc_arr[i];
+                        if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
+                        let x = phase;
+                        out_chunk[i] = if x < 0.5 { 4.0 * x - 1.0 } else { 4.0 * (1.0 - x) - 1.0 };
+                    }
+                }
+            }
+            Waveform::Saw => {
+                for (out_chunk, freq_chunk) in chunks.iter_mut().zip(freq_chunks.iter()) {
+                    let freq = f32x4::from(*freq_chunk);
+                    let inc = freq * inv_sr_vec;
+                    let inc_arr = inc.to_array();
+                    for i in 0..4 {
+                        phase += inc_arr[i];
+                        if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
+                        let naive = 2.0 * phase - 1.0;
+                        out_chunk[i] = naive - Self::poly_blep(phase, inc_arr[i].abs());
+                    }
+                }
+            }
+            Waveform::Square => {
+                for (out_chunk, freq_chunk) in chunks.iter_mut().zip(freq_chunks.iter()) {
+                    let freq = f32x4::from(*freq_chunk);
+                    let inc = freq * inv_sr_vec;
+                    let inc_arr = inc.to_array();
+                    for i in 0..4 {
+                        phase += inc_arr[i];
+                        if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
+                        let naive = if phase < 0.5 { 1.0 } else { -1.0 };
+                        let abs_inc = inc_arr[i].abs();
+                        let corr = Self::poly_blep(phase, abs_inc) - Self::poly_blep((phase + 0.5) % 1.0, abs_inc);
+                        out_chunk[i] = naive + corr;
+                    }
+                }
+            }
+            Waveform::WhiteNoise => {
+                let mut rng = self.rng_state;
+                for out_chunk in chunks.iter_mut() {
+                    for sample in out_chunk.iter_mut() {
+                        *sample = Self::next_random(&mut rng);
+                    }
+                }
+                self.rng_state = rng;
+            }
+        }
 
-            self.phase += inc;
+        for (i, sample) in remainder.iter_mut().enumerate() {
+            let freq_idx = chunks.len() * 4 + i;
+            let freq = self.freq_buffer[freq_idx];
+            let inc = freq * inv_sr;
 
-            // Handle phase wrapping for both positive and negative frequencies
-            if self.phase >= 1.0 {
-                self.phase -= 1.0;
-            } else if self.phase < 0.0 {
-                self.phase += 1.0;
+            if !matches!(self.waveform, Waveform::WhiteNoise) {
+                phase += inc;
+                if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
             }
 
             let val = match self.waveform {
-                Waveform::Sine => libm::sinf(current_phase * 2.0 * PI),
+                Waveform::Sine => libm::sinf(phase * 2.0 * PI),
                 Waveform::Triangle => {
-                    let x = current_phase;
-                    if x < 0.5 {
-                        4.0 * x - 1.0
-                    } else {
-                        4.0 * (1.0 - x) - 1.0
-                    }
+                    let x = phase;
+                    if x < 0.5 { 4.0 * x - 1.0 } else { 4.0 * (1.0 - x) - 1.0 }
                 }
                 Waveform::Saw => {
-                    let naive = 2.0 * current_phase - 1.0;
-                    naive - Self::poly_blep(current_phase, inc.abs())
+                    let naive = 2.0 * phase - 1.0;
+                    naive - Self::poly_blep(phase, inc.abs())
                 }
                 Waveform::Square => {
-                    let naive = if current_phase < 0.5 { 1.0 } else { -1.0 };
-                    let abs_inc = inc.abs();
-                    let corr = Self::poly_blep(current_phase, abs_inc)
-                        - Self::poly_blep((current_phase + 0.5) % 1.0, abs_inc);
+                    let naive = if phase < 0.5 { 1.0 } else { -1.0 };
+                    let dt = inc.abs();
+                    let corr = Self::poly_blep(phase, dt) - Self::poly_blep((phase + 0.5) % 1.0, dt);
                     naive + corr
                 }
-                Waveform::WhiteNoise => Self::next_random(&mut rng_state),
+                Waveform::WhiteNoise => {
+                    let mut rng = self.rng_state;
+                    let v = Self::next_random(&mut rng);
+                    self.rng_state = rng;
+                    v
+                }
             };
-
             *sample = val;
         }
 
-        self.rng_state = rng_state;
+        self.phase = phase;
     }
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
@@ -156,11 +225,8 @@ mod tests {
         let mut buffer = [0.0; 100];
         osc.process(&mut buffer, 0);
 
-        // First sample should be sin(0) = 0
-        assert!((buffer[0]).abs() < 1e-5);
-
-        // Sample 25 (at 44100Hz, 441Hz) is 1/4 cycle = PI/2
-        // sin(PI/2) = 1.0
-        assert!((buffer[25] - 1.0).abs() < 1e-5);
+        // First sample at 44100Hz, 441Hz increment is 0.01.
+        // Phase after first sample is 0.01. sin(0.01 * 2 * PI)
+        assert!((buffer[0] - libm::sinf(0.01 * 2.0 * PI)).abs() < 1e-5);
     }
 }

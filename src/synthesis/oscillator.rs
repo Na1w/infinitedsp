@@ -108,9 +108,17 @@ impl FrameProcessor<Mono> for Oscillator {
                     let inc_arr = inc.to_array();
                     for i in 0..4 {
                         phase += inc_arr[i];
-                        if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
+                        if phase >= 1.0 {
+                            phase -= 1.0;
+                        } else if phase < 0.0 {
+                            phase += 1.0;
+                        }
                         let x = phase;
-                        out_chunk[i] = if x < 0.5 { 4.0 * x - 1.0 } else { 4.0 * (1.0 - x) - 1.0 };
+                        out_chunk[i] = if x < 0.5 {
+                            4.0 * x - 1.0
+                        } else {
+                            4.0 * (1.0 - x) - 1.0
+                        };
                     }
                 }
             }
@@ -121,7 +129,11 @@ impl FrameProcessor<Mono> for Oscillator {
                     let inc_arr = inc.to_array();
                     for i in 0..4 {
                         phase += inc_arr[i];
-                        if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
+                        if phase >= 1.0 {
+                            phase -= 1.0;
+                        } else if phase < 0.0 {
+                            phase += 1.0;
+                        }
                         let naive = 2.0 * phase - 1.0;
                         out_chunk[i] = naive - Self::poly_blep(phase, inc_arr[i].abs());
                     }
@@ -134,10 +146,15 @@ impl FrameProcessor<Mono> for Oscillator {
                     let inc_arr = inc.to_array();
                     for i in 0..4 {
                         phase += inc_arr[i];
-                        if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
+                        if phase >= 1.0 {
+                            phase -= 1.0;
+                        } else if phase < 0.0 {
+                            phase += 1.0;
+                        }
                         let naive = if phase < 0.5 { 1.0 } else { -1.0 };
                         let abs_inc = inc_arr[i].abs();
-                        let corr = Self::poly_blep(phase, abs_inc) - Self::poly_blep((phase + 0.5) % 1.0, abs_inc);
+                        let corr = Self::poly_blep(phase, abs_inc)
+                            - Self::poly_blep((phase + 0.5) % 1.0, abs_inc);
                         out_chunk[i] = naive + corr;
                     }
                 }
@@ -160,14 +177,22 @@ impl FrameProcessor<Mono> for Oscillator {
 
             if !matches!(self.waveform, Waveform::WhiteNoise) {
                 phase += inc;
-                if phase >= 1.0 { phase -= 1.0; } else if phase < 0.0 { phase += 1.0; }
+                if phase >= 1.0 {
+                    phase -= 1.0;
+                } else if phase < 0.0 {
+                    phase += 1.0;
+                }
             }
 
             let val = match self.waveform {
                 Waveform::Sine => libm::sinf(phase * 2.0 * PI),
                 Waveform::Triangle => {
                     let x = phase;
-                    if x < 0.5 { 4.0 * x - 1.0 } else { 4.0 * (1.0 - x) - 1.0 }
+                    if x < 0.5 {
+                        4.0 * x - 1.0
+                    } else {
+                        4.0 * (1.0 - x) - 1.0
+                    }
                 }
                 Waveform::Saw => {
                     let naive = 2.0 * phase - 1.0;
@@ -176,7 +201,8 @@ impl FrameProcessor<Mono> for Oscillator {
                 Waveform::Square => {
                     let naive = if phase < 0.5 { 1.0 } else { -1.0 };
                     let dt = inc.abs();
-                    let corr = Self::poly_blep(phase, dt) - Self::poly_blep((phase + 0.5) % 1.0, dt);
+                    let corr =
+                        Self::poly_blep(phase, dt) - Self::poly_blep((phase + 0.5) % 1.0, dt);
                     naive + corr
                 }
                 Waveform::WhiteNoise => {

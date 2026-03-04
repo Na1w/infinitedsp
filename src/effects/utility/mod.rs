@@ -1,4 +1,5 @@
 pub mod add;
+pub mod bypass;
 pub mod dc_source;
 pub mod gain;
 pub mod gate;

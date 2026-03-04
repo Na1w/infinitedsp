@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772646349831,
+  "lastUpdate": 1772661349567,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -734,6 +734,60 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/0de4538d48e124d24f876608e8e4f7fbe0a71eb0"
         },
         "date": 1772646348969,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 29736,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14441,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 43970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6963,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31037,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "76e87ec162997681209b394cb3f5b7b36acc2006",
+          "message": "Fixes and demos (#12)\n\n* Improved pitch shift/ola, delay and phaser. added a few new demos",
+          "timestamp": "2026-03-04T22:54:22+01:00",
+          "tree_id": "4748ea2726c1c6197a26ef251564f256c5b2d79d",
+          "url": "https://github.com/Na1w/infinitedsp/commit/76e87ec162997681209b394cb3f5b7b36acc2006"
+        },
+        "date": 1772661349075,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

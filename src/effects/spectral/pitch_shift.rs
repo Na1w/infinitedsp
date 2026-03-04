@@ -1,6 +1,7 @@
 use crate::core::audio_param::AudioParam;
 use crate::core::ola::SpectralProcessor;
 use alloc::vec::Vec;
+use core::f32::consts::PI;
 use num_complex::{Complex32, ComplexFloat};
 
 /// A spectral pitch shifter using FFT.
@@ -8,8 +9,12 @@ use num_complex::{Complex32, ComplexFloat};
 /// Shifts the pitch of the input signal by a specified number of semitones.
 /// Uses spectral resampling (interpolation) to avoid gaps.
 pub struct FftPitchShift<const N: usize> {
-    fft_buffer: [Complex32; N],
-    scratch: [Complex32; N],
+    prev_analysis_phases: [f32; N],
+    synthesis_phases: [f32; N],
+    analysis_mags: [f32; N],
+    analysis_freqs: [f32; N],
+    synthesis_mags: [f32; N],
+    synthesis_freqs: [f32; N],
     semitones: AudioParam,
     factor: f32,
     semitones_buffer: Vec<f32>,
@@ -22,8 +27,12 @@ impl<const N: usize> FftPitchShift<N> {
     /// * `semitones` - Pitch shift amount in semitones.
     pub fn new(semitones: AudioParam) -> Self {
         FftPitchShift {
-            fft_buffer: [Complex32::new(0.0, 0.0); N],
-            scratch: [Complex32::new(0.0, 0.0); N],
+            prev_analysis_phases: [0.0; N],
+            synthesis_phases: [0.0; N],
+            analysis_mags: [0.0; N],
+            analysis_freqs: [0.0; N],
+            synthesis_mags: [0.0; N],
+            synthesis_freqs: [0.0; N],
             semitones,
             factor: 1.0,
             semitones_buffer: Vec::new(),
@@ -35,37 +44,71 @@ impl<const N: usize> FftPitchShift<N> {
         self.semitones = semitones;
     }
 
-    fn pitch_shift(&mut self) {
-        self.scratch.fill(Complex32::new(0.0, 0.0));
-
+    fn process_phase_vocoder(&mut self, bins: &mut [Complex32]) {
         let half_n = N / 2;
+        let hop_size = N / 2; 
+        let expect = 2.0 * PI * hop_size as f32 / N as f32;
 
-        for k in 0..half_n {
-            let src_k_float = k as f32 / self.factor;
+        for k in 0..=half_n {
+            let mag = bins[k].abs();
+            let phase = bins[k].arg();
 
-            if src_k_float < (half_n as f32 - 1.0) {
-                let idx_a = src_k_float as usize;
-                let idx_b = idx_a + 1;
-                let frac = src_k_float - idx_a as f32;
+            let mut tmp = phase - self.prev_analysis_phases[k];
+            self.prev_analysis_phases[k] = phase;
 
-                let val_a = self.fft_buffer[idx_a];
-                let val_b = self.fft_buffer[idx_b];
+            tmp -= k as f32 * expect;
 
-                let mag_a = val_a.abs();
-                let mag_b = val_b.abs();
-                let mag = mag_a * (1.0 - frac) + mag_b * frac;
+            let qpd = libm::floorf(tmp / (2.0 * PI) + 0.5);
+            tmp -= qpd * 2.0 * PI;
+            tmp = tmp / (hop_size as f32);
 
-                let phase = self.fft_buffer[k].arg();
-                let val = Complex32::from_polar(mag, phase);
+            let freq = k as f32 * (2.0 * PI / N as f32) + tmp;
 
-                self.scratch[k] = val;
+            self.analysis_mags[k] = mag;
+            self.analysis_freqs[k] = freq;
+        }
 
-                if k > 0 {
-                    self.scratch[N - k] = val.conj();
+        self.synthesis_mags.fill(0.0);
+        self.synthesis_freqs.fill(0.0);
+
+        for k in 0..=half_n {
+            let target_float = k as f32 * self.factor;
+            let target_k = (target_float + 0.5) as usize;
+            
+            if target_k <= half_n {
+                let m = self.analysis_mags[k];
+                let f = self.analysis_freqs[k] * self.factor;
+
+                if m > self.synthesis_mags[target_k] {
+                    self.synthesis_mags[target_k] = m;
+                    self.synthesis_freqs[target_k] = f;
                 }
             }
         }
-        self.fft_buffer = self.scratch;
+
+        for k in 0..=half_n {
+            let mag = self.synthesis_mags[k];
+            let freq = self.synthesis_freqs[k];
+
+            self.synthesis_phases[k] += freq * hop_size as f32;
+            
+            let mut p = self.synthesis_phases[k];
+            let wraps = libm::floorf(p / (2.0 * PI) + 0.5);
+            p -= wraps * 2.0 * PI;
+            self.synthesis_phases[k] = p;
+
+            let bin = Complex32::from_polar(mag, p);
+            bins[k] = bin;
+
+            if k > 0 && k < half_n {
+                bins[N - k] = bin.conj();
+            }
+        }
+        
+        bins[0] = Complex32::new(bins[0].re, 0.0);
+        if N % 2 == 0 {
+            bins[half_n] = Complex32::new(bins[half_n].re, 0.0);
+        }
     }
 }
 
@@ -85,9 +128,7 @@ impl<const N: usize> SpectralProcessor for FftPitchShift<N> {
 
         self.factor = libm::powf(2.0, semitones_val / 12.0);
 
-        self.fft_buffer.copy_from_slice(bins);
-        self.pitch_shift();
-        bins.copy_from_slice(&self.fft_buffer);
+        self.process_phase_vocoder(bins);
     }
 
     #[cfg(feature = "debug_visualize")]

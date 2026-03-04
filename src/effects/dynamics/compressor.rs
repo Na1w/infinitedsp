@@ -144,120 +144,54 @@ impl FrameProcessor<Mono> for Compressor {
         self.knee_width_db
             .process(&mut self.knee_buffer[0..len], sample_index);
 
-        if let (
-            Some(thresh_db),
-            Some(ratio),
-            Some(att_ms),
-            Some(rel_ms),
-            Some(makeup_db),
-            Some(knee_db),
-        ) = (
-            self.threshold_db.get_constant(),
-            self.ratio.get_constant(),
-            self.attack_ms.get_constant(),
-            self.release_ms.get_constant(),
-            self.makeup_gain_db.get_constant(),
-            self.knee_width_db.get_constant(),
-        ) {
-            let att_bits = att_ms.to_bits();
-            let rel_bits = rel_ms.to_bits();
+        for (i, sample) in buffer.iter_mut().enumerate() {
+            let threshold_db = self.threshold_buffer[i];
+            let ratio = self.ratio_buffer[i];
+            let attack_ms = self.attack_buffer[i];
+            let release_ms = self.release_buffer[i];
+            let makeup_db = self.makeup_buffer[i];
+            let knee_db = self.knee_buffer[i];
+
+            let att_bits = attack_ms.to_bits();
+            let rel_bits = release_ms.to_bits();
 
             if att_bits != self.last_attack_bits || rel_bits != self.last_release_bits {
-                self.recalc(att_ms, rel_ms);
+                self.recalc(attack_ms, release_ms);
                 self.last_attack_bits = att_bits;
                 self.last_release_bits = rel_bits;
             }
 
             let makeup = libm::powf(10.0, makeup_db / 20.0);
-            let inv_ratio_sub_one = 1.0 - 1.0 / ratio;
+            let input = *sample;
+            let abs_input = input.abs();
 
-            for sample in buffer.iter_mut() {
-                let input = *sample;
-                let abs_input = input.abs();
-
-                if abs_input > self.envelope {
-                    self.envelope =
-                        self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
-                } else {
-                    self.envelope =
-                        self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
-                }
-
-                let mut gain = 1.0;
-                let env_db = 20.0 * libm::log10f(self.envelope);
-
-                if knee_db > 0.0 {
-                    if env_db > (thresh_db + knee_db / 2.0) {
-                        let over_db = env_db - thresh_db;
-                        let gain_db = -over_db * inv_ratio_sub_one;
-                        gain = libm::powf(10.0, gain_db / 20.0);
-                    } else if env_db > (thresh_db - knee_db / 2.0) {
-                        let slope = inv_ratio_sub_one;
-                        let over_db = env_db - thresh_db + knee_db / 2.0;
-                        let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
-                        gain = libm::powf(10.0, gain_db / 20.0);
-                    }
-                } else if env_db > thresh_db {
-                    let over_db = env_db - thresh_db;
-                    let gain_db = -over_db * inv_ratio_sub_one;
-                    gain = libm::powf(10.0, gain_db / 20.0);
-                }
-
-                *sample = input * gain * makeup;
+            if abs_input > self.envelope {
+                self.envelope = self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+            } else {
+                self.envelope = self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
             }
-        } else {
-            for (i, sample) in buffer.iter_mut().enumerate() {
-                let threshold_db = self.threshold_buffer[i];
-                let ratio = self.ratio_buffer[i];
-                let attack_ms = self.attack_buffer[i];
-                let release_ms = self.release_buffer[i];
-                let makeup_db = self.makeup_buffer[i];
-                let knee_db = self.knee_buffer[i];
 
-                let att_bits = attack_ms.to_bits();
-                let rel_bits = release_ms.to_bits();
+            let mut gain = 1.0;
+            let env_db = 20.0 * libm::log10f(self.envelope + 1e-9);
 
-                if att_bits != self.last_attack_bits || rel_bits != self.last_release_bits {
-                    self.recalc(attack_ms, release_ms);
-                    self.last_attack_bits = att_bits;
-                    self.last_release_bits = rel_bits;
-                }
-
-                let makeup = libm::powf(10.0, makeup_db / 20.0);
-
-                let input = *sample;
-                let abs_input = input.abs();
-
-                if abs_input > self.envelope {
-                    self.envelope =
-                        self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
-                } else {
-                    self.envelope =
-                        self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
-                }
-
-                let mut gain = 1.0;
-                let env_db = 20.0 * libm::log10f(self.envelope);
-
-                if knee_db > 0.0 {
-                    if env_db > (threshold_db + knee_db / 2.0) {
-                        let over_db = env_db - threshold_db;
-                        let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                        gain = libm::powf(10.0, gain_db / 20.0);
-                    } else if env_db > (threshold_db - knee_db / 2.0) {
-                        let slope = 1.0 - 1.0 / ratio;
-                        let over_db = env_db - threshold_db + knee_db / 2.0;
-                        let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
-                        gain = libm::powf(10.0, gain_db / 20.0);
-                    }
-                } else if env_db > threshold_db {
+            if knee_db > 0.0 {
+                if env_db > (threshold_db + knee_db / 2.0) {
                     let over_db = env_db - threshold_db;
                     let gain_db = -over_db * (1.0 - 1.0 / ratio);
                     gain = libm::powf(10.0, gain_db / 20.0);
+                } else if env_db > (threshold_db - knee_db / 2.0) {
+                    let slope = 1.0 - 1.0 / ratio;
+                    let over_db = env_db - threshold_db + knee_db / 2.0;
+                    let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
+                    gain = libm::powf(10.0, gain_db / 20.0);
                 }
-
-                *sample = input * gain * makeup;
+            } else if env_db > threshold_db {
+                let over_db = env_db - threshold_db;
+                let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                gain = libm::powf(10.0, gain_db / 20.0);
             }
+
+            *sample = input * gain * makeup;
         }
     }
 

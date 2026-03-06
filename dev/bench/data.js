@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772825570608,
+  "lastUpdate": 1772827132475,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -896,6 +896,60 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/f6da23ae3362e3e946e33f3b14f995c3dc6a2d56"
         },
         "date": 1772825569664,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 30255,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14449,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 44361,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31072,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "distinct": true,
+          "id": "e6965f9eb5ab0205b30a000412a7311d25aac885",
+          "message": "Stutter optimizations, minor tweaks",
+          "timestamp": "2026-03-06T20:57:21+01:00",
+          "tree_id": "25e4a4d47561496e21788b3b76652d744a8d096a",
+          "url": "https://github.com/Na1w/infinitedsp/commit/e6965f9eb5ab0205b30a000412a7311d25aac885"
+        },
+        "date": 1772827131745,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

@@ -166,9 +166,11 @@ impl FrameProcessor<Mono> for Compressor {
             let abs_input = input.abs();
 
             if abs_input > self.envelope {
-                self.envelope = self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                self.envelope =
+                    self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
             } else {
-                self.envelope = self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                self.envelope =
+                    self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
             }
 
             let mut gain = 1.0;

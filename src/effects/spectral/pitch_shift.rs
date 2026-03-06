@@ -46,7 +46,7 @@ impl<const N: usize> FftPitchShift<N> {
 
     fn process_phase_vocoder(&mut self, bins: &mut [Complex32]) {
         let half_n = N / 2;
-        let hop_size = N / 2; 
+        let hop_size = N / 2;
         let expect = 2.0 * PI * hop_size as f32 / N as f32;
 
         for k in 0..=half_n {
@@ -74,7 +74,7 @@ impl<const N: usize> FftPitchShift<N> {
         for k in 0..=half_n {
             let target_float = k as f32 * self.factor;
             let target_k = (target_float + 0.5) as usize;
-            
+
             if target_k <= half_n {
                 let m = self.analysis_mags[k];
                 let f = self.analysis_freqs[k] * self.factor;
@@ -91,7 +91,7 @@ impl<const N: usize> FftPitchShift<N> {
             let freq = self.synthesis_freqs[k];
 
             self.synthesis_phases[k] += freq * hop_size as f32;
-            
+
             let mut p = self.synthesis_phases[k];
             let wraps = libm::floorf(p / (2.0 * PI) + 0.5);
             p -= wraps * 2.0 * PI;
@@ -104,7 +104,7 @@ impl<const N: usize> FftPitchShift<N> {
                 bins[N - k] = bin.conj();
             }
         }
-        
+
         bins[0] = Complex32::new(bins[0].re, 0.0);
         if N % 2 == 0 {
             bins[half_n] = Complex32::new(bins[half_n].re, 0.0);

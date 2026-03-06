@@ -89,8 +89,8 @@ impl FrameProcessor<Mono> for Stack {
             self.temp_buffer[0..len].fill(0.0);
             osc.process(&mut self.temp_buffer[0..len], sample_index);
 
-            for j in 0..len {
-                buffer[j] += self.temp_buffer[j] * self.mix_buffer[j];
+            for (j, sample) in buffer.iter_mut().enumerate().take(len) {
+                *sample += self.temp_buffer[j] * self.mix_buffer[j];
             }
         }
     }

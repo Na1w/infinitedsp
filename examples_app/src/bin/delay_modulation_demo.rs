@@ -33,7 +33,7 @@ fn create_chain(sample_rate: f32) -> DspChain<Stereo> {
 }
 
 fn main() -> Result<()> {
-    let (stream, _sample_rate) = init_audio_interleaved(move |sr| create_chain(sr))?;
+    let (stream, _sample_rate) = init_audio_interleaved(create_chain)?;
 
     let chain = create_chain(44100.0);
 

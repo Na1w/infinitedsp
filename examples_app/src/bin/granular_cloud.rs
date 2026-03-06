@@ -53,8 +53,8 @@ impl StereoProcessor for GranularCloud {
 
         let mut arp_buf = vec![0.0; len * 2];
         self.arpeggio.process(&mut arp_buf, sample_index);
-        for i in 0..len * 2 {
-            self.stereo_acc[i] += arp_buf[i];
+        for (acc, arp) in self.stereo_acc.iter_mut().zip(&arp_buf) {
+            *acc += *arp;
         }
 
         self.layer_buf.fill(0.0);
@@ -66,12 +66,12 @@ impl StereoProcessor for GranularCloud {
         }
 
         let mut shim_in = vec![0.0; len];
-        for i in 0..len {
-            shim_in[i] = (self.stereo_acc[2 * i] + self.stereo_acc[2 * i + 1]) * 0.5;
+        for (i, shim) in shim_in.iter_mut().enumerate() {
+            *shim = (self.stereo_acc[2 * i] + self.stereo_acc[2 * i + 1]) * 0.5;
         }
         self.shimmer.process(&mut shim_in, sample_index);
-        for i in 0..len {
-            let s = shim_in[i] * 0.6;
+        for (i, shim) in shim_in.iter().enumerate() {
+            let s = *shim * 0.6;
             self.stereo_acc[2 * i] += s;
             self.stereo_acc[2 * i + 1] += s;
         }

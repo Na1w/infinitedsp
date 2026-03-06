@@ -134,10 +134,9 @@ fn main() -> Result<()> {
         for note in &melody {
             if current_beat >= note.start_beat
                 && current_beat < (note.start_beat + note.duration_beats)
+                && current_beat < (note.start_beat + note.duration_beats - 0.1)
             {
-                if current_beat < (note.start_beat + note.duration_beats - 0.1) {
-                    active_note = Some(note);
-                }
+                active_note = Some(note);
             }
         }
 
@@ -146,10 +145,8 @@ fn main() -> Result<()> {
                 pitch_param.set(note.freq);
                 gate_param.set(1.0);
             }
-        } else {
-            if gate_param.get() == 1.0 {
-                gate_param.set(0.0);
-            }
+        } else if gate_param.get() == 1.0 {
+            gate_param.set(0.0);
         }
 
         thread::sleep(Duration::from_millis(5));

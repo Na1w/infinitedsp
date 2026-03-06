@@ -199,7 +199,7 @@ fn main() -> Result<()> {
     let chain = create_thx_chain(44100.0);
     println!("Signal Chain:\n{}", chain.visualize(0));
 
-    let (stream, sample_rate) = init_audio_interleaved(|sr| create_thx_chain(sr))?;
+    let (stream, sample_rate) = init_audio_interleaved(create_thx_chain)?;
 
     println!("Playing InfiniteDSP Demo at {}Hz...", sample_rate);
     println!("Wait for the drop...");

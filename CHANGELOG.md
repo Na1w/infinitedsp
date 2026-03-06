@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-03-06
+
+### Added
+- **Speech Synthesizer:** Introduced `SpeechSynth` in `src/synthesis/speech.rs`, a formant-based vocal synthesizer with a complete phoneme system.
+- **Vowel Filter:** Added `VowelFilter` in `src/effects/filter/vowel.rs`, simulating the human vocal tract with multiple formants.
+- **Stutter Effect:** Added `Stutter` in `src/effects/time/stutter.rs` for rhythmic repetitions and digital glitch effects.
+- **Oscillator Stack:** Added `Stack` in `src/synthesis/stack.rs` for thick, detuned multi-oscillator sounds.
+- **New Examples:** Added `speech_synth` demo and significantly updated `acid_trip` to showcase the new synthesis capabilities.
+
+### Changed
+- **Oscillator (Enhanced):** Added `NaiveSaw` waveform and exposed internal state (phase, rng) for more flexible modulation. Added `tick` method for sample-by-sample processing.
+- **AudioParam:** Added `get_value_at` for direct sampling of parameters at specific indices.
+- **StateVariableFilter:** Optimized with a new `tick` method for high-performance usage in complex filters like `VowelFilter`.
+
 ## [0.9.0] - 2026-03-04
 
 ### Added

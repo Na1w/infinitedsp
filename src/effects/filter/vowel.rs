@@ -172,8 +172,6 @@ impl VowelFilter {
     }
 
     /// Efficiently processes a single sample with manual formant control.
-    ///
-    /// Used by [`SpeechSynth`] for high-performance formant synthesis.
     #[inline(always)]
     pub fn tick_manual(&mut self, input: f32, f1: f32, f2: f32, f3: f32, q: f32) -> f32 {
         let o1 = self.f1.tick(input, f1, q);

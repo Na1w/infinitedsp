@@ -35,6 +35,7 @@ pub struct Phoneme {
 
 impl Phoneme {
     /// Creates a new Phoneme.
+    #[allow(clippy::too_many_arguments)]
     pub const fn new(
         duration_ms: f32,
         f1: f32,

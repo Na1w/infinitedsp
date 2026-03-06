@@ -60,7 +60,7 @@ impl TextParser {
                 if i < chars.len() && chars[i] == '!' {
                     i += 1;
                     let mut num_str = String::new();
-                    while i < chars.len() && chars[i].is_digit(10) {
+                    while i < chars.len() && chars[i].is_ascii_digit() {
                         num_str.push(chars[i]);
                         i += 1;
                     }
@@ -77,8 +77,7 @@ impl TextParser {
             let mut matched = false;
             for key in &keys {
                 let key_chars: Vec<char> = key.chars().collect();
-                if i + key_chars.len() <= chars.len()
-                    && &chars[i..i + key_chars.len()] == &key_chars
+                if i + key_chars.len() <= chars.len() && chars[i..i + key_chars.len()] == key_chars
                 {
                     let added = Self::get_phoneme(key);
                     let mut added_vec = added.to_vec();
@@ -87,7 +86,7 @@ impl TextParser {
                     if i < chars.len() && chars[i] == '!' {
                         i += 1;
                         let mut num_str = String::new();
-                        while i < chars.len() && chars[i].is_digit(10) {
+                        while i < chars.len() && chars[i].is_ascii_digit() {
                             num_str.push(chars[i]);
                             i += 1;
                         }
@@ -154,8 +153,6 @@ fn main() -> Result<()> {
         "SISTEM ONLAIN!3   INFINIT DIESPI PAUER".to_string()
     };
 
-    let sample_rate = 44100.0;
-
     let phonemes_vec = TextParser::parse(&input);
     let phonemes: &'static [Phoneme] = Box::leak(phonemes_vec.into_boxed_slice());
 
@@ -167,32 +164,8 @@ fn main() -> Result<()> {
         }
     }
 
-    let total_samples = ((total_duration_ms + 1500.0) / 1000.0 * sample_rate) as usize;
-
     println!("Parsing Phonetics: '{}'", input);
-    println!("Saving to 'speech_output.wav'...");
-
-    let mut render_chain = create_speech_chain(sample_rate, phonemes);
-    let mut wav_buffer = vec![0.0; total_samples * 2];
-    let block_size = 1024;
-    for i in (0..wav_buffer.len()).step_by(block_size * 2) {
-        let end = (i + block_size * 2).min(wav_buffer.len());
-        render_chain.process(&mut wav_buffer[i..end], (i / 2) as u64);
-    }
-
-    let spec = hound::WavSpec {
-        channels: 2,
-        sample_rate: sample_rate as u32,
-        bits_per_sample: 32,
-        sample_format: hound::SampleFormat::Float,
-    };
-    let mut writer = hound::WavWriter::create("speech_output.wav", spec)?;
-    for &sample in &wav_buffer {
-        writer.write_sample(sample)?;
-    }
-    writer.finalize()?;
-
-    println!("Done! Now playing...");
+    println!("Now playing...");
 
     let (stream, _sr) = init_audio_interleaved(|sr| create_speech_chain(sr, phonemes))?;
     stream.play()?;

@@ -49,9 +49,9 @@ impl<const N: usize> FftPitchShift<N> {
         let hop_size = N / 2;
         let expect = 2.0 * PI * hop_size as f32 / N as f32;
 
-        for k in 0..=half_n {
-            let mag = bins[k].abs();
-            let phase = bins[k].arg();
+        for (k, bin) in bins.iter().enumerate().take(half_n + 1) {
+            let mag = bin.abs();
+            let phase = bin.arg();
 
             let mut tmp = phase - self.prev_analysis_phases[k];
             self.prev_analysis_phases[k] = phase;
@@ -60,7 +60,7 @@ impl<const N: usize> FftPitchShift<N> {
 
             let qpd = libm::floorf(tmp / (2.0 * PI) + 0.5);
             tmp -= qpd * 2.0 * PI;
-            tmp = tmp / (hop_size as f32);
+            tmp /= hop_size as f32;
 
             let freq = k as f32 * (2.0 * PI / N as f32) + tmp;
 
@@ -106,7 +106,7 @@ impl<const N: usize> FftPitchShift<N> {
         }
 
         bins[0] = Complex32::new(bins[0].re, 0.0);
-        if N % 2 == 0 {
+        if N.is_multiple_of(2) {
             bins[half_n] = Complex32::new(bins[half_n].re, 0.0);
         }
     }

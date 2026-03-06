@@ -44,10 +44,8 @@ impl StereoProcessor for InfinityEngine {
         self.drone_voice
             .process(&mut self.mixing_buffer, sample_index);
 
-        for i in 0..len {
-            left[i] = self.mixing_buffer[i];
-            right[i] = self.mixing_buffer[i];
-        }
+        left[..len].copy_from_slice(&self.mixing_buffer[..len]);
+        right[..len].copy_from_slice(&self.mixing_buffer[..len]);
 
         self.mixing_buffer.fill(0.0);
         self.star_pluck

@@ -74,7 +74,7 @@ impl StereoProcessor for AcidTrip {
                     self.g.set(1.0);
                 }
                 self.a.set(if acc[s] { 1.0 } else { 0.0 });
-                if s % 4 == 0 {
+                if s.is_multiple_of(4) {
                     self.kg.set(1.0);
                 }
                 if s % 2 == 1 {

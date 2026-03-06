@@ -112,3 +112,55 @@ impl FrameProcessor<Mono> for Stack {
         "Stack"
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_stack_basic() {
+        let mut stack = Stack::new(
+            3,
+            AudioParam::hz(440.0),
+            Waveform::Sine,
+            AudioParam::Static(0.0),
+        );
+        stack.set_sample_rate(44100.0);
+        let mut buffer = [0.0; 100];
+        stack.process(&mut buffer, 0);
+
+        // Should have generated some signal
+        assert!((buffer[1]).abs() > 0.0);
+    }
+
+    #[test]
+    fn test_stack_detune() {
+        let mut stack = Stack::new(
+            2,
+            AudioParam::hz(440.0),
+            Waveform::Sine,
+            AudioParam::Static(1.0),
+        );
+        stack.set_sample_rate(44100.0);
+        let mut buffer1 = [0.0; 100];
+        stack.process(&mut buffer1, 0);
+
+        let mut stack2 = Stack::new(
+            2,
+            AudioParam::hz(440.0),
+            Waveform::Sine,
+            AudioParam::Static(0.0),
+        );
+        stack2.set_sample_rate(44100.0);
+        let mut buffer2 = [0.0; 100];
+        stack2.process(&mut buffer2, 0);
+
+        // Detuned signal should be different from non-detuned after some time
+        // We check a bit further into the buffer
+        let mut diff = 0.0;
+        for i in 0..100 {
+            diff += (buffer1[i] - buffer2[i]).abs();
+        }
+        assert!(diff > 0.001);
+    }
+}

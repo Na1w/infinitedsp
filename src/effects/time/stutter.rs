@@ -23,6 +23,12 @@ pub struct Stutter {
     stutter_len_samples: usize,
     remaining_samples: i32,
     last_trigger: f32,
+
+    // Buffers for block processing
+    length_buffer: Vec<f32>,
+    repeats_buffer: Vec<f32>,
+    trigger_buffer: Vec<f32>,
+    mix_buffer: Vec<f32>,
 }
 
 impl Stutter {
@@ -55,6 +61,10 @@ impl Stutter {
             stutter_len_samples: 0,
             remaining_samples: 0,
             last_trigger: 0.0,
+            length_buffer: Vec::new(),
+            repeats_buffer: Vec::new(),
+            trigger_buffer: Vec::new(),
+            mix_buffer: Vec::new(),
         }
     }
 
@@ -83,14 +93,28 @@ impl FrameProcessor<Mono> for Stutter {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let sample_rate = self.sample_rate;
         let buffer_len = self.buffer.len();
+        let len = buffer.len();
 
-        for (i, sample) in buffer.iter_mut().enumerate() {
-            let current_idx = sample_index + i as u64;
+        if self.length_buffer.len() < len {
+            self.length_buffer.resize(len, 0.0);
+            self.repeats_buffer.resize(len, 0.0);
+            self.trigger_buffer.resize(len, 0.0);
+            self.mix_buffer.resize(len, 0.0);
+        }
 
-            let trig = self.trigger.get_value_at(current_idx);
-            let target_len_sec = self.length.get_value_at(current_idx);
-            let target_reps = self.repeats.get_value_at(current_idx);
-            let mix = self.mix.get_value_at(current_idx);
+        self.length
+            .process(&mut self.length_buffer[0..len], sample_index);
+        self.repeats
+            .process(&mut self.repeats_buffer[0..len], sample_index);
+        self.trigger
+            .process(&mut self.trigger_buffer[0..len], sample_index);
+        self.mix.process(&mut self.mix_buffer[0..len], sample_index);
+
+        for i in 0..len {
+            let trig = self.trigger_buffer[i];
+            let target_len_sec = self.length_buffer[i];
+            let target_reps = self.repeats_buffer[i];
+            let mix = self.mix_buffer[i];
 
             if trig > 0.5 && self.last_trigger <= 0.5 {
                 self.is_stuttering = true;
@@ -103,7 +127,7 @@ impl FrameProcessor<Mono> for Stutter {
             }
             self.last_trigger = trig;
 
-            let input = *sample;
+            let input = buffer[i];
             self.buffer[self.write_pos] = input;
             self.write_pos = (self.write_pos + 1) % buffer_len;
 
@@ -121,7 +145,7 @@ impl FrameProcessor<Mono> for Stutter {
                 }
 
                 let stutter_out = self.buffer[read_idx] * envelope;
-                *sample = input * (1.0 - mix) + stutter_out * mix;
+                buffer[i] = input * (1.0 - mix) + stutter_out * mix;
 
                 self.stutter_read_pos += 1.0;
                 if self.stutter_read_pos >= self.stutter_len_samples as f32 {
@@ -166,5 +190,70 @@ impl FrameProcessor<Mono> for Stutter {
     #[cfg(feature = "debug_visualize")]
     fn name(&self) -> &str {
         "Stutter"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_stutter_passthrough() {
+        let mut stutter = Stutter::new(
+            100.0,
+            AudioParam::Static(0.01),
+            AudioParam::Static(1.0),
+            AudioParam::Static(0.0),
+        );
+        let mut buffer = [1.0, 2.0, 3.0, 4.0];
+        stutter.process(&mut buffer, 0);
+        // When not triggered, it should pass through the input
+        assert_eq!(buffer, [1.0, 2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn test_stutter_trigger() {
+        let mut stutter = Stutter::new(
+            100.0,
+            AudioParam::Static(0.001), // 10ms at 1000Hz = 10 samples
+            AudioParam::Static(2.0),   // Repeat twice
+            AudioParam::Static(0.0),
+        );
+        stutter.set_sample_rate(1000.0);
+
+        // Fill buffer with some data
+        let mut buffer = [1.0; 20];
+        for i in 0..20 {
+            buffer[i] = i as f32;
+        }
+
+        // Process first block to fill internal buffer
+        let mut block1 = buffer;
+        stutter.process(&mut block1, 0);
+
+        // Trigger stutter
+        stutter.set_trigger(AudioParam::Static(1.0));
+        let mut block2 = [100.0; 10]; // Input is 100.0
+        stutter.process(&mut block2, 20);
+
+        // It should be playing back the recorded data (0.0, 1.0, ...)
+        // instead of the input 100.0
+        assert!(block2[0] < 50.0);
+        assert!(block2[9] < 50.0);
+    }
+
+    #[test]
+    fn test_stutter_reset() {
+        let mut stutter = Stutter::new(
+            100.0,
+            AudioParam::Static(0.01),
+            AudioParam::Static(1.0),
+            AudioParam::Static(1.0),
+        );
+        stutter.process(&mut [1.0; 10], 0);
+        assert!(stutter.is_stuttering);
+        stutter.reset();
+        assert!(!stutter.is_stuttering);
+        assert_eq!(stutter.write_pos, 0);
     }
 }

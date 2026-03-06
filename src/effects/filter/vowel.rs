@@ -222,3 +222,31 @@ impl FrameProcessor<Mono> for VowelFilter {
         "VowelFilter"
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vowel_filter_morph() {
+        let mut filter = VowelFilter::new(AudioParam::Static(0.0), AudioParam::Static(18.0));
+        filter.set_sample_rate(44100.0);
+        let mut buffer = [1.0; 100];
+        filter.process(&mut buffer, 0);
+
+        // Filter should process and change the amplitude
+        assert!(buffer[0].abs() < 2.0);
+        assert!((buffer[0] - 1.0).abs() > 0.0001);
+    }
+
+    #[test]
+    fn test_vowel_filter_manual() {
+        let mut filter = VowelFilter::new(AudioParam::Static(0.0), AudioParam::Static(18.0));
+        filter.set_sample_rate(44100.0);
+        filter.set_formants(500.0, 1500.0, 2500.0);
+
+        let mut buffer = [1.0; 10];
+        filter.process(&mut buffer, 0);
+        assert!(buffer[0].is_finite());
+    }
+}

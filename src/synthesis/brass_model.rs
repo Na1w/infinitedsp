@@ -65,7 +65,9 @@ impl PhysBiQuad {
 }
 
 /// A physical model of a brass instrument.
-/// This is very much WIP and will continue to be tweaked over time...
+///
+/// This model uses a waveguide with a non-linear pressure-controlled valve
+/// to simulate the vibration of a player's lips.
 pub struct BrassModel {
     pitch: AudioParam,
     breath_pressure: AudioParam,

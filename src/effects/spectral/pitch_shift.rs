@@ -124,7 +124,8 @@ impl<const N: usize> SpectralProcessor for FftPitchShift<N> {
             self.semitones_buffer.resize(hop_size, 0.0);
         }
 
-        self.semitones.process(&mut self.semitones_buffer, sample_index);
+        self.semitones
+            .process(&mut self.semitones_buffer, sample_index);
 
         let semitones_val = self.semitones_buffer[0];
 

@@ -25,14 +25,15 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 *   **Graph Visualization:** Generate ASCII diagrams of your signal chain for easy debugging (`chain.get_graph()`).
 *   **Spectral Processing:** Includes a robust Overlap-Add (OLA) engine for FFT-based effects.
 *   **Comprehensive Effect Suite:**
-    *   **Time:** Delay (Standard & LowMem), Tape Delay (with saturation & flutter), PingPongDelay, Reverb (Schroeder, Standard & LowMem).
-    *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style, both Iterative and Predictive ZDF), State Variable Filter (TPT/ZDF).
+    *   **Time:** Delay (Standard & LowMem), Tape Delay (with saturation & flutter), PingPongDelay, Reverb (Schroeder, Standard & LowMem), Stutter.
+    *   **Filter:** Biquad (LowPass, HighPass, BandPass, Notch), Ladder Filter (Moog-style, both Iterative and Predictive ZDF), State Variable Filter (TPT/ZDF), Vowel Filter.
     *   **Dynamics:** Compressor, Limiter, Distortion (Soft/Hard Clip, BitCrush, Foldback).
     *   **Modulation:** Phaser, Tremolo, Ring Modulator, Chorus, Flanger.
     *   **Spectral:** FFT Pitch Shift, Granular Pitch Shift, Spectral Filter.
     *   **Utility:** Gain, Offset, Stereo Panner, Stereo Widener, MapRange, TimedGate.
 *   **Synthesis:**
-    *   **Oscillators:** Sine, Triangle, Saw, Square (PolyBLEP anti-aliased), Noise.
+    *   **Oscillators:** Sine, Triangle, Saw, Square (PolyBLEP anti-aliased), Noise, Stack (Detuned Multi-Osc).
+    *   **Vocal:** Speech Synthesizer (Formant-based).
     *   **Physical Modeling:** Karplus-Strong (String), Brass Model.
     *   **Control:** LFO, ADSR Envelope (with retrigger support).
 
@@ -51,6 +52,8 @@ Listen to some of the examples generated with this library:
 [![Filter Sweep Demo](assets/player_filter_sweep.svg)](assets/audio/filter_sweep.wav)
 
 [![Trance Synth Demo](assets/player_trance_synth.svg)](assets/audio/trance_synth.wav)
+
+[![Speech Synth Demo](assets/player_speech_synth.svg)](assets/audio/speech_output.wav)
 
 ## Showcase
 
@@ -116,6 +119,7 @@ cargo run --release -p infinitedsp-examples --bin <example_name>
 ### Available Examples:
 
 *   **`infinitedsp_demo`**: A complex polyphonic demo showcasing 30 voices, filters, envelopes, and effects (Stereo).
+*   **`speech_synth`**: Formant-based vocal synthesizer demo with rhythmic glitch effects.
 *   **`filter_sweep`**: Compares `PredictiveLadderFilter` vs `LadderFilter` with an LFO sweep (Mono).
 *   **`dual_mono_demo`**: Demonstrates independent processing of Left/Right channels (Ping-Pong Delay).
 *   **`ping_pong_demo`**: Demonstrates the stereo PingPongDelay effect.

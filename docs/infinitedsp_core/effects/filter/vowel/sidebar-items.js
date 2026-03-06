@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Vowel"],"struct":["VowelFilter"]};

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/effects/dynamics/compressor.rs`."><title>compressor.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="infinitedsp_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.1 (01f6ddf75 2026-02-11)" data-channel="1.93.1" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">infinitedsp_core/effects/dynamics/</div>compressor.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::core::audio_param::AudioParam;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/effects/dynamics/compressor.rs`."><title>compressor.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-77263533.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="infinitedsp_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0 (4a4ef493e 2026-03-02)" data-channel="1.94.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">infinitedsp_core/effects/dynamics/</div>compressor.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::core::audio_param::AudioParam;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::core::channels::Mono;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span><span class="kw">crate</span>::FrameProcessor;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>alloc::vec::Vec;
@@ -166,71 +166,73 @@
 <a href=#166 id=166 data-nosnippet>166</a>            <span class="kw">let </span>abs_input = input.abs();
 <a href=#167 id=167 data-nosnippet>167</a>
 <a href=#168 id=168 data-nosnippet>168</a>            <span class="kw">if </span>abs_input &gt; <span class="self">self</span>.envelope {
-<a href=#169 id=169 data-nosnippet>169</a>                <span class="self">self</span>.envelope = <span class="self">self</span>.attack_coeff * <span class="self">self</span>.envelope + (<span class="number">1.0 </span>- <span class="self">self</span>.attack_coeff) * abs_input;
-<a href=#170 id=170 data-nosnippet>170</a>            } <span class="kw">else </span>{
-<a href=#171 id=171 data-nosnippet>171</a>                <span class="self">self</span>.envelope = <span class="self">self</span>.release_coeff * <span class="self">self</span>.envelope + (<span class="number">1.0 </span>- <span class="self">self</span>.release_coeff) * abs_input;
-<a href=#172 id=172 data-nosnippet>172</a>            }
-<a href=#173 id=173 data-nosnippet>173</a>
-<a href=#174 id=174 data-nosnippet>174</a>            <span class="kw">let </span><span class="kw-2">mut </span>gain = <span class="number">1.0</span>;
-<a href=#175 id=175 data-nosnippet>175</a>            <span class="kw">let </span>env_db = <span class="number">20.0 </span>* libm::log10f(<span class="self">self</span>.envelope + <span class="number">1e-9</span>);
-<a href=#176 id=176 data-nosnippet>176</a>
-<a href=#177 id=177 data-nosnippet>177</a>            <span class="kw">if </span>knee_db &gt; <span class="number">0.0 </span>{
-<a href=#178 id=178 data-nosnippet>178</a>                <span class="kw">if </span>env_db &gt; (threshold_db + knee_db / <span class="number">2.0</span>) {
-<a href=#179 id=179 data-nosnippet>179</a>                    <span class="kw">let </span>over_db = env_db - threshold_db;
-<a href=#180 id=180 data-nosnippet>180</a>                    <span class="kw">let </span>gain_db = -over_db * (<span class="number">1.0 </span>- <span class="number">1.0 </span>/ ratio);
-<a href=#181 id=181 data-nosnippet>181</a>                    gain = libm::powf(<span class="number">10.0</span>, gain_db / <span class="number">20.0</span>);
-<a href=#182 id=182 data-nosnippet>182</a>                } <span class="kw">else if </span>env_db &gt; (threshold_db - knee_db / <span class="number">2.0</span>) {
-<a href=#183 id=183 data-nosnippet>183</a>                    <span class="kw">let </span>slope = <span class="number">1.0 </span>- <span class="number">1.0 </span>/ ratio;
-<a href=#184 id=184 data-nosnippet>184</a>                    <span class="kw">let </span>over_db = env_db - threshold_db + knee_db / <span class="number">2.0</span>;
-<a href=#185 id=185 data-nosnippet>185</a>                    <span class="kw">let </span>gain_db = -slope * (over_db * over_db) / (<span class="number">2.0 </span>* knee_db);
-<a href=#186 id=186 data-nosnippet>186</a>                    gain = libm::powf(<span class="number">10.0</span>, gain_db / <span class="number">20.0</span>);
-<a href=#187 id=187 data-nosnippet>187</a>                }
-<a href=#188 id=188 data-nosnippet>188</a>            } <span class="kw">else if </span>env_db &gt; threshold_db {
-<a href=#189 id=189 data-nosnippet>189</a>                <span class="kw">let </span>over_db = env_db - threshold_db;
-<a href=#190 id=190 data-nosnippet>190</a>                <span class="kw">let </span>gain_db = -over_db * (<span class="number">1.0 </span>- <span class="number">1.0 </span>/ ratio);
-<a href=#191 id=191 data-nosnippet>191</a>                gain = libm::powf(<span class="number">10.0</span>, gain_db / <span class="number">20.0</span>);
-<a href=#192 id=192 data-nosnippet>192</a>            }
-<a href=#193 id=193 data-nosnippet>193</a>
-<a href=#194 id=194 data-nosnippet>194</a>            <span class="kw-2">*</span>sample = input * gain * makeup;
-<a href=#195 id=195 data-nosnippet>195</a>        }
-<a href=#196 id=196 data-nosnippet>196</a>    }
-<a href=#197 id=197 data-nosnippet>197</a>
-<a href=#198 id=198 data-nosnippet>198</a>    <span class="kw">fn </span>set_sample_rate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sample_rate: f32) {
-<a href=#199 id=199 data-nosnippet>199</a>        <span class="self">self</span>.sample_rate = sample_rate;
-<a href=#200 id=200 data-nosnippet>200</a>        <span class="self">self</span>.threshold_db.set_sample_rate(sample_rate);
-<a href=#201 id=201 data-nosnippet>201</a>        <span class="self">self</span>.ratio.set_sample_rate(sample_rate);
-<a href=#202 id=202 data-nosnippet>202</a>        <span class="self">self</span>.attack_ms.set_sample_rate(sample_rate);
-<a href=#203 id=203 data-nosnippet>203</a>        <span class="self">self</span>.release_ms.set_sample_rate(sample_rate);
-<a href=#204 id=204 data-nosnippet>204</a>        <span class="self">self</span>.makeup_gain_db.set_sample_rate(sample_rate);
-<a href=#205 id=205 data-nosnippet>205</a>        <span class="self">self</span>.knee_width_db.set_sample_rate(sample_rate);
-<a href=#206 id=206 data-nosnippet>206</a>        <span class="self">self</span>.last_attack_bits = u32::MAX;
-<a href=#207 id=207 data-nosnippet>207</a>    }
-<a href=#208 id=208 data-nosnippet>208</a>
-<a href=#209 id=209 data-nosnippet>209</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#210 id=210 data-nosnippet>210</a>        <span class="self">self</span>.envelope = <span class="number">0.0</span>;
-<a href=#211 id=211 data-nosnippet>211</a>    }
-<a href=#212 id=212 data-nosnippet>212</a>
-<a href=#213 id=213 data-nosnippet>213</a>    <span class="attr">#[cfg(feature = <span class="string">"debug_visualize"</span>)]
-<a href=#214 id=214 data-nosnippet>214</a>    </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-<a href=#215 id=215 data-nosnippet>215</a>        <span class="string">"Compressor"
-<a href=#216 id=216 data-nosnippet>216</a>    </span>}
-<a href=#217 id=217 data-nosnippet>217</a>}
-<a href=#218 id=218 data-nosnippet>218</a>
-<a href=#219 id=219 data-nosnippet>219</a><span class="attr">#[cfg(test)]
-<a href=#220 id=220 data-nosnippet>220</a></span><span class="kw">mod </span>tests {
-<a href=#221 id=221 data-nosnippet>221</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#222 id=222 data-nosnippet>222</a>
-<a href=#223 id=223 data-nosnippet>223</a>    <span class="attr">#[test]
-<a href=#224 id=224 data-nosnippet>224</a>    </span><span class="kw">fn </span>test_limiter() {
-<a href=#225 id=225 data-nosnippet>225</a>        <span class="kw">let </span><span class="kw-2">mut </span>limiter = Compressor::new_limiter();
-<a href=#226 id=226 data-nosnippet>226</a>        limiter.set_sample_rate(<span class="number">44100.0</span>);
-<a href=#227 id=227 data-nosnippet>227</a>
-<a href=#228 id=228 data-nosnippet>228</a>        <span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">2.0</span>; <span class="number">100</span>];
-<a href=#229 id=229 data-nosnippet>229</a>        limiter.process(<span class="kw-2">&amp;mut </span>buffer, <span class="number">0</span>);
-<a href=#230 id=230 data-nosnippet>230</a>
-<a href=#231 id=231 data-nosnippet>231</a>        <span class="kw">let </span>last = buffer[<span class="number">99</span>];
-<a href=#232 id=232 data-nosnippet>232</a>        <span class="macro">assert!</span>(last &lt; <span class="number">1.5</span>);
-<a href=#233 id=233 data-nosnippet>233</a>        <span class="macro">assert!</span>(last &gt; <span class="number">0.0</span>);
-<a href=#234 id=234 data-nosnippet>234</a>    }
-<a href=#235 id=235 data-nosnippet>235</a>}
+<a href=#169 id=169 data-nosnippet>169</a>                <span class="self">self</span>.envelope =
+<a href=#170 id=170 data-nosnippet>170</a>                    <span class="self">self</span>.attack_coeff * <span class="self">self</span>.envelope + (<span class="number">1.0 </span>- <span class="self">self</span>.attack_coeff) * abs_input;
+<a href=#171 id=171 data-nosnippet>171</a>            } <span class="kw">else </span>{
+<a href=#172 id=172 data-nosnippet>172</a>                <span class="self">self</span>.envelope =
+<a href=#173 id=173 data-nosnippet>173</a>                    <span class="self">self</span>.release_coeff * <span class="self">self</span>.envelope + (<span class="number">1.0 </span>- <span class="self">self</span>.release_coeff) * abs_input;
+<a href=#174 id=174 data-nosnippet>174</a>            }
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a>            <span class="kw">let </span><span class="kw-2">mut </span>gain = <span class="number">1.0</span>;
+<a href=#177 id=177 data-nosnippet>177</a>            <span class="kw">let </span>env_db = <span class="number">20.0 </span>* libm::log10f(<span class="self">self</span>.envelope + <span class="number">1e-9</span>);
+<a href=#178 id=178 data-nosnippet>178</a>
+<a href=#179 id=179 data-nosnippet>179</a>            <span class="kw">if </span>knee_db &gt; <span class="number">0.0 </span>{
+<a href=#180 id=180 data-nosnippet>180</a>                <span class="kw">if </span>env_db &gt; (threshold_db + knee_db / <span class="number">2.0</span>) {
+<a href=#181 id=181 data-nosnippet>181</a>                    <span class="kw">let </span>over_db = env_db - threshold_db;
+<a href=#182 id=182 data-nosnippet>182</a>                    <span class="kw">let </span>gain_db = -over_db * (<span class="number">1.0 </span>- <span class="number">1.0 </span>/ ratio);
+<a href=#183 id=183 data-nosnippet>183</a>                    gain = libm::powf(<span class="number">10.0</span>, gain_db / <span class="number">20.0</span>);
+<a href=#184 id=184 data-nosnippet>184</a>                } <span class="kw">else if </span>env_db &gt; (threshold_db - knee_db / <span class="number">2.0</span>) {
+<a href=#185 id=185 data-nosnippet>185</a>                    <span class="kw">let </span>slope = <span class="number">1.0 </span>- <span class="number">1.0 </span>/ ratio;
+<a href=#186 id=186 data-nosnippet>186</a>                    <span class="kw">let </span>over_db = env_db - threshold_db + knee_db / <span class="number">2.0</span>;
+<a href=#187 id=187 data-nosnippet>187</a>                    <span class="kw">let </span>gain_db = -slope * (over_db * over_db) / (<span class="number">2.0 </span>* knee_db);
+<a href=#188 id=188 data-nosnippet>188</a>                    gain = libm::powf(<span class="number">10.0</span>, gain_db / <span class="number">20.0</span>);
+<a href=#189 id=189 data-nosnippet>189</a>                }
+<a href=#190 id=190 data-nosnippet>190</a>            } <span class="kw">else if </span>env_db &gt; threshold_db {
+<a href=#191 id=191 data-nosnippet>191</a>                <span class="kw">let </span>over_db = env_db - threshold_db;
+<a href=#192 id=192 data-nosnippet>192</a>                <span class="kw">let </span>gain_db = -over_db * (<span class="number">1.0 </span>- <span class="number">1.0 </span>/ ratio);
+<a href=#193 id=193 data-nosnippet>193</a>                gain = libm::powf(<span class="number">10.0</span>, gain_db / <span class="number">20.0</span>);
+<a href=#194 id=194 data-nosnippet>194</a>            }
+<a href=#195 id=195 data-nosnippet>195</a>
+<a href=#196 id=196 data-nosnippet>196</a>            <span class="kw-2">*</span>sample = input * gain * makeup;
+<a href=#197 id=197 data-nosnippet>197</a>        }
+<a href=#198 id=198 data-nosnippet>198</a>    }
+<a href=#199 id=199 data-nosnippet>199</a>
+<a href=#200 id=200 data-nosnippet>200</a>    <span class="kw">fn </span>set_sample_rate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sample_rate: f32) {
+<a href=#201 id=201 data-nosnippet>201</a>        <span class="self">self</span>.sample_rate = sample_rate;
+<a href=#202 id=202 data-nosnippet>202</a>        <span class="self">self</span>.threshold_db.set_sample_rate(sample_rate);
+<a href=#203 id=203 data-nosnippet>203</a>        <span class="self">self</span>.ratio.set_sample_rate(sample_rate);
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="self">self</span>.attack_ms.set_sample_rate(sample_rate);
+<a href=#205 id=205 data-nosnippet>205</a>        <span class="self">self</span>.release_ms.set_sample_rate(sample_rate);
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="self">self</span>.makeup_gain_db.set_sample_rate(sample_rate);
+<a href=#207 id=207 data-nosnippet>207</a>        <span class="self">self</span>.knee_width_db.set_sample_rate(sample_rate);
+<a href=#208 id=208 data-nosnippet>208</a>        <span class="self">self</span>.last_attack_bits = u32::MAX;
+<a href=#209 id=209 data-nosnippet>209</a>    }
+<a href=#210 id=210 data-nosnippet>210</a>
+<a href=#211 id=211 data-nosnippet>211</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#212 id=212 data-nosnippet>212</a>        <span class="self">self</span>.envelope = <span class="number">0.0</span>;
+<a href=#213 id=213 data-nosnippet>213</a>    }
+<a href=#214 id=214 data-nosnippet>214</a>
+<a href=#215 id=215 data-nosnippet>215</a>    <span class="attr">#[cfg(feature = <span class="string">"debug_visualize"</span>)]
+<a href=#216 id=216 data-nosnippet>216</a>    </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+<a href=#217 id=217 data-nosnippet>217</a>        <span class="string">"Compressor"
+<a href=#218 id=218 data-nosnippet>218</a>    </span>}
+<a href=#219 id=219 data-nosnippet>219</a>}
+<a href=#220 id=220 data-nosnippet>220</a>
+<a href=#221 id=221 data-nosnippet>221</a><span class="attr">#[cfg(test)]
+<a href=#222 id=222 data-nosnippet>222</a></span><span class="kw">mod </span>tests {
+<a href=#223 id=223 data-nosnippet>223</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#224 id=224 data-nosnippet>224</a>
+<a href=#225 id=225 data-nosnippet>225</a>    <span class="attr">#[test]
+<a href=#226 id=226 data-nosnippet>226</a>    </span><span class="kw">fn </span>test_limiter() {
+<a href=#227 id=227 data-nosnippet>227</a>        <span class="kw">let </span><span class="kw-2">mut </span>limiter = Compressor::new_limiter();
+<a href=#228 id=228 data-nosnippet>228</a>        limiter.set_sample_rate(<span class="number">44100.0</span>);
+<a href=#229 id=229 data-nosnippet>229</a>
+<a href=#230 id=230 data-nosnippet>230</a>        <span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">2.0</span>; <span class="number">100</span>];
+<a href=#231 id=231 data-nosnippet>231</a>        limiter.process(<span class="kw-2">&amp;mut </span>buffer, <span class="number">0</span>);
+<a href=#232 id=232 data-nosnippet>232</a>
+<a href=#233 id=233 data-nosnippet>233</a>        <span class="kw">let </span>last = buffer[<span class="number">99</span>];
+<a href=#234 id=234 data-nosnippet>234</a>        <span class="macro">assert!</span>(last &lt; <span class="number">1.5</span>);
+<a href=#235 id=235 data-nosnippet>235</a>        <span class="macro">assert!</span>(last &gt; <span class="number">0.0</span>);
+<a href=#236 id=236 data-nosnippet>236</a>    }
+<a href=#237 id=237 data-nosnippet>237</a>}
 </code></pre></div></section></main></body></html>

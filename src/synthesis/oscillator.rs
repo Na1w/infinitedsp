@@ -14,6 +14,8 @@ pub enum Waveform {
     Triangle,
     /// Sawtooth wave.
     Saw,
+    /// Sawtooth wave (Non bandwidth limited).
+    NaiveSaw,
     /// Square wave.
     Square,
     /// White noise.
@@ -24,12 +26,12 @@ pub enum Waveform {
 ///
 /// Generates standard waveforms using PolyBLEP for anti-aliasing.
 pub struct Oscillator {
-    phase: f32,
-    frequency: AudioParam,
-    waveform: Waveform,
-    sample_rate: f32,
+    pub phase: f32,
+    pub frequency: AudioParam,
+    pub waveform: Waveform,
+    pub sample_rate: f32,
     freq_buffer: Vec<f32>,
-    rng_state: u32,
+    pub rng_state: u32,
 }
 
 impl Oscillator {
@@ -66,6 +68,66 @@ impl Oscillator {
         *rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
         let val = (*rng_state >> 16) & 0x7FFF;
         (val as f32 / 32768.0) * 2.0 - 1.0
+    }
+
+    /// Sets the frequency of the oscillator.
+    pub fn set_frequency(&mut self, frequency: AudioParam) {
+        self.frequency = frequency;
+    }
+
+    /// Gets the current frequency of the oscillator.
+    pub fn get_frequency(&self) -> &AudioParam {
+        &self.frequency
+    }
+
+    /// Sets the phase of the oscillator (0.0 to 1.0).
+    pub fn set_phase(&mut self, phase: f32) {
+        self.phase = phase;
+    }
+
+    /// Gets the current phase of the oscillator.
+    pub fn get_phase(&self) -> f32 {
+        self.phase
+    }
+
+    /// Processes a single sample from the oscillator.
+    #[inline(always)]
+    pub fn tick(&mut self, freq_hz: f32) -> f32 {
+        let inv_sr = 1.0 / self.sample_rate;
+        let inc = freq_hz * inv_sr;
+
+        if self.waveform != Waveform::WhiteNoise {
+            self.phase += inc;
+            if self.phase >= 1.0 {
+                self.phase -= 1.0;
+            } else if self.phase < 0.0 {
+                self.phase += 1.0;
+            }
+        }
+
+        match self.waveform {
+            Waveform::Sine => libm::sinf(self.phase * 2.0 * PI),
+            Waveform::Triangle => {
+                if self.phase < 0.5 {
+                    4.0 * self.phase - 1.0
+                } else {
+                    4.0 * (1.0 - self.phase) - 1.0
+                }
+            }
+            Waveform::Saw => {
+                let naive = 2.0 * self.phase - 1.0;
+                naive - Self::poly_blep(self.phase, inc.abs())
+            }
+            Waveform::NaiveSaw => 2.0 * self.phase - 1.0,
+            Waveform::Square => {
+                let naive = if self.phase < 0.5 { 1.0 } else { -1.0 };
+                let dt = inc.abs();
+                let core =
+                    Self::poly_blep(self.phase, dt) - Self::poly_blep((self.phase + 0.5) % 1.0, dt);
+                naive + core
+            }
+            Waveform::WhiteNoise => Self::next_random(&mut self.rng_state),
+        }
     }
 }
 
@@ -139,6 +201,22 @@ impl FrameProcessor<Mono> for Oscillator {
                     }
                 }
             }
+            Waveform::NaiveSaw => {
+                for (out_chunk, freq_chunk) in chunks.iter_mut().zip(freq_chunks.iter()) {
+                    let freq = f32x4::from(*freq_chunk);
+                    let inc = freq * inv_sr_vec;
+                    let inc_arr = inc.to_array();
+                    for i in 0..4 {
+                        phase += inc_arr[i];
+                        if phase >= 1.0 {
+                            phase -= 1.0;
+                        } else if phase < 0.0 {
+                            phase += 1.0;
+                        }
+                        out_chunk[i] = 2.0 * phase - 1.0;
+                    }
+                }
+            }
             Waveform::Square => {
                 for (out_chunk, freq_chunk) in chunks.iter_mut().zip(freq_chunks.iter()) {
                     let freq = f32x4::from(*freq_chunk);
@@ -198,6 +276,7 @@ impl FrameProcessor<Mono> for Oscillator {
                     let naive = 2.0 * phase - 1.0;
                     naive - Self::poly_blep(phase, inc.abs())
                 }
+                Waveform::NaiveSaw => 2.0 * phase - 1.0,
                 Waveform::Square => {
                     let naive = if phase < 0.5 { 1.0 } else { -1.0 };
                     let dt = inc.abs();
@@ -233,6 +312,7 @@ impl FrameProcessor<Mono> for Oscillator {
             Waveform::Sine => "Oscillator (Sine)",
             Waveform::Triangle => "Oscillator (Triangle)",
             Waveform::Saw => "Oscillator (Saw)",
+            Waveform::NaiveSaw => "Oscillator (NaiveSaw)",
             Waveform::Square => "Oscillator (Square)",
             Waveform::WhiteNoise => "Oscillator (WhiteNoise)",
         }

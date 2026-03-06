@@ -52,22 +52,22 @@ impl StereoProcessor for CyberCity {
         self.mix_buffer.fill(0.0);
         self.bass.process(&mut self.mix_buffer, sample_index);
         for i in 0..len {
-            self.stereo_acc[2*i] += self.mix_buffer[i];
-            self.stereo_acc[2*i+1] += self.mix_buffer[i];
+            self.stereo_acc[2 * i] += self.mix_buffer[i];
+            self.stereo_acc[2 * i + 1] += self.mix_buffer[i];
         }
 
         self.mix_buffer.fill(0.0);
         self.lead.process(&mut self.mix_buffer, sample_index);
         for i in 0..len {
-            self.stereo_acc[2*i] += self.mix_buffer[i];
-            self.stereo_acc[2*i+1] += self.mix_buffer[i];
+            self.stereo_acc[2 * i] += self.mix_buffer[i];
+            self.stereo_acc[2 * i + 1] += self.mix_buffer[i];
         }
 
         self.reverb.process(&mut self.stereo_acc, sample_index);
 
         for i in 0..len {
-            left[i] = self.stereo_acc[2*i];
-            right[i] = self.stereo_acc[2*i+1];
+            left[i] = self.stereo_acc[2 * i];
+            right[i] = self.stereo_acc[2 * i + 1];
         }
 
         self.limiter.process(left, sample_index);
@@ -77,13 +77,13 @@ impl StereoProcessor for CyberCity {
 
 fn create_bass(sr: f32, pitch: Parameter, gate: Parameter) -> DspChain<Mono> {
     let osc = Oscillator::new(AudioParam::Linked(pitch), Waveform::Saw);
-    
+
     let amp_env = Adsr::new(
         AudioParam::Linked(gate.clone()),
         AudioParam::Static(0.005),
         AudioParam::Static(0.15),
         AudioParam::Static(0.0),
-        AudioParam::Static(0.05)
+        AudioParam::Static(0.05),
     );
 
     let filter_env = Adsr::new(
@@ -91,45 +91,63 @@ fn create_bass(sr: f32, pitch: Parameter, gate: Parameter) -> DspChain<Mono> {
         AudioParam::Static(0.005),
         AudioParam::Static(0.12),
         AudioParam::Static(0.0),
-        AudioParam::Static(0.05)
+        AudioParam::Static(0.05),
     );
 
     let mapped_filter_env = MapRange::new(
         AudioParam::Dynamic(Box::new(filter_env)),
         AudioParam::Static(100.0),
         AudioParam::Static(2500.0),
-        CurveType::Exponential
+        CurveType::Exponential,
     );
 
     let filter = LadderFilter::new(
         AudioParam::Dynamic(Box::new(mapped_filter_env)),
-        AudioParam::Static(0.3)
+        AudioParam::Static(0.3),
     );
 
     let amp = Gain::new(AudioParam::Dynamic(Box::new(amp_env)));
 
-    DspChain::new(osc, sr).and(filter).and(amp).and(Gain::new_db(2.0))
+    DspChain::new(osc, sr)
+        .and(filter)
+        .and(amp)
+        .and(Gain::new_db(2.0))
 }
 
 fn create_lead(sr: f32, pitch: Parameter, gate: Parameter) -> DspChain<Mono> {
     let osc1 = Oscillator::new(AudioParam::Linked(pitch.clone()), Waveform::Saw);
-    let osc2 = Oscillator::new(AudioParam::Dynamic(Box::new(PitchDetune { pitch: pitch.clone(), ratio: 1.006 })), Waveform::Saw);
-    let osc3 = Oscillator::new(AudioParam::Dynamic(Box::new(PitchDetune { pitch, ratio: 0.994 })), Waveform::Saw);
+    let osc2 = Oscillator::new(
+        AudioParam::Dynamic(Box::new(PitchDetune {
+            pitch: pitch.clone(),
+            ratio: 1.006,
+        })),
+        Waveform::Saw,
+    );
+    let osc3 = Oscillator::new(
+        AudioParam::Dynamic(Box::new(PitchDetune {
+            pitch,
+            ratio: 0.994,
+        })),
+        Waveform::Saw,
+    );
 
     let amp_env = Adsr::new(
         AudioParam::Linked(gate),
         AudioParam::Static(0.05),
         AudioParam::Static(0.0),
         AudioParam::Static(1.0),
-        AudioParam::Static(0.4)
+        AudioParam::Static(0.4),
     );
 
     let filter = LadderFilter::new(AudioParam::Static(3000.0), AudioParam::Static(0.1));
     let amp = Gain::new(AudioParam::Dynamic(Box::new(amp_env)));
     let chorus = ModulatedDelay::new_chorus();
-    
+
     let delay = TapeDelay::new(
-        2.0, AudioParam::Static(0.5), AudioParam::Static(0.4), AudioParam::Static(0.35)
+        2.0,
+        AudioParam::Static(0.5),
+        AudioParam::Static(0.4),
+        AudioParam::Static(0.35),
     );
 
     DspChain::new(osc1, sr)
@@ -156,8 +174,9 @@ fn main() -> Result<()> {
     let (stream, _sr) = init_audio_stereo(move |sr| {
         let bass = create_bass(sr, bp_clone, bg_clone);
         let lead = create_lead(sr, lp_clone, lg_clone);
-        let reverb_unit = Reverb::new_with_params(AudioParam::Static(0.9), AudioParam::Static(0.3), 101);
-        
+        let reverb_unit =
+            Reverb::new_with_params(AudioParam::Static(0.9), AudioParam::Static(0.3), 101);
+
         CyberCity {
             bass,
             lead,
@@ -171,34 +190,30 @@ fn main() -> Result<()> {
     stream.play()?;
 
     let bass_notes = [
-        41.20, 41.20, 41.20, 41.20,  41.20, 41.20, 41.20, 49.00,
-        41.20, 41.20, 41.20, 41.20,  55.00, 55.00, 49.00, 49.00,
-        32.70, 32.70, 32.70, 32.70,  32.70, 32.70, 32.70, 38.89,
-        32.70, 32.70, 32.70, 32.70,  38.89, 38.89, 41.20, 41.20,
+        41.20, 41.20, 41.20, 41.20, 41.20, 41.20, 41.20, 49.00, 41.20, 41.20, 41.20, 41.20, 55.00,
+        55.00, 49.00, 49.00, 32.70, 32.70, 32.70, 32.70, 32.70, 32.70, 32.70, 38.89, 32.70, 32.70,
+        32.70, 32.70, 38.89, 38.89, 41.20, 41.20,
     ];
 
     let lead_notes = [
-        164.81, 164.81, 164.81, 164.81,  164.81, 164.81, 164.81, 164.81,
-        196.00, 196.00, 196.00, 196.00,  196.00, 196.00, 246.94, 246.94,
-        130.81, 130.81, 130.81, 130.81,  130.81, 130.81, 130.81, 130.81,
-        146.83, 146.83, 146.83, 146.83,  146.83, 146.83, 164.81, 164.81,
+        164.81, 164.81, 164.81, 164.81, 164.81, 164.81, 164.81, 164.81, 196.00, 196.00, 196.00,
+        196.00, 196.00, 196.00, 246.94, 246.94, 130.81, 130.81, 130.81, 130.81, 130.81, 130.81,
+        130.81, 130.81, 146.83, 146.83, 146.83, 146.83, 146.83, 146.83, 164.81, 164.81,
     ];
 
     let lead_gates = [
-        1.0, 1.0, 1.0, 1.0,  1.0, 1.0, 0.0, 0.0,
-        1.0, 1.0, 1.0, 1.0,  0.0, 0.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0,  1.0, 1.0, 0.0, 0.0,
-        1.0, 1.0, 1.0, 1.0,  0.0, 0.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
     ];
 
     let start = Instant::now();
     let mut step = 0;
-    
+
     while start.elapsed() < Duration::from_secs(15) {
         bass_pitch.set(bass_notes[step]);
         lead_pitch.set(lead_notes[step]);
         lead_gate.set(lead_gates[step]);
-        
+
         bass_gate.set(1.0);
         thread::sleep(Duration::from_millis(60));
         bass_gate.set(0.0);

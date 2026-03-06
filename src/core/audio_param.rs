@@ -44,6 +44,21 @@ impl AudioParam {
         }
     }
 
+    /// Returns the parameter value at a specific sample index.
+    ///
+    /// For Dynamic parameters, this will process a single sample.
+    pub fn get_value_at(&mut self, sample_index: u64) -> f32 {
+        match self {
+            AudioParam::Static(val) => *val,
+            AudioParam::Linked(param) => param.get(),
+            AudioParam::Dynamic(processor) => {
+                let mut buf = [0.0];
+                processor.process(&mut buf, sample_index);
+                buf[0]
+            }
+        }
+    }
+
     /// Sets the sample rate for dynamic parameters.
     pub fn set_sample_rate(&mut self, sample_rate: f32) {
         if let AudioParam::Dynamic(p) = self {
@@ -82,5 +97,12 @@ impl AudioParam {
     /// Creates a static AudioParam representing a linear value (e.g. gain, ratio).
     pub fn linear(val: f32) -> Self {
         AudioParam::Static(val)
+    }
+
+    /// Returns a new static AudioParam with the current constant value.
+    ///
+    /// If the parameter is dynamic, returns None.
+    pub fn clone_static(&self) -> Option<AudioParam> {
+        self.get_constant().map(AudioParam::Static)
     }
 }

@@ -118,17 +118,33 @@ impl<const N: usize> SpectralProcessor for FftPitchShift<N> {
             return;
         }
 
-        if self.semitones_buffer.is_empty() {
-            self.semitones_buffer.resize(1, 0.0);
+        let hop_size = N / 2;
+
+        if self.semitones_buffer.len() != hop_size {
+            self.semitones_buffer.resize(hop_size, 0.0);
         }
 
-        self.semitones
-            .process(&mut self.semitones_buffer[0..1], sample_index);
+        self.semitones.process(&mut self.semitones_buffer, sample_index);
+
         let semitones_val = self.semitones_buffer[0];
 
         self.factor = libm::powf(2.0, semitones_val / 12.0);
 
         self.process_phase_vocoder(bins);
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f32) {
+        self.semitones.set_sample_rate(sample_rate);
+    }
+
+    fn reset(&mut self) {
+        self.prev_analysis_phases.fill(0.0);
+        self.synthesis_phases.fill(0.0);
+        self.analysis_mags.fill(0.0);
+        self.analysis_freqs.fill(0.0);
+        self.synthesis_mags.fill(0.0);
+        self.synthesis_freqs.fill(0.0);
+        self.semitones.reset();
     }
 
     #[cfg(feature = "debug_visualize")]

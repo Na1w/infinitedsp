@@ -19,6 +19,12 @@ pub trait SpectralProcessor {
     /// * `sample_index` - The sample index corresponding to the start of the analysis window.
     fn process_spectral(&mut self, bins: &mut [Complex32], sample_index: u64);
 
+    /// Sets the sample rate.
+    fn set_sample_rate(&mut self, _sample_rate: f32) {}
+
+    /// Resets the internal state of the processor.
+    fn reset(&mut self) {}
+
     /// Returns the name of the spectral processor.
     fn name(&self) -> &str {
         #[cfg(feature = "debug_visualize")]
@@ -201,7 +207,9 @@ where
         }
     }
 
-    fn set_sample_rate(&mut self, _sample_rate: f32) {}
+    fn set_sample_rate(&mut self, sample_rate: f32) {
+        self.processor.set_sample_rate(sample_rate);
+    }
 
     fn reset(&mut self) {
         self.input_queue.clear();
@@ -209,6 +217,7 @@ where
         self.output_queue.extend(vec![0.0; N]);
         self.ola_buffer.fill(0.0);
         self.current_sample_index = 0;
+        self.processor.reset();
     }
 
     #[cfg(feature = "debug_visualize")]

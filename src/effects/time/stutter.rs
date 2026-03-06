@@ -110,12 +110,18 @@ impl FrameProcessor<Mono> for Stutter {
             .process(&mut self.trigger_buffer[0..len], sample_index);
         self.mix.process(&mut self.mix_buffer[0..len], sample_index);
 
-        for i in 0..len {
-            let trig = self.trigger_buffer[i];
-            let target_len_sec = self.length_buffer[i];
-            let target_reps = self.repeats_buffer[i];
-            let mix = self.mix_buffer[i];
+        let trigger_slice = &self.trigger_buffer[..len];
+        let length_slice = &self.length_buffer[..len];
+        let repeats_slice = &self.repeats_buffer[..len];
+        let mix_slice = &self.mix_buffer[..len];
 
+        for ((((&trig, &target_len_sec), &target_reps), &mix), sample) in trigger_slice
+            .iter()
+            .zip(length_slice)
+            .zip(repeats_slice)
+            .zip(mix_slice)
+            .zip(buffer.iter_mut())
+        {
             if trig > 0.5 && self.last_trigger <= 0.5 {
                 self.is_stuttering = true;
                 self.stutter_len_samples = (target_len_sec * sample_rate) as usize;
@@ -127,7 +133,7 @@ impl FrameProcessor<Mono> for Stutter {
             }
             self.last_trigger = trig;
 
-            let input = buffer[i];
+            let input = *sample;
             self.buffer[self.write_pos] = input;
             self.write_pos = (self.write_pos + 1) % buffer_len;
 
@@ -145,7 +151,7 @@ impl FrameProcessor<Mono> for Stutter {
                 }
 
                 let stutter_out = self.buffer[read_idx] * envelope;
-                buffer[i] = input * (1.0 - mix) + stutter_out * mix;
+                *sample = input * (1.0 - mix) + stutter_out * mix;
 
                 self.stutter_read_pos += 1.0;
                 if self.stutter_read_pos >= self.stutter_len_samples as f32 {
@@ -223,8 +229,8 @@ mod tests {
 
         // Fill buffer with some data
         let mut buffer = [1.0; 20];
-        for i in 0..20 {
-            buffer[i] = i as f32;
+        for (i, sample) in buffer.iter_mut().enumerate() {
+            *sample = i as f32;
         }
 
         // Process first block to fill internal buffer

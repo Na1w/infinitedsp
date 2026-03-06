@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772661349567,
+  "lastUpdate": 1772824367069,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -818,6 +818,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::envelope::bench_adsr",
             "value": 31037,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "68927d2dfe7ddd58dd3aad854eecdbcbf18696ca",
+          "message": "Integrate the speech synthesizer (#13)\n\n* Integrate the speech synthesizer\n\n* formatting",
+          "timestamp": "2026-03-06T20:11:13+01:00",
+          "tree_id": "25cd83aa8928b659b0e5060b608bac385b7824b7",
+          "url": "https://github.com/Na1w/infinitedsp/commit/68927d2dfe7ddd58dd3aad854eecdbcbf18696ca"
+        },
+        "date": 1772824364850,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 30255,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14449,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 44361,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313818,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31072,
             "unit": "instructions"
           }
         ]

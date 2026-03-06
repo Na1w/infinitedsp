@@ -41,23 +41,26 @@ impl StereoProcessor for InfinityEngine {
         }
 
         self.mixing_buffer.fill(0.0);
-        self.drone_voice.process(&mut self.mixing_buffer, sample_index);
-        
+        self.drone_voice
+            .process(&mut self.mixing_buffer, sample_index);
+
         for i in 0..len {
             left[i] = self.mixing_buffer[i];
             right[i] = self.mixing_buffer[i];
         }
 
         self.mixing_buffer.fill(0.0);
-        self.star_pluck.process(&mut self.mixing_buffer, sample_index);
-        
+        self.star_pluck
+            .process(&mut self.mixing_buffer, sample_index);
+
         for i in 0..len {
             left[i] += self.mixing_buffer[i] * 0.6;
             right[i] += self.mixing_buffer[i] * 0.6;
         }
 
         self.shimmer_buffer.copy_from_slice(&self.mixing_buffer);
-        self.shimmer_bus.process(&mut self.shimmer_buffer, sample_index);
+        self.shimmer_bus
+            .process(&mut self.shimmer_buffer, sample_index);
 
         let mut stereo_buf = vec![0.0; len * 2];
         for i in 0..len {
@@ -82,10 +85,10 @@ impl StereoProcessor for InfinityEngine {
 fn create_drone(sample_rate: f32) -> DspChain<Mono> {
     let mut lfo = Lfo::new(AudioParam::Static(0.05), LfoWaveform::Sine);
     lfo.set_range(200.0, 800.0);
-    
+
     let osc = Oscillator::new(AudioParam::Static(60.0), Waveform::Saw);
     let filter = LadderFilter::new(AudioParam::Dynamic(Box::new(lfo)), AudioParam::Static(0.4));
-    
+
     DspChain::new(osc, sample_rate)
         .and(filter)
         .and(Gain::new_db(-20.0))
@@ -96,32 +99,32 @@ fn create_star_pluck(sample_rate: f32, pitch: Parameter, gate: Parameter) -> Dsp
         AudioParam::Linked(pitch),
         AudioParam::Linked(gate),
         AudioParam::Static(0.1),
-        AudioParam::Static(0.5)
+        AudioParam::Static(0.5),
     );
-    
+
     let delay = TapeDelay::new(
         2.0,
         AudioParam::Static(0.6),
         AudioParam::Static(0.4),
-        AudioParam::Static(1.0)
+        AudioParam::Static(1.0),
     );
 
-    DspChain::new(pluck, sample_rate)
-        .and_mix(0.5, delay)
+    DspChain::new(pluck, sample_rate).and_mix(0.5, delay)
 }
 
 fn main() -> Result<()> {
     let pluck_trigger = Parameter::new(0.0);
     let pluck_pitch = Parameter::new(440.0);
-    
+
     let pt_for_engine = pluck_trigger.clone();
     let pp_for_engine = pluck_pitch.clone();
 
     let (stream, _sample_rate) = init_audio_stereo(move |sr| {
         let shimmer_pitch = FftPitchShift::<1024>::new(AudioParam::Static(12.0));
         let shimmer_ola = Ola::<_, 1024>::with(shimmer_pitch);
-        let reverb_unit = Reverb::new_with_params(AudioParam::Static(0.95), AudioParam::Static(0.1), 42);
-        
+        let reverb_unit =
+            Reverb::new_with_params(AudioParam::Static(0.95), AudioParam::Static(0.1), 42);
+
         InfinityEngine {
             star_pluck: create_star_pluck(sr, pp_for_engine.clone(), pt_for_engine.clone()),
             drone_voice: create_drone(sr),
@@ -144,14 +147,20 @@ fn main() -> Result<()> {
         rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
         let r = (rng_state >> 16) & 0xFF;
         let note_idx = (r as usize) % scale.len();
-        let octave = if r > 200 { 4.0 } else if r > 100 { 3.0 } else { 2.0 };
+        let octave = if r > 200 {
+            4.0
+        } else if r > 100 {
+            3.0
+        } else {
+            2.0
+        };
         let freq = scale[note_idx] * octave;
-        
+
         pluck_pitch.set(freq);
         pluck_trigger.set(1.0);
         thread::sleep(Duration::from_millis(50));
         pluck_trigger.set(0.0);
-        
+
         let wait = 500 + (r as u64) * 10;
         thread::sleep(Duration::from_millis(wait));
     }

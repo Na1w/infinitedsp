@@ -1,7 +1,7 @@
 use anyhow::Result;
 use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
-use infinitedsp_core::core::channels::{Mono, Stereo, DualMono};
+use infinitedsp_core::core::channels::{DualMono, Mono, Stereo};
 use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
 use infinitedsp_core::core::ola::Ola;
@@ -37,39 +37,43 @@ struct GranularCloud {
 impl StereoProcessor for GranularCloud {
     fn process(&mut self, left: &mut [f32], right: &mut [f32], sample_index: u64) {
         let len = left.len();
-        if self.layer_buf.len() < len { 
+        if self.layer_buf.len() < len {
             self.layer_buf.resize(len, 0.0);
             self.stereo_acc.resize(len * 2, 0.0);
         }
-        
+
         self.stereo_acc.fill(0.0);
 
         self.layer_buf.fill(0.0);
         self.drone.process(&mut self.layer_buf, sample_index);
         for i in 0..len {
-            self.stereo_acc[2*i] += self.layer_buf[i];
-            self.stereo_acc[2*i+1] += self.layer_buf[i];
+            self.stereo_acc[2 * i] += self.layer_buf[i];
+            self.stereo_acc[2 * i + 1] += self.layer_buf[i];
         }
 
         let mut arp_buf = vec![0.0; len * 2];
         self.arpeggio.process(&mut arp_buf, sample_index);
-        for i in 0..len * 2 { self.stereo_acc[i] += arp_buf[i]; }
+        for i in 0..len * 2 {
+            self.stereo_acc[i] += arp_buf[i];
+        }
 
         self.layer_buf.fill(0.0);
         self.glitter.process(&mut self.layer_buf, sample_index);
         for i in 0..len {
             let g = self.layer_buf[i] * 0.4;
-            self.stereo_acc[2*i] += g;
-            self.stereo_acc[2*i+1] += g;
+            self.stereo_acc[2 * i] += g;
+            self.stereo_acc[2 * i + 1] += g;
         }
 
         let mut shim_in = vec![0.0; len];
-        for i in 0..len { shim_in[i] = (self.stereo_acc[2*i] + self.stereo_acc[2*i+1]) * 0.5; }
+        for i in 0..len {
+            shim_in[i] = (self.stereo_acc[2 * i] + self.stereo_acc[2 * i + 1]) * 0.5;
+        }
         self.shimmer.process(&mut shim_in, sample_index);
         for i in 0..len {
             let s = shim_in[i] * 0.6;
-            self.stereo_acc[2*i] += s;
-            self.stereo_acc[2*i+1] += s;
+            self.stereo_acc[2 * i] += s;
+            self.stereo_acc[2 * i + 1] += s;
         }
 
         self.reverb.process(&mut self.stereo_acc, sample_index);
@@ -85,13 +89,27 @@ impl StereoProcessor for GranularCloud {
 }
 
 fn create_arp_voice(sr: f32, p: Parameter, g: Parameter, rate: f32, d: f32) -> DspChain<Mono> {
-    let pluck = KarplusStrong::new(AudioParam::Linked(p), AudioParam::Linked(g), AudioParam::linear(0.05), AudioParam::linear(0.8));
+    let pluck = KarplusStrong::new(
+        AudioParam::Linked(p),
+        AudioParam::Linked(g),
+        AudioParam::linear(0.05),
+        AudioParam::linear(0.8),
+    );
     let mut lfo = Lfo::new(AudioParam::hz(rate), LfoWaveform::Sine);
     lfo.set_range(400.0, 2000.0);
     let filter = LadderFilter::new(AudioParam::Dynamic(Box::new(lfo)), AudioParam::linear(0.7));
     let gran = GranularPitchShift::new(45.0, AudioParam::linear(12.0));
-    let delay = TapeDelay::new(1.0, AudioParam::ms(d), AudioParam::linear(0.6), AudioParam::linear(0.4));
-    DspChain::new(pluck, sr).and(filter).and(gran).and(delay).and(Gain::new_db(-10.0))
+    let delay = TapeDelay::new(
+        1.0,
+        AudioParam::ms(d),
+        AudioParam::linear(0.6),
+        AudioParam::linear(0.4),
+    );
+    DspChain::new(pluck, sr)
+        .and(filter)
+        .and(gran)
+        .and(delay)
+        .and(Gain::new_db(-10.0))
 }
 
 fn create_drone(sr: f32) -> DspChain<Mono> {
@@ -100,18 +118,27 @@ fn create_drone(sr: f32) -> DspChain<Mono> {
     let mut lfo = Lfo::new(AudioParam::hz(0.05), LfoWaveform::Sine);
     lfo.set_range(80.0, 500.0);
     let filter = LadderFilter::new(AudioParam::Dynamic(Box::new(lfo)), AudioParam::linear(0.4));
-    DspChain::new(osc1, sr).and_mix(0.5, osc2).and(filter).and(Gain::new_db(-6.0))
+    DspChain::new(osc1, sr)
+        .and_mix(0.5, osc2)
+        .and(filter)
+        .and(Gain::new_db(-6.0))
 }
 
 fn create_glitter(sr: f32) -> DspChain<Mono> {
     let noise = Oscillator::new(AudioParam::Static(0.0), Waveform::WhiteNoise);
     let mut f_lfo = Lfo::new(AudioParam::hz(0.15), LfoWaveform::Sine);
     f_lfo.set_range(3000.0, 9000.0);
-    let filter = LadderFilter::new(AudioParam::Dynamic(Box::new(f_lfo)), AudioParam::linear(0.96));
+    let filter = LadderFilter::new(
+        AudioParam::Dynamic(Box::new(f_lfo)),
+        AudioParam::linear(0.96),
+    );
     let mut p_lfo = Lfo::new(AudioParam::hz(15.0), LfoWaveform::SampleAndHold);
     p_lfo.set_range(0.0, 24.0);
     let gran = GranularPitchShift::new(15.0, AudioParam::Dynamic(Box::new(p_lfo)));
-    DspChain::new(noise, sr).and(filter).and(gran).and(Gain::new_db(-14.0))
+    DspChain::new(noise, sr)
+        .and(filter)
+        .and(gran)
+        .and(Gain::new_db(-14.0))
 }
 
 fn main() -> Result<()> {
@@ -123,7 +150,8 @@ fn main() -> Result<()> {
         let left = create_arp_voice(sr, p_clone.clone(), g_clone.clone(), 0.1, 300.0);
         let right = create_arp_voice(sr, p_clone, g_clone, 0.12, 450.0);
         let shimmer_unit = FftPitchShift::<1024>::new(AudioParam::Static(12.0));
-        let reverb_unit = Reverb::new_with_params(AudioParam::linear(0.94), AudioParam::linear(0.2), 42);
+        let reverb_unit =
+            Reverb::new_with_params(AudioParam::linear(0.94), AudioParam::linear(0.2), 42);
         GranularCloud {
             arpeggio: DualMono::new(left, right),
             drone: create_drone(sr),

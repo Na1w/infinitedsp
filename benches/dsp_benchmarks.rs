@@ -95,4 +95,20 @@ library_benchmark_group!(
     benchmarks = bench_adsr
 );
 
-main!(library_benchmark_groups = oscillator, reverb, envelope);
+main!(library_benchmark_groups = oscillator, reverb, envelope, compressor);
+
+#[library_benchmark]
+fn bench_compressor() {
+    let mut compressor = infinitedsp_core::effects::dynamics::compressor::Compressor::new(
+        AudioParam::Static(-10.0),
+        AudioParam::Static(4.0),
+    );
+    compressor.set_sample_rate(44100.0);
+    let mut buffer = vec![0.5; 512];
+    compressor.process(black_box(&mut buffer), 0);
+}
+
+library_benchmark_group!(
+    name = compressor;
+    benchmarks = bench_compressor
+);

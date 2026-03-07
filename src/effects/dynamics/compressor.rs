@@ -110,48 +110,21 @@ impl Compressor {
 
 impl FrameProcessor<Mono> for Compressor {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
-        let len = buffer.len();
-
-        if self.threshold_buffer.len() < len {
-            self.threshold_buffer.resize(len, 0.0);
-        }
-        if self.ratio_buffer.len() < len {
-            self.ratio_buffer.resize(len, 0.0);
-        }
-        if self.attack_buffer.len() < len {
-            self.attack_buffer.resize(len, 0.0);
-        }
-        if self.release_buffer.len() < len {
-            self.release_buffer.resize(len, 0.0);
-        }
-        if self.makeup_buffer.len() < len {
-            self.makeup_buffer.resize(len, 0.0);
-        }
-        if self.knee_buffer.len() < len {
-            self.knee_buffer.resize(len, 0.0);
-        }
-
-        self.threshold_db
-            .process(&mut self.threshold_buffer[0..len], sample_index);
-        self.ratio
-            .process(&mut self.ratio_buffer[0..len], sample_index);
-        self.attack_ms
-            .process(&mut self.attack_buffer[0..len], sample_index);
-        self.release_ms
-            .process(&mut self.release_buffer[0..len], sample_index);
-        self.makeup_gain_db
-            .process(&mut self.makeup_buffer[0..len], sample_index);
-        self.knee_width_db
-            .process(&mut self.knee_buffer[0..len], sample_index);
-
-        for (i, sample) in buffer.iter_mut().enumerate() {
-            let threshold_db = self.threshold_buffer[i];
-            let ratio = self.ratio_buffer[i];
-            let attack_ms = self.attack_buffer[i];
-            let release_ms = self.release_buffer[i];
-            let makeup_db = self.makeup_buffer[i];
-            let knee_db = self.knee_buffer[i];
-
+        if let (
+            Some(threshold_db),
+            Some(ratio),
+            Some(attack_ms),
+            Some(release_ms),
+            Some(makeup_db),
+            Some(knee_db),
+        ) = (
+            self.threshold_db.get_constant(),
+            self.ratio.get_constant(),
+            self.attack_ms.get_constant(),
+            self.release_ms.get_constant(),
+            self.makeup_gain_db.get_constant(),
+            self.knee_width_db.get_constant(),
+        ) {
             let att_bits = attack_ms.to_bits();
             let rel_bits = release_ms.to_bits();
 
@@ -162,38 +135,127 @@ impl FrameProcessor<Mono> for Compressor {
             }
 
             let makeup = libm::powf(10.0, makeup_db / 20.0);
-            let input = *sample;
-            let abs_input = input.abs();
 
-            if abs_input > self.envelope {
-                self.envelope =
-                    self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
-            } else {
-                self.envelope =
-                    self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
-            }
+            for sample in buffer.iter_mut() {
+                let input = *sample;
+                let abs_input = input.abs();
 
-            let mut gain = 1.0;
-            let env_db = 20.0 * libm::log10f(self.envelope + 1e-9);
+                if abs_input > self.envelope {
+                    self.envelope =
+                        self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                } else {
+                    self.envelope =
+                        self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                }
 
-            if knee_db > 0.0 {
-                if env_db > (threshold_db + knee_db / 2.0) {
+                let mut gain = 1.0;
+                let env_db = 20.0 * libm::log10f(self.envelope + 1e-9);
+
+                if knee_db > 0.0 {
+                    if env_db > (threshold_db + knee_db / 2.0) {
+                        let over_db = env_db - threshold_db;
+                        let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    } else if env_db > (threshold_db - knee_db / 2.0) {
+                        let slope = 1.0 - 1.0 / ratio;
+                        let over_db = env_db - threshold_db + knee_db / 2.0;
+                        let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    }
+                } else if env_db > threshold_db {
                     let over_db = env_db - threshold_db;
                     let gain_db = -over_db * (1.0 - 1.0 / ratio);
                     gain = libm::powf(10.0, gain_db / 20.0);
-                } else if env_db > (threshold_db - knee_db / 2.0) {
-                    let slope = 1.0 - 1.0 / ratio;
-                    let over_db = env_db - threshold_db + knee_db / 2.0;
-                    let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
-                    gain = libm::powf(10.0, gain_db / 20.0);
                 }
-            } else if env_db > threshold_db {
-                let over_db = env_db - threshold_db;
-                let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                gain = libm::powf(10.0, gain_db / 20.0);
+
+                *sample = input * gain * makeup;
+            }
+        } else {
+            let len = buffer.len();
+
+            if self.threshold_buffer.len() < len {
+                self.threshold_buffer.resize(len, 0.0);
+            }
+            if self.ratio_buffer.len() < len {
+                self.ratio_buffer.resize(len, 0.0);
+            }
+            if self.attack_buffer.len() < len {
+                self.attack_buffer.resize(len, 0.0);
+            }
+            if self.release_buffer.len() < len {
+                self.release_buffer.resize(len, 0.0);
+            }
+            if self.makeup_buffer.len() < len {
+                self.makeup_buffer.resize(len, 0.0);
+            }
+            if self.knee_buffer.len() < len {
+                self.knee_buffer.resize(len, 0.0);
             }
 
-            *sample = input * gain * makeup;
+            self.threshold_db
+                .process(&mut self.threshold_buffer[0..len], sample_index);
+            self.ratio
+                .process(&mut self.ratio_buffer[0..len], sample_index);
+            self.attack_ms
+                .process(&mut self.attack_buffer[0..len], sample_index);
+            self.release_ms
+                .process(&mut self.release_buffer[0..len], sample_index);
+            self.makeup_gain_db
+                .process(&mut self.makeup_buffer[0..len], sample_index);
+            self.knee_width_db
+                .process(&mut self.knee_buffer[0..len], sample_index);
+
+            for (i, sample) in buffer.iter_mut().enumerate() {
+                let threshold_db = self.threshold_buffer[i];
+                let ratio = self.ratio_buffer[i];
+                let attack_ms = self.attack_buffer[i];
+                let release_ms = self.release_buffer[i];
+                let makeup_db = self.makeup_buffer[i];
+                let knee_db = self.knee_buffer[i];
+
+                let att_bits = attack_ms.to_bits();
+                let rel_bits = release_ms.to_bits();
+
+                if att_bits != self.last_attack_bits || rel_bits != self.last_release_bits {
+                    self.recalc(attack_ms, release_ms);
+                    self.last_attack_bits = att_bits;
+                    self.last_release_bits = rel_bits;
+                }
+
+                let makeup = libm::powf(10.0, makeup_db / 20.0);
+                let input = *sample;
+                let abs_input = input.abs();
+
+                if abs_input > self.envelope {
+                    self.envelope =
+                        self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                } else {
+                    self.envelope =
+                        self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                }
+
+                let mut gain = 1.0;
+                let env_db = 20.0 * libm::log10f(self.envelope + 1e-9);
+
+                if knee_db > 0.0 {
+                    if env_db > (threshold_db + knee_db / 2.0) {
+                        let over_db = env_db - threshold_db;
+                        let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    } else if env_db > (threshold_db - knee_db / 2.0) {
+                        let slope = 1.0 - 1.0 / ratio;
+                        let over_db = env_db - threshold_db + knee_db / 2.0;
+                        let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    }
+                } else if env_db > threshold_db {
+                    let over_db = env_db - threshold_db;
+                    let gain_db = -over_db * (1.0 - 1.0 / ratio);
+                    gain = libm::powf(10.0, gain_db / 20.0);
+                }
+
+                *sample = input * gain * makeup;
+            }
         }
     }
 

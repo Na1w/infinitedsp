@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772838292725,
+  "lastUpdate": 1772900297547,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -1142,6 +1142,65 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::envelope::bench_adsr",
             "value": 31072,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0f4667249de38df3a35b0b3b56422ec70a201f82",
+          "message": "perf(compressor): add dual-path process loop for constant parameters (#14)\n\nIntroduces a fast-path optimization in `Compressor::process` by utilizing `AudioParam::get_constant()`. If all parameters are constant, the loop avoids buffering operations entirely and hoists loop-invariant calculations (such as `makeup` gain and `.to_bits()` parameter change checks) out of the per-sample audio processing logic.\n\nThis significantly lowers computation complexity and improves cache locality, resulting in a ~42% cycle reduction measured by the `compressor` iai-callgrind benchmark. The fallback branch handles dynamic parameters seamlessly.\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>",
+          "timestamp": "2026-03-07T17:16:46+01:00",
+          "tree_id": "b25f32bc165b2c5c130e24ff613425ab23ac8f36",
+          "url": "https://github.com/Na1w/infinitedsp/commit/0f4667249de38df3a35b0b3b56422ec70a201f82"
+        },
+        "date": 1772900297002,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 30255,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14449,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 44361,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313827,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31067,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 64353,
             "unit": "instructions"
           }
         ]

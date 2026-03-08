@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["granular_pitch","pitch_shift"]};
+window.SIDEBAR_ITEMS = {"mod":["granular_pitch","pitch_shift","spectral_smear"]};

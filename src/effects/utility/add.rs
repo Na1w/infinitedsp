@@ -22,8 +22,8 @@ impl Add {
         Add {
             input_a,
             input_b,
-            buffer_a: Vec::new(),
-            buffer_b: Vec::new(),
+            buffer_a: Vec::with_capacity(128),
+            buffer_b: Vec::with_capacity(128),
         }
     }
 }

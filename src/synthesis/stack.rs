@@ -37,9 +37,9 @@ impl Stack {
             oscillators,
             detune,
             mix: AudioParam::Static(1.0 / count.max(1) as f32),
-            detune_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
-            temp_buffer: Vec::new(),
+            detune_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
+            temp_buffer: Vec::with_capacity(128),
         }
     }
 

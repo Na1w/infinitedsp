@@ -109,9 +109,9 @@ impl BrassModel {
             bell_state: 0.0,
             last_out: 0.0,
             vibrato_phase: 0.0,
-            pitch_buffer: Vec::new(),
-            breath_buffer: Vec::new(),
-            tension_buffer: Vec::new(),
+            pitch_buffer: Vec::with_capacity(128),
+            breath_buffer: Vec::with_capacity(128),
+            tension_buffer: Vec::with_capacity(128),
             rng_state: 12345,
         }
     }

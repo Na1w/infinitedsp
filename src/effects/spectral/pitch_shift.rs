@@ -35,7 +35,7 @@ impl<const N: usize> FftPitchShift<N> {
             synthesis_freqs: [0.0; N],
             semitones,
             factor: 1.0,
-            semitones_buffer: Vec::new(),
+            semitones_buffer: Vec::with_capacity(128),
         }
     }
 

@@ -19,7 +19,7 @@ impl DcSource {
     pub fn new(value: AudioParam) -> Self {
         DcSource {
             value,
-            buffer: Vec::new(),
+            buffer: Vec::with_capacity(128),
         }
     }
 }

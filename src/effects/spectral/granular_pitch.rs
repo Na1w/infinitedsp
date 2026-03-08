@@ -41,7 +41,7 @@ impl GranularPitchShift {
             pitch_factor: 1.0,
             window_ms,
             sample_rate,
-            semitones_buffer: Vec::new(),
+            semitones_buffer: Vec::with_capacity(128),
             last_semitones_bits: u32::MAX,
         }
     }

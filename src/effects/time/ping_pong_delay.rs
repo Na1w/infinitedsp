@@ -48,9 +48,9 @@ impl PingPongDelay {
             mix,
             max_delay_seconds,
             sample_rate,
-            delay_buffer: Vec::new(),
-            feedback_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
+            delay_buffer: Vec::with_capacity(128),
+            feedback_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
         }
     }
 

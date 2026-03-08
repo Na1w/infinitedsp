@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772931031271,
+  "lastUpdate": 1772941842419,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -1225,6 +1225,65 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/356f88ca68db831962851f79e36c9ecb0324eba2"
         },
         "date": 1772931030557,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 30255,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14449,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 44361,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313827,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31067,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 64353,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b406896b1662bb0f642867c3dc950f97936ba3a5",
+          "message": "Add spectral smear (#15)",
+          "timestamp": "2026-03-08T04:49:17+01:00",
+          "tree_id": "4b7735e663ce75bfc717a26ad8c797ae762c4b55",
+          "url": "https://github.com/Na1w/infinitedsp/commit/b406896b1662bb0f642867c3dc950f97936ba3a5"
+        },
+        "date": 1772941841815,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

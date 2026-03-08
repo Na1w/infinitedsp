@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772941842419,
+  "lastUpdate": 1772944739201,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -1284,6 +1284,65 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/b406896b1662bb0f642867c3dc950f97936ba3a5"
         },
         "date": 1772941841815,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 30255,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14449,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 44361,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313827,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31067,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 64353,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b7c8afedba380e7b67b855e275a0e8cc60e8b694",
+          "message": "refactor: centralized rng (#16)",
+          "timestamp": "2026-03-08T05:37:33+01:00",
+          "tree_id": "961e7c0da7b2b914ac5113b119851800eb5cc479",
+          "url": "https://github.com/Na1w/infinitedsp/commit/b7c8afedba380e7b67b855e275a0e8cc60e8b694"
+        },
+        "date": 1772944738477,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

@@ -95,7 +95,12 @@ library_benchmark_group!(
     benchmarks = bench_adsr
 );
 
-main!(library_benchmark_groups = oscillator, reverb, envelope, compressor);
+main!(
+    library_benchmark_groups = oscillator,
+    reverb,
+    envelope,
+    compressor
+);
 
 #[library_benchmark]
 fn bench_compressor() {

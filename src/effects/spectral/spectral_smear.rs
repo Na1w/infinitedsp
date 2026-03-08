@@ -25,7 +25,7 @@ impl<const N: usize> SpectralSmear<N> {
         SpectralSmear {
             smear,
             prev_magnitudes: [0.0; N],
-            smear_buffer: Vec::with_capacity(128),
+            smear_buffer: Vec::new(),
             rng: FastRng::new(12345),
         }
     }

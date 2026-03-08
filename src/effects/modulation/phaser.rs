@@ -84,11 +84,11 @@ impl Phaser {
             mix,
             sample_rate,
             last_sample: 0.0,
-            rate_buffer: Vec::with_capacity(128),
-            min_freq_buffer: Vec::with_capacity(128),
-            max_freq_buffer: Vec::with_capacity(128),
-            feedback_buffer: Vec::with_capacity(128),
-            mix_buffer: Vec::with_capacity(128),
+            rate_buffer: Vec::new(),
+            min_freq_buffer: Vec::new(),
+            max_freq_buffer: Vec::new(),
+            feedback_buffer: Vec::new(),
+            mix_buffer: Vec::new(),
         }
     }
 

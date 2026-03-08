@@ -15,7 +15,7 @@ impl Offset {
     pub fn new(offset: f32) -> Self {
         Offset {
             offset: AudioParam::Static(offset),
-            offset_buffer: Vec::with_capacity(128),
+            offset_buffer: Vec::new(),
         }
     }
 
@@ -23,7 +23,7 @@ impl Offset {
     pub fn new_param(offset: AudioParam) -> Self {
         Offset {
             offset,
-            offset_buffer: Vec::with_capacity(128),
+            offset_buffer: Vec::new(),
         }
     }
 }

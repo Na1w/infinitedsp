@@ -21,7 +21,7 @@ impl StereoPanner {
     pub fn new(pan: AudioParam) -> Self {
         StereoPanner {
             pan,
-            pan_buffer: Vec::with_capacity(128),
+            pan_buffer: Vec::new(),
         }
     }
 

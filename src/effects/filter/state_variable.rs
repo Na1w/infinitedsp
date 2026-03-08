@@ -55,8 +55,8 @@ impl StateVariableFilter {
             last_res: -1.0,
             g: 0.0,
             k: 0.0,
-            cutoff_buffer: Vec::with_capacity(128),
-            res_buffer: Vec::with_capacity(128),
+            cutoff_buffer: Vec::new(),
+            res_buffer: Vec::new(),
         }
     }
 

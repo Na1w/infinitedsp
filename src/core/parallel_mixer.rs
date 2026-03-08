@@ -31,10 +31,10 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> ParallelMixer<P, C> {
         ParallelMixer {
             processor,
             mix: AudioParam::Static(mix),
-            dry_buffer: Vec::with_capacity(128),
-            delay_line: Vec::with_capacity(128),
+            dry_buffer: Vec::new(),
+            delay_line: Vec::new(),
             write_ptr: 0,
-            mix_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::new(),
             _marker: core::marker::PhantomData,
         }
     }

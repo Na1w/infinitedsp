@@ -31,8 +31,8 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> SummingMixer<C, T> {
             inputs,
             gain: AudioParam::Static(1.0),
             soft_clip: false,
-            temp_buffer: Vec::with_capacity(128),
-            gain_buffer: Vec::with_capacity(128),
+            temp_buffer: Vec::new(),
+            gain_buffer: Vec::new(),
             _marker: PhantomData,
         }
     }

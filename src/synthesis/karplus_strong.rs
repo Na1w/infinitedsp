@@ -58,10 +58,10 @@ impl KarplusStrong {
             filter_state: 0.0,
             noise_burst_samples: 0,
             current_burst_sample: 0,
-            pitch_buffer: Vec::with_capacity(128),
-            gate_buffer: Vec::with_capacity(128),
-            damping_buffer: Vec::with_capacity(128),
-            pick_buffer: Vec::with_capacity(128),
+            pitch_buffer: Vec::new(),
+            gate_buffer: Vec::new(),
+            damping_buffer: Vec::new(),
+            pick_buffer: Vec::new(),
             rng_state: 12345,
         }
     }

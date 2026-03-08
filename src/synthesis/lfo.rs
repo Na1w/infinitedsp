@@ -48,7 +48,7 @@ impl Lfo {
             min: -1.0,
             max: 1.0,
             sample_rate: 44100.0,
-            freq_buffer: Vec::with_capacity(128),
+            freq_buffer: Vec::new(),
             rng_state: 12345,
             last_sh_value: 0.0,
             sh_triggered: false,

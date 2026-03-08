@@ -52,8 +52,8 @@ where
         DualMono {
             left,
             right,
-            left_buffer: Vec::with_capacity(128),
-            right_buffer: Vec::with_capacity(128),
+            left_buffer: Vec::new(),
+            right_buffer: Vec::new(),
         }
     }
 }
@@ -192,7 +192,7 @@ impl<P: FrameProcessor<Stereo>> StereoToMono<P> {
     pub fn new(inner: P) -> Self {
         StereoToMono {
             inner,
-            stereo_buffer: Vec::with_capacity(128),
+            stereo_buffer: Vec::new(),
         }
     }
 }

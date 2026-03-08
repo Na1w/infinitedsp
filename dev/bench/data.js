@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772987832755,
+  "lastUpdate": 1772987989015,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -1536,6 +1536,140 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/37bf06f147e4da5cfe7b96eced5a910cc9bf116e"
         },
         "date": 1772987831876,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 30255,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14449,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 44361,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313827,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31067,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 64353,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_svf_lowpass",
+            "value": 30404,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_ladder_lowpass",
+            "value": 279607,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_predictive_ladder_lowpass",
+            "value": 29920,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_biquad_lowpass",
+            "value": 31422,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_spectral_smear",
+            "value": 232191,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_fft_pitch_shift",
+            "value": 301433,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_stereo_panner",
+            "value": 60903,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_ping_pong_delay",
+            "value": 41970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_dynamic_chain",
+            "value": 63420,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_static_chain",
+            "value": 61903,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_speech_synth",
+            "value": 386245,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_karplus_strong",
+            "value": 98195,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
+            "value": 206751,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sine",
+            "value": 20482,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sh",
+            "value": 17424,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "distinct": true,
+          "id": "ccadb08fdab0c59f6799d2bb816aeda0d6f5d767",
+          "message": "Formatting",
+          "timestamp": "2026-03-08T17:38:06+01:00",
+          "tree_id": "eea48475679578389bae98fc697d0ffb61520f96",
+          "url": "https://github.com/Na1w/infinitedsp/commit/ccadb08fdab0c59f6799d2bb816aeda0d6f5d767"
+        },
+        "date": 1772987987751,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

@@ -7,3 +7,4 @@ pub mod parallel_mixer;
 pub mod parameter;
 pub mod static_dsp_chain;
 pub mod summing_mixer;
+pub mod utils;

@@ -116,10 +116,9 @@ impl BrassModel {
         }
     }
 
+    #[inline(always)]
     fn next_random(rng_state: &mut u32) -> f32 {
-        *rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-        let val = (*rng_state >> 16) & 0x7FFF;
-        (val as f32 / 32768.0) * 2.0 - 1.0
+        crate::core::utils::FastRng::next_f32_bipolar_stateless(rng_state)
     }
 }
 

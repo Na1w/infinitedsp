@@ -1,5 +1,6 @@
 use crate::core::audio_param::AudioParam;
 use crate::core::ola::SpectralProcessor;
+use crate::core::utils::FastRng;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
 use num_complex::{Complex32, ComplexFloat};
@@ -12,7 +13,7 @@ pub struct SpectralSmear<const N: usize> {
     smear: AudioParam,
     prev_magnitudes: [f32; N],
     smear_buffer: Vec<f32>,
-    seed: u32,
+    rng: FastRng,
 }
 
 impl<const N: usize> SpectralSmear<N> {
@@ -25,19 +26,13 @@ impl<const N: usize> SpectralSmear<N> {
             smear,
             prev_magnitudes: [0.0; N],
             smear_buffer: Vec::new(),
-            seed: 12345,
+            rng: FastRng::new(12345),
         }
     }
 
     /// Sets the smear amount.
     pub fn set_smear(&mut self, smear: AudioParam) {
         self.smear = smear;
-    }
-
-    #[inline(always)]
-    fn next_rand(&mut self) -> f32 {
-        self.seed = self.seed.wrapping_mul(1664525).wrapping_add(1013904223);
-        (self.seed as f32) / (u32::MAX as f32)
     }
 }
 
@@ -63,7 +58,7 @@ impl<const N: usize> SpectralProcessor for SpectralSmear<N> {
             let smoothed_mag = s * self.prev_magnitudes[i] + one_minus_s * mag;
             self.prev_magnitudes[i] = smoothed_mag;
 
-            let phase = self.next_rand() * 2.0 * PI;
+            let phase = self.rng.next_f32_unipolar() * 2.0 * PI;
             let new_bin = Complex32::from_polar(smoothed_mag, phase);
             bins[i] = new_bin;
 

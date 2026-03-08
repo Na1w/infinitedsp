@@ -97,7 +97,11 @@ fn bench_compressor() {
 
 #[library_benchmark]
 fn bench_svf_lowpass() {
-    let mut filter = StateVariableFilter::new(SvfType::LowPass, AudioParam::hz(1000.0), AudioParam::Static(0.7));
+    let mut filter = StateVariableFilter::new(
+        SvfType::LowPass,
+        AudioParam::hz(1000.0),
+        AudioParam::Static(0.7),
+    );
     filter.set_sample_rate(SAMPLE_RATE);
     let mut buffer = vec![0.5; BUFFER_SIZE];
     filter.process(black_box(&mut buffer), 0);
@@ -121,7 +125,11 @@ fn bench_predictive_ladder_lowpass() {
 
 #[library_benchmark]
 fn bench_biquad_lowpass() {
-    let mut filter = Biquad::new(BiquadType::LowPass, AudioParam::hz(1000.0), AudioParam::Static(0.7));
+    let mut filter = Biquad::new(
+        BiquadType::LowPass,
+        AudioParam::hz(1000.0),
+        AudioParam::Static(0.7),
+    );
     filter.set_sample_rate(SAMPLE_RATE);
     let mut buffer = vec![0.5; BUFFER_SIZE];
     filter.process(black_box(&mut buffer), 0);
@@ -148,7 +156,11 @@ fn bench_fft_pitch_shift() {
 #[library_benchmark]
 fn bench_dynamic_chain() {
     let osc = Oscillator::new(AudioParam::hz(440.0), Waveform::Sine);
-    let filter = StateVariableFilter::new(SvfType::LowPass, AudioParam::hz(1000.0), AudioParam::Static(0.7));
+    let filter = StateVariableFilter::new(
+        SvfType::LowPass,
+        AudioParam::hz(1000.0),
+        AudioParam::Static(0.7),
+    );
     let gain = Gain::new_fixed(0.5);
     let mut chain = DspChain::new(osc, SAMPLE_RATE).and(filter).and(gain);
     let mut buffer = vec![0.0; BUFFER_SIZE];
@@ -158,9 +170,15 @@ fn bench_dynamic_chain() {
 #[library_benchmark]
 fn bench_static_chain() {
     let osc = Oscillator::new(AudioParam::hz(440.0), Waveform::Sine);
-    let filter = StateVariableFilter::new(SvfType::LowPass, AudioParam::hz(1000.0), AudioParam::Static(0.7));
+    let filter = StateVariableFilter::new(
+        SvfType::LowPass,
+        AudioParam::hz(1000.0),
+        AudioParam::Static(0.7),
+    );
     let gain = Gain::new_fixed(0.5);
-    let mut chain = StaticDspChain::<Mono, _>::new(osc, SAMPLE_RATE).and(filter).and(gain);
+    let mut chain = StaticDspChain::<Mono, _>::new(osc, SAMPLE_RATE)
+        .and(filter)
+        .and(gain);
     let mut buffer = vec![0.0; BUFFER_SIZE];
     chain.process(black_box(&mut buffer), 0);
 }
@@ -196,7 +214,11 @@ fn bench_karplus_strong() {
 
 #[library_benchmark]
 fn bench_brass_model() {
-    let mut brass = BrassModel::new(AudioParam::hz(440.0), AudioParam::Static(0.8), AudioParam::Static(0.5));
+    let mut brass = BrassModel::new(
+        AudioParam::hz(440.0),
+        AudioParam::Static(0.8),
+        AudioParam::Static(0.5),
+    );
     brass.set_sample_rate(SAMPLE_RATE);
     let mut buffer = vec![0.0; BUFFER_SIZE];
     brass.process(black_box(&mut buffer), 0);

@@ -82,26 +82,26 @@ impl<C: ChannelConfig> FrameProcessor<C> for Add {
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
-        output.push_str(&format!("{}Add (Signal Combiner)\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}Add (Signal Combiner)\n", spaces));
 
-        output.push_str(&format!("{}  |-- Input A:\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |-- Input A:\n", spaces));
         if let AudioParam::Dynamic(p) = &self.input_a {
             let inner = p.visualize(0);
             for line in inner.lines() {
-                output.push_str(&format!("{}  |    {}\n", spaces, line));
+                let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    {}\n", spaces, line));
             }
         } else {
-            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+            let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    (Static/Linked Value)\n", spaces));
         }
 
-        output.push_str(&format!("{}  |-- Input B:\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |-- Input B:\n", spaces));
         if let AudioParam::Dynamic(p) = &self.input_b {
             let inner = p.visualize(0);
             for line in inner.lines() {
-                output.push_str(&format!("{}  |    {}\n", spaces, line));
+                let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    {}\n", spaces, line));
             }
         } else {
-            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+            let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    (Static/Linked Value)\n", spaces));
         }
 
         output

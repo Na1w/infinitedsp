@@ -120,10 +120,10 @@ where
         let spaces = " ".repeat(indent);
         let mut output = format!("{}DualMono Wrapper\n", spaces);
 
-        output.push_str(&format!("{}  Left Channel:\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  Left Channel:\n", spaces));
         output.push_str(&self.left.visualize(indent + 4));
 
-        output.push_str(&format!("{}  Right Channel:\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  Right Channel:\n", spaces));
         output.push_str(&self.right.visualize(indent + 4));
 
         output

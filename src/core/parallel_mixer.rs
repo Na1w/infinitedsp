@@ -132,21 +132,21 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> FrameProcessor<C> for ParallelMixer
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
-        output.push_str(&format!("{}ParallelMixer\n", spaces));
-        output.push_str(&format!("{}  |-- Input Signal (Passthrough)\n", spaces));
-        output.push_str(&format!("{}  |-- Processed Signal\n", spaces));
-        output.push_str(&format!("{}  |    |\n", spaces));
-        output.push_str(&format!("{}  |    v\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}ParallelMixer\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |-- Input Signal (Passthrough)\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |-- Processed Signal\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    |\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    v\n", spaces));
 
         let inner_viz = self.processor.visualize(0);
 
         for line in inner_viz.lines() {
-            output.push_str(&format!("{}  |    {}\n", spaces, line));
+            let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    {}\n", spaces, line));
         }
 
-        output.push_str(&format!("{}  |    |\n", spaces));
-        output.push_str(&format!("{}  |    v\n", spaces));
-        output.push_str(&format!("{}  |-- Sum\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    |\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |    v\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}  |-- Sum\n", spaces));
 
         output
     }

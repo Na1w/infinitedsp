@@ -133,21 +133,21 @@ impl<C: ChannelConfig> FrameProcessor<C> for DspChain<C> {
             "Stereo"
         };
 
-        output.push_str(&format!("{}DspChain ({})\n", spaces, channel_type));
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}DspChain ({})\n", spaces, channel_type));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}|\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}v\n", arrow_spaces));
 
         for (i, p) in self.processors.iter().enumerate() {
             output.push_str(&p.visualize(indent));
             if i < self.processors.len() - 1 {
-                output.push_str(&format!("{}|\n", arrow_spaces));
-                output.push_str(&format!("{}v\n", arrow_spaces));
+                let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}|\n", arrow_spaces));
+                let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}v\n", arrow_spaces));
             }
         }
 
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
-        output.push_str(&format!("{}Output\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}|\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}v\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}Output\n", spaces));
 
         output
     }

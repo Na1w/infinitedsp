@@ -57,8 +57,8 @@ where
         let mut output = String::new();
 
         output.push_str(&self.first.visualize(indent));
-        output.push_str(&format!("{}|\n", spaces));
-        output.push_str(&format!("{}v\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}|\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}v\n", spaces));
         output.push_str(&self.second.visualize(indent));
 
         output
@@ -205,15 +205,15 @@ impl<C: ChannelConfig, P: FrameProcessor<C>> FrameProcessor<C> for StaticDspChai
         };
 
         let mut output = String::new();
-        output.push_str(&format!("{}StaticDspChain ({})\n", spaces, channel_type));
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}StaticDspChain ({})\n", spaces, channel_type));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}|\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}v\n", arrow_spaces));
 
         output.push_str(&self.processor.visualize(indent));
 
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
-        output.push_str(&format!("{}Output\n", spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}|\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}v\n", arrow_spaces));
+        let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}Output\n", spaces));
 
         output
     }

@@ -159,10 +159,10 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             let spaces = " ".repeat(indent);
             let child_indent = indent + 2;
 
-            output.push_str(&format!("{}SummingMixer\n", spaces));
+            let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}SummingMixer\n", spaces));
 
             for (i, input) in self.inputs.iter().enumerate() {
-                output.push_str(&format!("{}Input {}:\n", " ".repeat(child_indent), i + 1));
+                let _ = core::fmt::Write::write_fmt(&mut output, format_args!("{}Input {}:\n", " ".repeat(child_indent), i + 1));
                 output.push_str(&input.visualize(child_indent + 2));
             }
 

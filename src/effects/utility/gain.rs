@@ -20,7 +20,7 @@ impl Gain {
     pub fn new(gain: AudioParam) -> Self {
         Gain {
             gain,
-            gain_buffer: Vec::new(),
+            gain_buffer: Vec::with_capacity(128),
         }
     }
 
@@ -28,7 +28,7 @@ impl Gain {
     pub fn new_fixed(gain: f32) -> Self {
         Gain {
             gain: AudioParam::Static(gain),
-            gain_buffer: Vec::new(),
+            gain_buffer: Vec::with_capacity(128),
         }
     }
 
@@ -38,7 +38,7 @@ impl Gain {
         let val = libm::powf(10.0, db / 20.0);
         Gain {
             gain: AudioParam::Static(val),
-            gain_buffer: Vec::new(),
+            gain_buffer: Vec::with_capacity(128),
         }
     }
 }

@@ -30,8 +30,8 @@ impl PredictiveLadderFilter {
             resonance,
             sample_rate: 44100.0,
             s: [0.0; 4],
-            cutoff_buffer: Vec::new(),
-            res_buffer: Vec::new(),
+            cutoff_buffer: Vec::with_capacity(128),
+            res_buffer: Vec::with_capacity(128),
         }
     }
 

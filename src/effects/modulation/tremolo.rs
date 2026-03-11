@@ -32,8 +32,8 @@ impl Tremolo {
             depth,
             rate,
             sample_rate,
-            depth_buffer: Vec::new(),
-            rate_buffer: Vec::new(),
+            depth_buffer: Vec::with_capacity(128),
+            rate_buffer: Vec::with_capacity(128),
         }
     }
 

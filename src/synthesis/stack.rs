@@ -37,9 +37,9 @@ impl Stack {
             oscillators,
             detune,
             mix: AudioParam::Static(1.0 / count.max(1) as f32),
-            detune_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
-            temp_buffer: Vec::new(),
+            detune_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
+            temp_buffer: Vec::with_capacity(128),
         }
     }
 
@@ -72,9 +72,12 @@ impl FrameProcessor<Mono> for Stack {
             .process(&mut self.detune_buffer[0..len], sample_index);
         self.mix.process(&mut self.mix_buffer[0..len], sample_index);
 
-        buffer.fill(0.0);
-
         let count = self.oscillators.len();
+        if count == 0 {
+            buffer.fill(0.0);
+            return;
+        }
+
         for (i, osc) in self.oscillators.iter_mut().enumerate() {
             let spread = if count > 1 {
                 (i as f32 / (count - 1) as f32) * 2.0 - 1.0
@@ -89,8 +92,14 @@ impl FrameProcessor<Mono> for Stack {
             self.temp_buffer[0..len].fill(0.0);
             osc.process(&mut self.temp_buffer[0..len], sample_index);
 
-            for (j, sample) in buffer.iter_mut().enumerate().take(len) {
-                *sample += self.temp_buffer[j] * self.mix_buffer[j];
+            if i == 0 {
+                for (j, sample) in buffer.iter_mut().enumerate().take(len) {
+                    *sample = self.temp_buffer[j] * self.mix_buffer[j];
+                }
+            } else {
+                for (j, sample) in buffer.iter_mut().enumerate().take(len) {
+                    *sample += self.temp_buffer[j] * self.mix_buffer[j];
+                }
             }
         }
     }

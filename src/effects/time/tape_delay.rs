@@ -55,10 +55,10 @@ impl TapeDelay {
             lfo_phase: 0.0,
             lfo_inc: 2.0 * PI * 0.5 / sample_rate,
             filter_state: 0.0,
-            delay_buffer: Vec::new(),
-            feedback_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
-            drive_buffer: Vec::new(),
+            delay_buffer: Vec::with_capacity(128),
+            feedback_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
+            drive_buffer: Vec::with_capacity(128),
         }
     }
 

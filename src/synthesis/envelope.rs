@@ -108,7 +108,7 @@ impl Adsr {
     /// Use this to manually retrigger the envelope from any thread.
     pub fn create_trigger(&self) -> Trigger {
         Trigger {
-            flag: self.retrigger.clone(),
+            flag: Arc::clone(&self.retrigger),
         }
     }
 

@@ -20,7 +20,7 @@ impl StereoWidener {
     pub fn new(width: AudioParam) -> Self {
         StereoWidener {
             width,
-            width_buffer: Vec::new(),
+            width_buffer: Vec::with_capacity(128),
         }
     }
 }

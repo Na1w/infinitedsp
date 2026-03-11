@@ -61,10 +61,10 @@ impl Stutter {
             stutter_len_samples: 0,
             remaining_samples: 0,
             last_trigger: 0.0,
-            length_buffer: Vec::new(),
-            repeats_buffer: Vec::new(),
-            trigger_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
+            length_buffer: Vec::with_capacity(128),
+            repeats_buffer: Vec::with_capacity(128),
+            trigger_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
         }
     }
 

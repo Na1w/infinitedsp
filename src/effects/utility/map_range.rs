@@ -37,9 +37,9 @@ impl MapRange {
             min,
             max,
             curve,
-            input_buffer: Vec::new(),
-            min_buffer: Vec::new(),
-            max_buffer: Vec::new(),
+            input_buffer: Vec::with_capacity(128),
+            min_buffer: Vec::with_capacity(128),
+            max_buffer: Vec::with_capacity(128),
         }
     }
 }

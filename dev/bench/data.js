@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772987989015,
+  "lastUpdate": 1773223478481,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -1780,6 +1780,140 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::modulation::bench_lfo_sh",
             "value": 17424,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "28fe75a04a0745a5d84d6379f5aedd8c56e1400c",
+          "message": "perf: Optimize DSP memory allocations, Arc clones, and parameter processing (#19)",
+          "timestamp": "2026-03-11T11:02:58+01:00",
+          "tree_id": "fb584e6fe6b78322d80ed1a286e9a0b227fcdd1b",
+          "url": "https://github.com/Na1w/infinitedsp/commit/28fe75a04a0745a5d84d6379f5aedd8c56e1400c"
+        },
+        "date": 1773223477563,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 30255,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14449,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 44361,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6970,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313827,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31072,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 66103,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_svf_lowpass",
+            "value": 31320,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_ladder_lowpass",
+            "value": 280191,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_predictive_ladder_lowpass",
+            "value": 30504,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_biquad_lowpass",
+            "value": 32807,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_spectral_smear",
+            "value": 237597,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_fft_pitch_shift",
+            "value": 301984,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_stereo_panner",
+            "value": 61350,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_ping_pong_delay",
+            "value": 43343,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_dynamic_chain",
+            "value": 64821,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_static_chain",
+            "value": 63293,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_speech_synth",
+            "value": 389692,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_karplus_strong",
+            "value": 99978,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
+            "value": 208069,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sine",
+            "value": 20938,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sh",
+            "value": 17880,
             "unit": "instructions"
           }
         ]

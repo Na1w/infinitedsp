@@ -20,7 +20,7 @@
 <a href=#20 id=20 data-nosnippet>20</a>    </span><span class="kw">pub fn </span>new(gain: AudioParam) -&gt; <span class="self">Self </span>{
 <a href=#21 id=21 data-nosnippet>21</a>        Gain {
 <a href=#22 id=22 data-nosnippet>22</a>            gain,
-<a href=#23 id=23 data-nosnippet>23</a>            gain_buffer: Vec::new(),
+<a href=#23 id=23 data-nosnippet>23</a>            gain_buffer: Vec::with_capacity(<span class="number">128</span>),
 <a href=#24 id=24 data-nosnippet>24</a>        }
 <a href=#25 id=25 data-nosnippet>25</a>    }
 <a href=#26 id=26 data-nosnippet>26</a>
@@ -28,7 +28,7 @@
 <a href=#28 id=28 data-nosnippet>28</a>    </span><span class="kw">pub fn </span>new_fixed(gain: f32) -&gt; <span class="self">Self </span>{
 <a href=#29 id=29 data-nosnippet>29</a>        Gain {
 <a href=#30 id=30 data-nosnippet>30</a>            gain: AudioParam::Static(gain),
-<a href=#31 id=31 data-nosnippet>31</a>            gain_buffer: Vec::new(),
+<a href=#31 id=31 data-nosnippet>31</a>            gain_buffer: Vec::with_capacity(<span class="number">128</span>),
 <a href=#32 id=32 data-nosnippet>32</a>        }
 <a href=#33 id=33 data-nosnippet>33</a>    }
 <a href=#34 id=34 data-nosnippet>34</a>
@@ -38,7 +38,7 @@
 <a href=#38 id=38 data-nosnippet>38</a>        </span><span class="kw">let </span>val = libm::powf(<span class="number">10.0</span>, db / <span class="number">20.0</span>);
 <a href=#39 id=39 data-nosnippet>39</a>        Gain {
 <a href=#40 id=40 data-nosnippet>40</a>            gain: AudioParam::Static(val),
-<a href=#41 id=41 data-nosnippet>41</a>            gain_buffer: Vec::new(),
+<a href=#41 id=41 data-nosnippet>41</a>            gain_buffer: Vec::with_capacity(<span class="number">128</span>),
 <a href=#42 id=42 data-nosnippet>42</a>        }
 <a href=#43 id=43 data-nosnippet>43</a>    }
 <a href=#44 id=44 data-nosnippet>44</a>}

@@ -31,10 +31,10 @@
 <a href=#31 id=31 data-nosnippet>31</a>        ParallelMixer {
 <a href=#32 id=32 data-nosnippet>32</a>            processor,
 <a href=#33 id=33 data-nosnippet>33</a>            mix: AudioParam::Static(mix),
-<a href=#34 id=34 data-nosnippet>34</a>            dry_buffer: Vec::new(),
+<a href=#34 id=34 data-nosnippet>34</a>            dry_buffer: Vec::with_capacity(<span class="number">128</span>),
 <a href=#35 id=35 data-nosnippet>35</a>            delay_line: Vec::new(),
 <a href=#36 id=36 data-nosnippet>36</a>            write_ptr: <span class="number">0</span>,
-<a href=#37 id=37 data-nosnippet>37</a>            mix_buffer: Vec::new(),
+<a href=#37 id=37 data-nosnippet>37</a>            mix_buffer: Vec::with_capacity(<span class="number">128</span>),
 <a href=#38 id=38 data-nosnippet>38</a>            _marker: core::marker::PhantomData,
 <a href=#39 id=39 data-nosnippet>39</a>        }
 <a href=#40 id=40 data-nosnippet>40</a>    }

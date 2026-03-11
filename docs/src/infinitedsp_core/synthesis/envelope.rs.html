@@ -108,7 +108,7 @@
 <a href=#108 id=108 data-nosnippet>108</a>    /// Use this to manually retrigger the envelope from any thread.
 <a href=#109 id=109 data-nosnippet>109</a>    </span><span class="kw">pub fn </span>create_trigger(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Trigger {
 <a href=#110 id=110 data-nosnippet>110</a>        Trigger {
-<a href=#111 id=111 data-nosnippet>111</a>            flag: <span class="self">self</span>.retrigger.clone(),
+<a href=#111 id=111 data-nosnippet>111</a>            flag: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.retrigger),
 <a href=#112 id=112 data-nosnippet>112</a>        }
 <a href=#113 id=113 data-nosnippet>113</a>    }
 <a href=#114 id=114 data-nosnippet>114</a>

@@ -93,11 +93,11 @@ impl Adsr {
             last_attack: -1.0,
             last_decay: -1.0,
             last_release: -1.0,
-            gate_buffer: Vec::new(),
-            attack_buffer: Vec::new(),
-            decay_buffer: Vec::new(),
-            sustain_buffer: Vec::new(),
-            release_buffer: Vec::new(),
+            gate_buffer: Vec::with_capacity(128),
+            attack_buffer: Vec::with_capacity(128),
+            decay_buffer: Vec::with_capacity(128),
+            sustain_buffer: Vec::with_capacity(128),
+            release_buffer: Vec::with_capacity(128),
             retrigger: Arc::new(AtomicBool::new(false)),
         };
         adsr.recalc(0.01, 0.1, 0.1); // Initial dummy recalc
@@ -108,7 +108,7 @@ impl Adsr {
     /// Use this to manually retrigger the envelope from any thread.
     pub fn create_trigger(&self) -> Trigger {
         Trigger {
-            flag: self.retrigger.clone(),
+            flag: Arc::clone(&self.retrigger),
         }
     }
 

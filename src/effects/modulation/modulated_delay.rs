@@ -42,9 +42,9 @@ impl ModulatedDelay {
             feedback: AudioParam::Static(0.4),
             mix: AudioParam::Static(0.5),
             sample_rate,
-            depth_buffer: Vec::new(),
-            feedback_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
+            depth_buffer: Vec::with_capacity(128),
+            feedback_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
         }
     }
 
@@ -65,9 +65,9 @@ impl ModulatedDelay {
             feedback: AudioParam::Static(0.7),
             mix: AudioParam::Static(0.5),
             sample_rate,
-            depth_buffer: Vec::new(),
-            feedback_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
+            depth_buffer: Vec::with_capacity(128),
+            feedback_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
         }
     }
 

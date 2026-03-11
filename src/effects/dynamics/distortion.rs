@@ -41,8 +41,8 @@ impl Distortion {
             drive,
             mix,
             dist_type,
-            drive_buffer: Vec::new(),
-            mix_buffer: Vec::new(),
+            drive_buffer: Vec::with_capacity(128),
+            mix_buffer: Vec::with_capacity(128),
         }
     }
 

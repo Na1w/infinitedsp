@@ -178,8 +178,8 @@
 <a href=#178 id=178 data-nosnippet>178</a>        <span class="kw">let </span>combs_l = [Comb4::new(c1_l, <span class="number">0.8</span>, <span class="number">0.2</span>), Comb4::new(c2_l, <span class="number">0.8</span>, <span class="number">0.2</span>)];
 <a href=#179 id=179 data-nosnippet>179</a>        <span class="kw">let </span>combs_r = [Comb4::new(c1_r, <span class="number">0.8</span>, <span class="number">0.2</span>), Comb4::new(c2_r, <span class="number">0.8</span>, <span class="number">0.2</span>)];
 <a href=#180 id=180 data-nosnippet>180</a>
-<a href=#181 id=181 data-nosnippet>181</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_l = Vec::new();
-<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_r = Vec::new();
+<a href=#181 id=181 data-nosnippet>181</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_l = Vec::with_capacity(allpass_tuning.len());
+<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_r = Vec::with_capacity(allpass_tuning.len());
 <a href=#183 id=183 data-nosnippet>183</a>
 <a href=#184 id=184 data-nosnippet>184</a>        <span class="kw">for </span>t <span class="kw">in </span>allpass_tuning {
 <a href=#185 id=185 data-nosnippet>185</a>            allpasses_l.push(Allpass::new(t + seed));

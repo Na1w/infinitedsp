@@ -189,8 +189,8 @@
 <a href=#189 id=189 data-nosnippet>189</a>            Comb4LowMem::new(c2_r, <span class="number">0.8</span>, <span class="number">0.2</span>),
 <a href=#190 id=190 data-nosnippet>190</a>        ];
 <a href=#191 id=191 data-nosnippet>191</a>
-<a href=#192 id=192 data-nosnippet>192</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_l = Vec::new();
-<a href=#193 id=193 data-nosnippet>193</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_r = Vec::new();
+<a href=#192 id=192 data-nosnippet>192</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_l = Vec::with_capacity(allpass_tuning.len());
+<a href=#193 id=193 data-nosnippet>193</a>        <span class="kw">let </span><span class="kw-2">mut </span>allpasses_r = Vec::with_capacity(allpass_tuning.len());
 <a href=#194 id=194 data-nosnippet>194</a>
 <a href=#195 id=195 data-nosnippet>195</a>        <span class="kw">for </span>t <span class="kw">in </span>allpass_tuning {
 <a href=#196 id=196 data-nosnippet>196</a>            allpasses_l.push(AllpassLowMem::new(t + seed));

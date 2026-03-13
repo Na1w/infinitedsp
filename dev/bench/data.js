@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773223478481,
+  "lastUpdate": 1773417604804,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -1904,6 +1904,140 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
             "value": 208069,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sine",
+            "value": 20938,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sh",
+            "value": 17880,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a0a9acf220d308c9bb4e0a9facbaa3fdc6a9c967",
+          "message": "perf: optimize memory allocations and string formatting (#20)\n\n* perf: optimize memory allocations & strings\n\nReplaced `Vec::new()` with `Vec::with_capacity(128)` for audio buffers initialized in constructors where capacity is known.\nReplaced temporary `format!()` usage inside loops in `debug_visualize` methods with `writeln!(output, ...)` to avoid memory bloat and string reallocation overhead.\n\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>\n\n* fix: resolve unused import warnings and compilation errors for alloc::string::String\n\nFixed missing import of `alloc::string::String` when `debug_visualize` feature is disabled, and correctly scoped `core::fmt::Write` to only be used when `debug_visualize` is active. This resolves the recent CI build failures.\n\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>\n\n* fix: revert Vec::with_capacity(128) in heavily instantiated structures to fix benchmark regression\n\nReverts pre-allocating `Vec::with_capacity(128)` back to `Vec::new()` in `Oscillator` and `Adsr` components. While helpful for DSP block reallocation overhead, these objects are often heavily instantiated (e.g., in polyphonic structures) and cause an upfront allocation cost that is harshly penalized by instruction-counting profilers like `iai-callgrind`. Kept the `Vec::with_capacity` in larger, less-instantiated structures (like Mixers and Utilities) where the runtime DSP loop benefit clearly outweighs the initialization cost.\n\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>\n\n---------\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>",
+          "timestamp": "2026-03-13T16:58:30+01:00",
+          "tree_id": "b539f5e72f1dcc570f4788cd58845fabb04536c7",
+          "url": "https://github.com/Na1w/infinitedsp/commit/a0a9acf220d308c9bb4e0a9facbaa3fdc6a9c967"
+        },
+        "date": 1773417603406,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 29877,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14452,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 54254,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 6974,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 313718,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31072,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 66103,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_svf_lowpass",
+            "value": 31320,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_ladder_lowpass",
+            "value": 280478,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_predictive_ladder_lowpass",
+            "value": 30503,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_biquad_lowpass",
+            "value": 32807,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_spectral_smear",
+            "value": 232769,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_fft_pitch_shift",
+            "value": 297147,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_stereo_panner",
+            "value": 61354,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_ping_pong_delay",
+            "value": 43355,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_dynamic_chain",
+            "value": 64446,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_static_chain",
+            "value": 62913,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_speech_synth",
+            "value": 389697,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_karplus_strong",
+            "value": 112698,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
+            "value": 220711,
             "unit": "instructions"
           },
           {

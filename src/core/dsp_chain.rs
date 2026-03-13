@@ -4,7 +4,6 @@ use crate::core::audio_param::AudioParam;
 use crate::core::channels::{ChannelConfig, Mono, Stereo};
 use crate::core::channels::{MonoToStereo, StereoToMono};
 use alloc::boxed::Box;
-#[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;

@@ -2,7 +2,6 @@ use super::channels::{ChannelConfig, Mono, MonoToStereo, Stereo, StereoToMono};
 use super::frame_processor::FrameProcessor;
 use super::parallel_mixer::ParallelMixer;
 use crate::core::audio_param::AudioParam;
-#[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 use core::marker::PhantomData;
 

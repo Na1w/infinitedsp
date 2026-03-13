@@ -1,6 +1,5 @@
 use crate::core::channels::ChannelConfig;
 use alloc::boxed::Box;
-#[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 
 /// The core trait for all audio processors.

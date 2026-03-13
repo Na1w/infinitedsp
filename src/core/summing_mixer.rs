@@ -2,7 +2,6 @@ use crate::core::audio_param::AudioParam;
 use crate::core::channels::ChannelConfig;
 use crate::core::frame_processor::FrameProcessor;
 use alloc::boxed::Box;
-#[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
@@ -152,10 +151,11 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
     }
 
     fn visualize(&self, indent: usize) -> String {
-        use core::fmt::Write;
+
 
         #[cfg(feature = "debug_visualize")]
         {
+        use core::fmt::Write;
             let mut output = String::new();
             let spaces = " ".repeat(indent);
             let child_indent = indent + 2;

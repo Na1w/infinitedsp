@@ -1,7 +1,5 @@
 use crate::core::channels::ChannelConfig;
 use alloc::boxed::Box;
-#[cfg(feature = "debug_visualize")]
-use alloc::format;
 use alloc::string::String;
 
 /// The core trait for all audio processors.
@@ -50,7 +48,7 @@ pub trait FrameProcessor<C: ChannelConfig> {
         #[cfg(feature = "debug_visualize")]
         {
             let spaces = " ".repeat(indent);
-            format!("{}{}\n", spaces, self.name())
+            alloc::format!("{}{}\n", spaces, self.name())
         }
         #[cfg(not(feature = "debug_visualize"))]
         {

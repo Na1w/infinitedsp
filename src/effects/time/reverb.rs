@@ -178,8 +178,8 @@ impl Reverb {
         let combs_l = [Comb4::new(c1_l, 0.8, 0.2), Comb4::new(c2_l, 0.8, 0.2)];
         let combs_r = [Comb4::new(c1_r, 0.8, 0.2), Comb4::new(c2_r, 0.8, 0.2)];
 
-        let mut allpasses_l = Vec::new();
-        let mut allpasses_r = Vec::new();
+        let mut allpasses_l = Vec::with_capacity(allpass_tuning.len());
+        let mut allpasses_r = Vec::with_capacity(allpass_tuning.len());
 
         for t in allpass_tuning {
             allpasses_l.push(Allpass::new(t + seed));

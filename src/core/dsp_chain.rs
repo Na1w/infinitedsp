@@ -4,8 +4,6 @@ use crate::core::audio_param::AudioParam;
 use crate::core::channels::{ChannelConfig, Mono, Stereo};
 use crate::core::channels::{MonoToStereo, StereoToMono};
 use alloc::boxed::Box;
-#[cfg(feature = "debug_visualize")]
-use alloc::format;
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -123,6 +121,7 @@ impl<C: ChannelConfig> FrameProcessor<C> for DspChain<C> {
 
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
+        use core::fmt::Write;
         let mut output = String::new();
         let spaces = " ".repeat(indent);
         let arrow_spaces = " ".repeat(indent + 2);
@@ -133,21 +132,21 @@ impl<C: ChannelConfig> FrameProcessor<C> for DspChain<C> {
             "Stereo"
         };
 
-        output.push_str(&format!("{}DspChain ({})\n", spaces, channel_type));
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
+        writeln!(output, "{}DspChain ({})", spaces, channel_type).unwrap();
+        writeln!(output, "{}|", arrow_spaces).unwrap();
+        writeln!(output, "{}v", arrow_spaces).unwrap();
 
         for (i, p) in self.processors.iter().enumerate() {
             output.push_str(&p.visualize(indent));
             if i < self.processors.len() - 1 {
-                output.push_str(&format!("{}|\n", arrow_spaces));
-                output.push_str(&format!("{}v\n", arrow_spaces));
+                writeln!(output, "{}|", arrow_spaces).unwrap();
+                writeln!(output, "{}v", arrow_spaces).unwrap();
             }
         }
 
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
-        output.push_str(&format!("{}Output\n", spaces));
+        writeln!(output, "{}|", arrow_spaces).unwrap();
+        writeln!(output, "{}v", arrow_spaces).unwrap();
+        writeln!(output, "{}Output", spaces).unwrap();
 
         output
     }

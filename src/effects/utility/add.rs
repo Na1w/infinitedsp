@@ -2,7 +2,6 @@ use crate::core::audio_param::AudioParam;
 use crate::core::channels::ChannelConfig;
 use crate::FrameProcessor;
 #[cfg(feature = "debug_visualize")]
-use alloc::format;
 #[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -22,8 +21,8 @@ impl Add {
         Add {
             input_a,
             input_b,
-            buffer_a: Vec::new(),
-            buffer_b: Vec::new(),
+            buffer_a: Vec::with_capacity(128),
+            buffer_b: Vec::with_capacity(128),
         }
     }
 }
@@ -79,29 +78,30 @@ impl<C: ChannelConfig> FrameProcessor<C> for Add {
 
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
+        use core::fmt::Write;
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
-        output.push_str(&format!("{}Add (Signal Combiner)\n", spaces));
+        writeln!(output, "{}Add (Signal Combiner)", spaces).unwrap();
 
-        output.push_str(&format!("{}  |-- Input A:\n", spaces));
+        writeln!(output, "{}  |-- Input A:", spaces).unwrap();
         if let AudioParam::Dynamic(p) = &self.input_a {
             let inner = p.visualize(0);
             for line in inner.lines() {
-                output.push_str(&format!("{}  |    {}\n", spaces, line));
+                writeln!(output, "{}  |    {}", spaces, line).unwrap();
             }
         } else {
-            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+            writeln!(output, "{}  |    (Static/Linked Value)", spaces).unwrap();
         }
 
-        output.push_str(&format!("{}  |-- Input B:\n", spaces));
+        writeln!(output, "{}  |-- Input B:", spaces).unwrap();
         if let AudioParam::Dynamic(p) = &self.input_b {
             let inner = p.visualize(0);
             for line in inner.lines() {
-                output.push_str(&format!("{}  |    {}\n", spaces, line));
+                writeln!(output, "{}  |    {}", spaces, line).unwrap();
             }
         } else {
-            output.push_str(&format!("{}  |    (Static/Linked Value)\n", spaces));
+            writeln!(output, "{}  |    (Static/Linked Value)", spaces).unwrap();
         }
 
         output

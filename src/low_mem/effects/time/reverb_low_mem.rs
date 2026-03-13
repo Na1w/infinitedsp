@@ -189,8 +189,8 @@ impl ReverbLowMem {
             Comb4LowMem::new(c2_r, 0.8, 0.2),
         ];
 
-        let mut allpasses_l = Vec::new();
-        let mut allpasses_r = Vec::new();
+        let mut allpasses_l = Vec::with_capacity(allpass_tuning.len());
+        let mut allpasses_r = Vec::with_capacity(allpass_tuning.len());
 
         for t in allpass_tuning {
             allpasses_l.push(AllpassLowMem::new(t + seed));

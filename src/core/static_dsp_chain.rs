@@ -2,8 +2,6 @@ use super::channels::{ChannelConfig, Mono, MonoToStereo, Stereo, StereoToMono};
 use super::frame_processor::FrameProcessor;
 use super::parallel_mixer::ParallelMixer;
 use crate::core::audio_param::AudioParam;
-#[cfg(feature = "debug_visualize")]
-use alloc::format;
 use alloc::string::String;
 use core::marker::PhantomData;
 
@@ -53,12 +51,13 @@ where
 
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
+        use core::fmt::Write;
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
         output.push_str(&self.first.visualize(indent));
-        output.push_str(&format!("{}|\n", spaces));
-        output.push_str(&format!("{}v\n", spaces));
+        writeln!(output, "{}|", spaces).unwrap();
+        writeln!(output, "{}v", spaces).unwrap();
         output.push_str(&self.second.visualize(indent));
 
         output
@@ -195,6 +194,7 @@ impl<C: ChannelConfig, P: FrameProcessor<C>> FrameProcessor<C> for StaticDspChai
 
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
+        use core::fmt::Write;
         let spaces = " ".repeat(indent);
         let arrow_spaces = " ".repeat(indent + 2);
 
@@ -205,15 +205,15 @@ impl<C: ChannelConfig, P: FrameProcessor<C>> FrameProcessor<C> for StaticDspChai
         };
 
         let mut output = String::new();
-        output.push_str(&format!("{}StaticDspChain ({})\n", spaces, channel_type));
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
+        writeln!(output, "{}StaticDspChain ({})", spaces, channel_type).unwrap();
+        writeln!(output, "{}|", arrow_spaces).unwrap();
+        writeln!(output, "{}v", arrow_spaces).unwrap();
 
         output.push_str(&self.processor.visualize(indent));
 
-        output.push_str(&format!("{}|\n", arrow_spaces));
-        output.push_str(&format!("{}v\n", arrow_spaces));
-        output.push_str(&format!("{}Output\n", spaces));
+        writeln!(output, "{}|", arrow_spaces).unwrap();
+        writeln!(output, "{}v", arrow_spaces).unwrap();
+        writeln!(output, "{}Output", spaces).unwrap();
 
         output
     }

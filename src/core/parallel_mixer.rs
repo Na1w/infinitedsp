@@ -2,7 +2,6 @@ use super::frame_processor::FrameProcessor;
 use crate::core::audio_param::AudioParam;
 use crate::core::channels::ChannelConfig;
 #[cfg(feature = "debug_visualize")]
-use alloc::format;
 #[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -32,7 +31,7 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> ParallelMixer<P, C> {
             processor,
             mix: AudioParam::Static(mix),
             dry_buffer: Vec::with_capacity(128),
-            delay_line: Vec::new(),
+            delay_line: Vec::with_capacity(128),
             write_ptr: 0,
             mix_buffer: Vec::with_capacity(128),
             _marker: core::marker::PhantomData,
@@ -129,24 +128,25 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> FrameProcessor<C> for ParallelMixer
 
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
+        use core::fmt::Write;
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
-        output.push_str(&format!("{}ParallelMixer\n", spaces));
-        output.push_str(&format!("{}  |-- Input Signal (Passthrough)\n", spaces));
-        output.push_str(&format!("{}  |-- Processed Signal\n", spaces));
-        output.push_str(&format!("{}  |    |\n", spaces));
-        output.push_str(&format!("{}  |    v\n", spaces));
+        writeln!(output, "{}ParallelMixer", spaces).unwrap();
+        writeln!(output, "{}  |-- Input Signal (Passthrough)", spaces).unwrap();
+        writeln!(output, "{}  |-- Processed Signal", spaces).unwrap();
+        writeln!(output, "{}  |    |", spaces).unwrap();
+        writeln!(output, "{}  |    v", spaces).unwrap();
 
         let inner_viz = self.processor.visualize(0);
 
         for line in inner_viz.lines() {
-            output.push_str(&format!("{}  |    {}\n", spaces, line));
+            writeln!(output, "{}  |    {}", spaces, line).unwrap();
         }
 
-        output.push_str(&format!("{}  |    |\n", spaces));
-        output.push_str(&format!("{}  |    v\n", spaces));
-        output.push_str(&format!("{}  |-- Sum\n", spaces));
+        writeln!(output, "{}  |    |", spaces).unwrap();
+        writeln!(output, "{}  |    v", spaces).unwrap();
+        writeln!(output, "{}  |-- Sum", spaces).unwrap();
 
         output
     }

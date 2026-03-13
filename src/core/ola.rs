@@ -2,7 +2,6 @@ use super::frame_processor::FrameProcessor;
 use crate::core::channels::Mono;
 use alloc::collections::VecDeque;
 #[cfg(feature = "debug_visualize")]
-use alloc::format;
 #[cfg(feature = "debug_visualize")]
 use alloc::string::String;
 use alloc::vec;
@@ -228,7 +227,7 @@ where
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
         let spaces = " ".repeat(indent);
-        format!(
+        alloc::format!(
             "{}Ola (FFT Size: {})\n{}  |-- {}\n",
             spaces,
             N,

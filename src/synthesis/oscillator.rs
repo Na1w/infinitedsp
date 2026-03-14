@@ -46,7 +46,7 @@ impl Oscillator {
             frequency,
             waveform,
             sample_rate: 44100.0,
-            freq_buffer: Vec::with_capacity(128), // Pre-allocate standard 128 block size
+            freq_buffer: Vec::new(),
             rng_state: 12345,
         }
     }

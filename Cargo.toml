@@ -34,3 +34,7 @@ iai-callgrind = "0.16.1"
 [[bench]]
 name = "dsp_benchmarks"
 harness = false
+
+[profile.release]
+lto = true
+opt-level = 3

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773417604804,
+  "lastUpdate": 1773660198580,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -2048,6 +2048,140 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::modulation::bench_lfo_sh",
             "value": 17880,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "334159c9453b67f88e885bf7f4f83ba08e0a5242",
+          "message": "Perf: Add release profile\n\n* Perf: Add release profile and eliminate allocs/zero-fills\n\n- Added a `[profile.release]` section in `Cargo.toml` with aggressive settings (`lto = true`, `panic = \"abort\"`, `codegen-units = 1`, `opt-level = 3`) to maximize zero-cost abstractions and LTO optimizations.\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>",
+          "timestamp": "2026-03-16T12:21:41+01:00",
+          "tree_id": "ea1d6df05f2c68b45bc891f00bb2e4a3216ad140",
+          "url": "https://github.com/Na1w/infinitedsp/commit/334159c9453b67f88e885bf7f4f83ba08e0a5242"
+        },
+        "date": 1773660197969,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 29510,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14599,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 54402,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 7121,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 311739,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31302,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 66950,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_svf_lowpass",
+            "value": 31574,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_ladder_lowpass",
+            "value": 253232,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_predictive_ladder_lowpass",
+            "value": 30402,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_biquad_lowpass",
+            "value": 30148,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_spectral_smear",
+            "value": 226062,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_fft_pitch_shift",
+            "value": 278304,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_stereo_panner",
+            "value": 57865,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_ping_pong_delay",
+            "value": 44160,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_dynamic_chain",
+            "value": 64473,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_static_chain",
+            "value": 63062,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_speech_synth",
+            "value": 334990,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_karplus_strong",
+            "value": 113238,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
+            "value": 214736,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sine",
+            "value": 21051,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sh",
+            "value": 17993,
             "unit": "instructions"
           }
         ]

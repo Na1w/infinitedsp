@@ -84,49 +84,58 @@
 <a href=#84 id=84 data-nosnippet>84</a>            }
 <a href=#85 id=85 data-nosnippet>85</a>
 <a href=#86 id=86 data-nosnippet>86</a>            <span class="kw">let </span>delay1 = <span class="self">self</span>.phasor;
-<a href=#87 id=87 data-nosnippet>87</a>            <span class="kw">let </span>r1 = (<span class="self">self</span>.write_ptr <span class="kw">as </span>f32 - delay1 + len) % len;
-<a href=#88 id=88 data-nosnippet>88</a>            <span class="kw">let </span>val1 = <span class="self">self</span>.buffer[r1 <span class="kw">as </span>usize];
-<a href=#89 id=89 data-nosnippet>89</a>
-<a href=#90 id=90 data-nosnippet>90</a>            <span class="kw">let </span><span class="kw-2">mut </span>delay2 = <span class="self">self</span>.phasor + <span class="self">self</span>.window_size * <span class="number">0.5</span>;
-<a href=#91 id=91 data-nosnippet>91</a>            <span class="kw">if </span>delay2 &gt;= <span class="self">self</span>.window_size {
-<a href=#92 id=92 data-nosnippet>92</a>                delay2 -= <span class="self">self</span>.window_size;
-<a href=#93 id=93 data-nosnippet>93</a>            }
-<a href=#94 id=94 data-nosnippet>94</a>            <span class="kw">let </span>r2 = (<span class="self">self</span>.write_ptr <span class="kw">as </span>f32 - delay2 + len) % len;
-<a href=#95 id=95 data-nosnippet>95</a>            <span class="kw">let </span>val2 = <span class="self">self</span>.buffer[r2 <span class="kw">as </span>usize];
-<a href=#96 id=96 data-nosnippet>96</a>
-<a href=#97 id=97 data-nosnippet>97</a>            <span class="kw">let </span>x1 = delay1 / <span class="self">self</span>.window_size;
-<a href=#98 id=98 data-nosnippet>98</a>            <span class="kw">let </span>gain1 = <span class="kw">if </span>x1 &lt; <span class="number">0.5 </span>{ <span class="number">2.0 </span>* x1 } <span class="kw">else </span>{ <span class="number">2.0 </span>* (<span class="number">1.0 </span>- x1) };
-<a href=#99 id=99 data-nosnippet>99</a>
-<a href=#100 id=100 data-nosnippet>100</a>            <span class="kw">let </span>x2 = delay2 / <span class="self">self</span>.window_size;
-<a href=#101 id=101 data-nosnippet>101</a>            <span class="kw">let </span>gain2 = <span class="kw">if </span>x2 &lt; <span class="number">0.5 </span>{ <span class="number">2.0 </span>* x2 } <span class="kw">else </span>{ <span class="number">2.0 </span>* (<span class="number">1.0 </span>- x2) };
+<a href=#87 id=87 data-nosnippet>87</a>            <span class="kw">let </span><span class="kw-2">mut </span>r1 = <span class="self">self</span>.write_ptr <span class="kw">as </span>f32 - delay1 + len;
+<a href=#88 id=88 data-nosnippet>88</a>            <span class="kw">while </span>r1 &gt;= len {
+<a href=#89 id=89 data-nosnippet>89</a>                r1 -= len;
+<a href=#90 id=90 data-nosnippet>90</a>            }
+<a href=#91 id=91 data-nosnippet>91</a>            <span class="kw">let </span>val1 = <span class="self">self</span>.buffer[r1 <span class="kw">as </span>usize];
+<a href=#92 id=92 data-nosnippet>92</a>
+<a href=#93 id=93 data-nosnippet>93</a>            <span class="kw">let </span><span class="kw-2">mut </span>delay2 = <span class="self">self</span>.phasor + <span class="self">self</span>.window_size * <span class="number">0.5</span>;
+<a href=#94 id=94 data-nosnippet>94</a>            <span class="kw">if </span>delay2 &gt;= <span class="self">self</span>.window_size {
+<a href=#95 id=95 data-nosnippet>95</a>                delay2 -= <span class="self">self</span>.window_size;
+<a href=#96 id=96 data-nosnippet>96</a>            }
+<a href=#97 id=97 data-nosnippet>97</a>            <span class="kw">let </span><span class="kw-2">mut </span>r2 = <span class="self">self</span>.write_ptr <span class="kw">as </span>f32 - delay2 + len;
+<a href=#98 id=98 data-nosnippet>98</a>            <span class="kw">while </span>r2 &gt;= len {
+<a href=#99 id=99 data-nosnippet>99</a>                r2 -= len;
+<a href=#100 id=100 data-nosnippet>100</a>            }
+<a href=#101 id=101 data-nosnippet>101</a>            <span class="kw">let </span>val2 = <span class="self">self</span>.buffer[r2 <span class="kw">as </span>usize];
 <a href=#102 id=102 data-nosnippet>102</a>
-<a href=#103 id=103 data-nosnippet>103</a>            <span class="kw-2">*</span>sample = val1 * gain1 + val2 * gain2;
-<a href=#104 id=104 data-nosnippet>104</a>
-<a href=#105 id=105 data-nosnippet>105</a>            <span class="self">self</span>.write_ptr = (<span class="self">self</span>.write_ptr + <span class="number">1</span>) % <span class="self">self</span>.buffer.len();
-<a href=#106 id=106 data-nosnippet>106</a>        }
-<a href=#107 id=107 data-nosnippet>107</a>    }
+<a href=#103 id=103 data-nosnippet>103</a>            <span class="kw">let </span>x1 = delay1 / <span class="self">self</span>.window_size;
+<a href=#104 id=104 data-nosnippet>104</a>            <span class="kw">let </span>gain1 = <span class="kw">if </span>x1 &lt; <span class="number">0.5 </span>{ <span class="number">2.0 </span>* x1 } <span class="kw">else </span>{ <span class="number">2.0 </span>* (<span class="number">1.0 </span>- x1) };
+<a href=#105 id=105 data-nosnippet>105</a>
+<a href=#106 id=106 data-nosnippet>106</a>            <span class="kw">let </span>x2 = delay2 / <span class="self">self</span>.window_size;
+<a href=#107 id=107 data-nosnippet>107</a>            <span class="kw">let </span>gain2 = <span class="kw">if </span>x2 &lt; <span class="number">0.5 </span>{ <span class="number">2.0 </span>* x2 } <span class="kw">else </span>{ <span class="number">2.0 </span>* (<span class="number">1.0 </span>- x2) };
 <a href=#108 id=108 data-nosnippet>108</a>
-<a href=#109 id=109 data-nosnippet>109</a>    <span class="kw">fn </span>set_sample_rate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sample_rate: f32) {
-<a href=#110 id=110 data-nosnippet>110</a>        <span class="self">self</span>.sample_rate = sample_rate;
-<a href=#111 id=111 data-nosnippet>111</a>        <span class="self">self</span>.semitones.set_sample_rate(sample_rate);
-<a href=#112 id=112 data-nosnippet>112</a>        <span class="self">self</span>.window_size = <span class="self">self</span>.window_ms * sample_rate / <span class="number">1000.0</span>;
-<a href=#113 id=113 data-nosnippet>113</a>        <span class="self">self</span>.last_semitones_bits = u32::MAX;
-<a href=#114 id=114 data-nosnippet>114</a>
-<a href=#115 id=115 data-nosnippet>115</a>        <span class="kw">let </span>needed = (sample_rate * <span class="number">0.5</span>) <span class="kw">as </span>usize;
-<a href=#116 id=116 data-nosnippet>116</a>        <span class="kw">if </span>needed &gt; <span class="self">self</span>.buffer.len() {
-<a href=#117 id=117 data-nosnippet>117</a>            <span class="self">self</span>.buffer.resize(needed, <span class="number">0.0</span>);
-<a href=#118 id=118 data-nosnippet>118</a>        }
-<a href=#119 id=119 data-nosnippet>119</a>    }
-<a href=#120 id=120 data-nosnippet>120</a>
-<a href=#121 id=121 data-nosnippet>121</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#122 id=122 data-nosnippet>122</a>        <span class="self">self</span>.buffer.fill(<span class="number">0.0</span>);
-<a href=#123 id=123 data-nosnippet>123</a>        <span class="self">self</span>.write_ptr = <span class="number">0</span>;
-<a href=#124 id=124 data-nosnippet>124</a>        <span class="self">self</span>.phasor = <span class="number">0.0</span>;
-<a href=#125 id=125 data-nosnippet>125</a>    }
-<a href=#126 id=126 data-nosnippet>126</a>
-<a href=#127 id=127 data-nosnippet>127</a>    <span class="attr">#[cfg(feature = <span class="string">"debug_visualize"</span>)]
-<a href=#128 id=128 data-nosnippet>128</a>    </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-<a href=#129 id=129 data-nosnippet>129</a>        <span class="string">"GranularPitchShift"
-<a href=#130 id=130 data-nosnippet>130</a>    </span>}
-<a href=#131 id=131 data-nosnippet>131</a>}
+<a href=#109 id=109 data-nosnippet>109</a>            <span class="kw-2">*</span>sample = val1 * gain1 + val2 * gain2;
+<a href=#110 id=110 data-nosnippet>110</a>
+<a href=#111 id=111 data-nosnippet>111</a>            <span class="self">self</span>.write_ptr += <span class="number">1</span>;
+<a href=#112 id=112 data-nosnippet>112</a>            <span class="kw">if </span><span class="self">self</span>.write_ptr &gt;= <span class="self">self</span>.buffer.len() {
+<a href=#113 id=113 data-nosnippet>113</a>                <span class="self">self</span>.write_ptr -= <span class="self">self</span>.buffer.len();
+<a href=#114 id=114 data-nosnippet>114</a>            }
+<a href=#115 id=115 data-nosnippet>115</a>        }
+<a href=#116 id=116 data-nosnippet>116</a>    }
+<a href=#117 id=117 data-nosnippet>117</a>
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">fn </span>set_sample_rate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sample_rate: f32) {
+<a href=#119 id=119 data-nosnippet>119</a>        <span class="self">self</span>.sample_rate = sample_rate;
+<a href=#120 id=120 data-nosnippet>120</a>        <span class="self">self</span>.semitones.set_sample_rate(sample_rate);
+<a href=#121 id=121 data-nosnippet>121</a>        <span class="self">self</span>.window_size = <span class="self">self</span>.window_ms * sample_rate / <span class="number">1000.0</span>;
+<a href=#122 id=122 data-nosnippet>122</a>        <span class="self">self</span>.last_semitones_bits = u32::MAX;
+<a href=#123 id=123 data-nosnippet>123</a>
+<a href=#124 id=124 data-nosnippet>124</a>        <span class="kw">let </span>needed = (sample_rate * <span class="number">0.5</span>) <span class="kw">as </span>usize;
+<a href=#125 id=125 data-nosnippet>125</a>        <span class="kw">if </span>needed &gt; <span class="self">self</span>.buffer.len() {
+<a href=#126 id=126 data-nosnippet>126</a>            <span class="self">self</span>.buffer.resize(needed, <span class="number">0.0</span>);
+<a href=#127 id=127 data-nosnippet>127</a>        }
+<a href=#128 id=128 data-nosnippet>128</a>    }
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+<a href=#131 id=131 data-nosnippet>131</a>        <span class="self">self</span>.buffer.fill(<span class="number">0.0</span>);
+<a href=#132 id=132 data-nosnippet>132</a>        <span class="self">self</span>.write_ptr = <span class="number">0</span>;
+<a href=#133 id=133 data-nosnippet>133</a>        <span class="self">self</span>.phasor = <span class="number">0.0</span>;
+<a href=#134 id=134 data-nosnippet>134</a>    }
+<a href=#135 id=135 data-nosnippet>135</a>
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="attr">#[cfg(feature = <span class="string">"debug_visualize"</span>)]
+<a href=#137 id=137 data-nosnippet>137</a>    </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+<a href=#138 id=138 data-nosnippet>138</a>        <span class="string">"GranularPitchShift"
+<a href=#139 id=139 data-nosnippet>139</a>    </span>}
+<a href=#140 id=140 data-nosnippet>140</a>}
 </code></pre></div></section></main></body></html>

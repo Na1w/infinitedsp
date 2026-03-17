@@ -89,7 +89,6 @@ impl FrameProcessor<Mono> for Stack {
             let detuned_freq = base_freq * (1.0 + spread * 0.01 * self.detune_buffer[0]);
             osc.set_frequency(AudioParam::Static(detuned_freq));
 
-            // self.temp_buffer[0..len].fill(0.0); // Removed: osc.process completely overwrites
             osc.process(&mut self.temp_buffer[0..len], sample_index);
 
             if i == 0 {

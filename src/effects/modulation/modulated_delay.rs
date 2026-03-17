@@ -124,9 +124,15 @@ impl FrameProcessor<Mono> for ModulatedDelay {
             let lfo = libm::sinf(self.lfo_phase);
             let current_delay = self.base_delay + lfo * depth;
 
-            let read_pos = (self.write_ptr as f32 - current_delay + len_f) % len_f;
+            let mut read_pos = self.write_ptr as f32 - current_delay + len_f;
+            while read_pos >= len_f {
+                read_pos -= len_f;
+            }
             let idx_a = read_pos as usize;
-            let idx_b = (idx_a + 1) % len;
+            let mut idx_b = idx_a + 1;
+            if idx_b >= len {
+                idx_b -= len;
+            }
             let frac = read_pos - idx_a as f32;
 
             let delayed = self.buffer[idx_a] * (1.0 - frac) + self.buffer[idx_b] * frac;
@@ -135,7 +141,10 @@ impl FrameProcessor<Mono> for ModulatedDelay {
 
             *sample = input * (1.0 - mix) + delayed * mix;
 
-            self.write_ptr = (self.write_ptr + 1) % len;
+            self.write_ptr += 1;
+            if self.write_ptr >= len {
+                self.write_ptr -= len;
+            }
         }
     }
 

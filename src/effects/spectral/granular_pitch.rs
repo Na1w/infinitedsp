@@ -84,14 +84,20 @@ impl FrameProcessor<Mono> for GranularPitchShift {
             }
 
             let delay1 = self.phasor;
-            let r1 = (self.write_ptr as f32 - delay1 + len) % len;
+            let mut r1 = self.write_ptr as f32 - delay1 + len;
+            while r1 >= len {
+                r1 -= len;
+            }
             let val1 = self.buffer[r1 as usize];
 
             let mut delay2 = self.phasor + self.window_size * 0.5;
             if delay2 >= self.window_size {
                 delay2 -= self.window_size;
             }
-            let r2 = (self.write_ptr as f32 - delay2 + len) % len;
+            let mut r2 = self.write_ptr as f32 - delay2 + len;
+            while r2 >= len {
+                r2 -= len;
+            }
             let val2 = self.buffer[r2 as usize];
 
             let x1 = delay1 / self.window_size;
@@ -102,7 +108,10 @@ impl FrameProcessor<Mono> for GranularPitchShift {
 
             *sample = val1 * gain1 + val2 * gain2;
 
-            self.write_ptr = (self.write_ptr + 1) % self.buffer.len();
+            self.write_ptr += 1;
+            if self.write_ptr >= self.buffer.len() {
+                self.write_ptr -= self.buffer.len();
+            }
         }
     }
 

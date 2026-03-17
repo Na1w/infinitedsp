@@ -119,10 +119,15 @@ impl FrameProcessor<Mono> for KarplusStrong {
             let period = self.sample_rate / pitch.max(1.0);
             let delay_samples = period;
 
-            let read_ptr_f =
-                (self.write_ptr as f32 - delay_samples + dl_len as f32) % dl_len as f32;
+            let mut read_ptr_f = self.write_ptr as f32 - delay_samples + dl_len as f32;
+            while read_ptr_f >= dl_len as f32 {
+                read_ptr_f -= dl_len as f32;
+            }
             let idx_a = read_ptr_f as usize;
-            let idx_b = (idx_a + 1) % dl_len;
+            let mut idx_b = idx_a + 1;
+            if idx_b >= dl_len {
+                idx_b -= dl_len;
+            }
             let frac = read_ptr_f - idx_a as f32;
 
             let delayed = self.delay_line[idx_a] * (1.0 - frac) + self.delay_line[idx_b] * frac;
@@ -134,7 +139,11 @@ impl FrameProcessor<Mono> for KarplusStrong {
 
             let output = input + feedback;
             self.delay_line[self.write_ptr] = output;
-            self.write_ptr = (self.write_ptr + 1) % dl_len;
+
+            self.write_ptr += 1;
+            if self.write_ptr >= dl_len {
+                self.write_ptr -= dl_len;
+            }
 
             *sample = output;
         }

@@ -126,8 +126,11 @@ impl FrameProcessor<Mono> for Stutter {
                 self.is_stuttering = true;
                 self.stutter_len_samples = (target_len_sec * sample_rate) as usize;
                 self.stutter_len_samples = self.stutter_len_samples.clamp(10, buffer_len - 1);
-                self.stutter_read_start_pos =
-                    (self.write_pos + buffer_len - self.stutter_len_samples) % buffer_len;
+                let mut read_start = self.write_pos + buffer_len - self.stutter_len_samples;
+                while read_start >= buffer_len {
+                    read_start -= buffer_len;
+                }
+                self.stutter_read_start_pos = read_start;
                 self.remaining_samples = (self.stutter_len_samples as f32 * target_reps) as i32;
                 self.stutter_read_pos = 0.0;
             }
@@ -135,11 +138,17 @@ impl FrameProcessor<Mono> for Stutter {
 
             let input = *sample;
             self.buffer[self.write_pos] = input;
-            self.write_pos = (self.write_pos + 1) % buffer_len;
+            self.write_pos += 1;
+            if self.write_pos >= buffer_len {
+                self.write_pos -= buffer_len;
+            }
 
             if self.is_stuttering {
                 let pos = self.stutter_read_pos as usize;
-                let read_idx = (self.stutter_read_start_pos + pos) % buffer_len;
+                let mut read_idx = self.stutter_read_start_pos + pos;
+                while read_idx >= buffer_len {
+                    read_idx -= buffer_len;
+                }
 
                 let fade_samples = (self.stutter_len_samples / 20).max(1);
                 let mut envelope = 1.0;

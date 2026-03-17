@@ -111,7 +111,10 @@ impl FrameProcessor<Mono> for Delay {
                 }
 
                 let idx_a = read_ptr_norm as usize;
-                let idx_b = (idx_a + 1) % len;
+                let mut idx_b = idx_a + 1;
+                if idx_b >= len {
+                    idx_b -= len;
+                }
                 let frac = read_ptr_norm - idx_a as f32;
 
                 let delayed = self.buffer[idx_a] * (1.0 - frac) + self.buffer[idx_b] * frac;
@@ -119,7 +122,10 @@ impl FrameProcessor<Mono> for Delay {
                 self.buffer[self.write_ptr] = next_val;
 
                 *sample = input * (1.0 - mix) + delayed * mix;
-                self.write_ptr = (self.write_ptr + 1) % len;
+                self.write_ptr += 1;
+                if self.write_ptr >= len {
+                    self.write_ptr -= len;
+                }
             }
 
             current_sample_index += chunk_len as u64;

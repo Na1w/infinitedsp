@@ -116,9 +116,12 @@ impl FrameProcessor<Mono> for DelayLowMem {
 
                 let current_pos = self.write_ptr as f32 + 0.5;
                 let delay_samples = delay_seconds * delay_sr;
-                let mut read_ptr_norm = (current_pos - delay_samples) % len_f;
-                if read_ptr_norm < 0.0 {
+                let mut read_ptr_norm = current_pos - delay_samples;
+                while read_ptr_norm < 0.0 {
                     read_ptr_norm += len_f;
+                }
+                while read_ptr_norm >= len_f {
+                    read_ptr_norm -= len_f;
                 }
 
                 let idx_a = read_ptr_norm as usize;
@@ -187,12 +190,16 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 read_ptr_norm_v = mask_under.blend(read_ptr_norm_v + len_f_vec, read_ptr_norm_v);
 
                 let idx_f: [f32; 4] = read_ptr_norm_v.into();
-                let idx_a = [
-                    idx_f[0] as usize % len,
-                    idx_f[1] as usize % len,
-                    idx_f[2] as usize % len,
-                    idx_f[3] as usize % len,
-                ];
+                let mut idx_a_0 = idx_f[0] as usize;
+                if idx_a_0 >= len { idx_a_0 -= len; }
+                let mut idx_a_1 = idx_f[1] as usize;
+                if idx_a_1 >= len { idx_a_1 -= len; }
+                let mut idx_a_2 = idx_f[2] as usize;
+                if idx_a_2 >= len { idx_a_2 -= len; }
+                let mut idx_a_3 = idx_f[3] as usize;
+                if idx_a_3 >= len { idx_a_3 -= len; }
+
+                let idx_a = [idx_a_0, idx_a_1, idx_a_2, idx_a_3];
 
                 let idx_prev = [
                     if idx_a[0] == 0 { len - 1 } else { idx_a[0] - 1 },
@@ -294,12 +301,16 @@ impl FrameProcessor<Mono> for DelayLowMem {
 
                 let current_pos = self.write_ptr as f32 + (self.phase as f32 * 0.5);
                 let delay_samples = delay_seconds * delay_sr;
-                let mut read_ptr_norm = (current_pos - delay_samples) % len_f;
-                if read_ptr_norm < 0.0 {
+                let mut read_ptr_norm = current_pos - delay_samples;
+                while read_ptr_norm < 0.0 {
                     read_ptr_norm += len_f;
                 }
+                while read_ptr_norm >= len_f {
+                    read_ptr_norm -= len_f;
+                }
 
-                let idx_a = read_ptr_norm as usize % len;
+                let mut idx_a = read_ptr_norm as usize;
+                if idx_a >= len { idx_a -= len; }
                 let idx_b = if idx_a + 1 == len { 0 } else { idx_a + 1 };
                 let idx_prev = if idx_a == 0 { len - 1 } else { idx_a - 1 };
                 let idx_next = if idx_b + 1 == len { 0 } else { idx_b + 1 };

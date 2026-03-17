@@ -72,7 +72,10 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> FrameProcessor<C> for ParallelMixer
             let len = self.delay_line.len();
             for &sample in buffer.iter() {
                 self.delay_line[self.write_ptr] = sample;
-                self.write_ptr = (self.write_ptr + 1) % len;
+                self.write_ptr += 1;
+                if self.write_ptr >= len {
+                    self.write_ptr -= len;
+                }
             }
         }
 
@@ -81,10 +84,17 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> FrameProcessor<C> for ParallelMixer
         if latency > 0 {
             let len = self.delay_line.len();
             let total_latency_samples = latency * channels;
-            let start_read = (self.write_ptr + len - buffer.len() - total_latency_samples) % len;
+
+            let mut start_read = self.write_ptr + len - buffer.len() - total_latency_samples;
+            while start_read >= len {
+                start_read -= len;
+            }
 
             for (i, sample) in buffer.iter_mut().enumerate() {
-                let read_idx = (start_read + i) % len;
+                let mut read_idx = start_read + i;
+                while read_idx >= len {
+                    read_idx -= len;
+                }
                 let dry = self.delay_line[read_idx];
 
                 let frame_idx = i / channels;

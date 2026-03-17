@@ -119,7 +119,10 @@ impl FrameProcessor<Stereo> for PingPongDelay {
             let fb = self.feedback_buffer[i];
             let mix = self.mix_buffer[i];
 
-            let read_ptr = (self.write_ptr + len - delay_samples) % len;
+            let mut read_ptr = self.write_ptr + len - delay_samples;
+            while read_ptr >= len {
+                read_ptr -= len;
+            }
 
             let delayed_l = self.left_buffer[read_ptr];
             let delayed_r = self.right_buffer[read_ptr];
@@ -133,7 +136,10 @@ impl FrameProcessor<Stereo> for PingPongDelay {
             frame[0] = input_l * (1.0 - mix) + delayed_l * mix;
             frame[1] = input_r * (1.0 - mix) + delayed_r * mix;
 
-            self.write_ptr = (self.write_ptr + 1) % len;
+            self.write_ptr += 1;
+            if self.write_ptr >= len {
+                self.write_ptr -= len;
+            }
         }
     }
 

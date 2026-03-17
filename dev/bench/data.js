@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773660198580,
+  "lastUpdate": 1773739906354,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -2172,6 +2172,140 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
             "value": 214736,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sine",
+            "value": 21051,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sh",
+            "value": 17993,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e79d0d6d79d5926942a6f841923afd141acd7134",
+          "message": "[Performance] Optimize circular buffer indexing and remove redundant zero-fills (#23)\n\n* Eliminate expensive modulo operations in audio hot loops and unnecessary buffer fills\n\n- Replaced modulo (`%`) operators in circular buffer lookups (e.g., delays, stutter, synths) with conditional addition/subtraction. Modulo is expensive in tight inner loops, and this change significantly reduces instructions for modules like `karplus_strong` and `brass_model` (verified via `cargo bench`).\n- Removed `buffer.fill(0.0)` in the `Stack` synthesis block where the buffer is later completely overwritten by `osc.process`. This prevents unnecessary write operations while keeping the `0.0` fill in the early return branch to prevent outputting garbage data.\n- Confirmed `format!` replacements were unnecessary because usages are exclusively conditionally compiled under the `debug_visualize` feature (used for ASCII graphs, not on audio hot path).\n- All benchmarks passed successfully with `iai-callgrind`, showing clear instruction reductions. Test suite continues to pass.\n\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>\n\n* Remove commented out line per review feedback\n\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>\n\n---------\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>",
+          "timestamp": "2026-03-17T10:30:11+01:00",
+          "tree_id": "e65ad2be4bf84a14712fe6e850cebb7bd191ee99",
+          "url": "https://github.com/Na1w/infinitedsp/commit/e79d0d6d79d5926942a6f841923afd141acd7134"
+        },
+        "date": 1773739905080,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 29510,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14599,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 54402,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 7121,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 311739,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 31302,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 66950,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_svf_lowpass",
+            "value": 31574,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_ladder_lowpass",
+            "value": 253232,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_predictive_ladder_lowpass",
+            "value": 30402,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_biquad_lowpass",
+            "value": 30148,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_spectral_smear",
+            "value": 226062,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_fft_pitch_shift",
+            "value": 278304,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_stereo_panner",
+            "value": 57865,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_ping_pong_delay",
+            "value": 43647,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_dynamic_chain",
+            "value": 64473,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_static_chain",
+            "value": 63062,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_speech_synth",
+            "value": 332945,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_karplus_strong",
+            "value": 73347,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
+            "value": 180844,
             "unit": "instructions"
           },
           {

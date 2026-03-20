@@ -46,9 +46,20 @@ impl Oscillator {
             frequency,
             waveform,
             sample_rate: 44100.0,
-            freq_buffer: Vec::new(),
+            freq_buffer: Vec::with_capacity(128),
             rng_state: 12345,
         }
+    }
+
+    #[inline(always)]
+    fn wrap_phase(mut p: f32) -> f32 {
+        while p >= 1.0 {
+            p -= 1.0;
+        }
+        while p < 0.0 {
+            p += 1.0;
+        }
+        p
     }
 
     #[inline(always)]
@@ -121,7 +132,7 @@ impl Oscillator {
                 let naive = if self.phase < 0.5 { 1.0 } else { -1.0 };
                 let dt = inc.abs();
                 let core =
-                    Self::poly_blep(self.phase, dt) - Self::poly_blep((self.phase + 0.5) % 1.0, dt);
+                    Self::poly_blep(self.phase, dt) - Self::poly_blep(Self::wrap_phase(self.phase + 0.5), dt);
                 naive + core
             }
             Waveform::WhiteNoise => Self::next_random(&mut self.rng_state),
@@ -230,7 +241,7 @@ impl FrameProcessor<Mono> for Oscillator {
                         let naive = if phase < 0.5 { 1.0 } else { -1.0 };
                         let abs_inc = inc_arr[i].abs();
                         let corr = Self::poly_blep(phase, abs_inc)
-                            - Self::poly_blep((phase + 0.5) % 1.0, abs_inc);
+                            - Self::poly_blep(Self::wrap_phase(phase + 0.5), abs_inc);
                         out_chunk[i] = naive + corr;
                     }
                 }
@@ -279,7 +290,7 @@ impl FrameProcessor<Mono> for Oscillator {
                     let naive = if phase < 0.5 { 1.0 } else { -1.0 };
                     let dt = inc.abs();
                     let corr =
-                        Self::poly_blep(phase, dt) - Self::poly_blep((phase + 0.5) % 1.0, dt);
+                        Self::poly_blep(phase, dt) - Self::poly_blep(Self::wrap_phase(phase + 0.5), dt);
                     naive + corr
                 }
                 Waveform::WhiteNoise => {

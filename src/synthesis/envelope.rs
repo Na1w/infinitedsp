@@ -93,7 +93,10 @@ impl Adsr {
             last_attack: -1.0,
             last_decay: -1.0,
             last_release: -1.0,
-            gate_buffer: Vec::with_capacity(128),
+
+            gate_buffer: Vec::with_capacity(128), // Pre-allocate standard block size
+
+
             attack_buffer: Vec::with_capacity(128),
             decay_buffer: Vec::with_capacity(128),
             sustain_buffer: Vec::with_capacity(128),

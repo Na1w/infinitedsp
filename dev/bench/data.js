@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773995610908,
+  "lastUpdate": 1774084489519,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -2430,6 +2430,140 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::synthesis_extended::bench_speech_synth",
             "value": 332945,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_karplus_strong",
+            "value": 73347,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_brass_model",
+            "value": 180844,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sine",
+            "value": 21051,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::modulation::bench_lfo_sh",
+            "value": 17993,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bc9b163ea37fa480e12e62de436894540b62ad75",
+          "message": "perf(oscillator): remove vec reallocation and modulo operation (#26)\n\n* perf(oscillator): remove vec reallocation and modulo operation\n\nOptimized the `Oscillator` by allocating the `freq_buffer` vector with an initial capacity of 128 (standard DSP block size) instead of using `Vec::new()`, removing reallocation overhead. Additionally, the expensive floating-point modulo operation (`% 1.0`) was replaced with a conditional subtraction (`if p2 >= 1.0 { p2 -= 1.0; }`), which yields a significant performance improvement in the hot loop.\n\nTested with `cargo clippy`, `cargo test`, and `cargo bench` to confirm correctness and measure performance gains.\n\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>\n\n* fix(oscillator): revert vec capacity optimization to fix CI regression\n\nReverted `freq_buffer: Vec::with_capacity(128)` back to `Vec::new()` in `Oscillator::new()` to fix an instruction count regression (1.06x) detected by Callgrind benchmarks in CI. The constructor overhead of pre-allocating the vector was causing the `bench_oscillator_noise` benchmark to exceed the strict 1.05x regression threshold.\n\nKept the highly effective floating-point modulo (`% 1.0`) optimization. Tested locally with `cargo bench` to confirm the regression is resolved.\n\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>\n\n---------\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>",
+          "timestamp": "2026-03-21T10:13:07+01:00",
+          "tree_id": "2ca38d0e44b55a7f6e891b15f3011da018561e03",
+          "url": "https://github.com/Na1w/infinitedsp/commit/bc9b163ea37fa480e12e62de436894540b62ad75"
+        },
+        "date": 1774084488627,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_sine",
+            "value": 29251,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_saw",
+            "value": 14598,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_square",
+            "value": 24879,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator_noise",
+            "value": 7119,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::reverb::bench_reverb",
+            "value": 311739,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::envelope::bench_adsr",
+            "value": 32321,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::compressor::bench_compressor",
+            "value": 66950,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_svf_lowpass",
+            "value": 31574,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_ladder_lowpass",
+            "value": 253232,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_predictive_ladder_lowpass",
+            "value": 30402,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::filters::bench_biquad_lowpass",
+            "value": 30148,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_spectral_smear",
+            "value": 226062,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::spectral::bench_fft_pitch_shift",
+            "value": 278304,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_stereo_panner",
+            "value": 57865,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::utility::bench_ping_pong_delay",
+            "value": 43647,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_dynamic_chain",
+            "value": 64214,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::chains::bench_static_chain",
+            "value": 62803,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis_extended::bench_speech_synth",
+            "value": 333452,
             "unit": "instructions"
           },
           {

@@ -120,8 +120,11 @@ impl Oscillator {
             Waveform::Square => {
                 let naive = if self.phase < 0.5 { 1.0 } else { -1.0 };
                 let dt = inc.abs();
-                let core =
-                    Self::poly_blep(self.phase, dt) - Self::poly_blep((self.phase + 0.5) % 1.0, dt);
+                let mut p2 = self.phase + 0.5;
+                if p2 >= 1.0 {
+                    p2 -= 1.0;
+                }
+                let core = Self::poly_blep(self.phase, dt) - Self::poly_blep(p2, dt);
                 naive + core
             }
             Waveform::WhiteNoise => Self::next_random(&mut self.rng_state),
@@ -229,8 +232,11 @@ impl FrameProcessor<Mono> for Oscillator {
                         }
                         let naive = if phase < 0.5 { 1.0 } else { -1.0 };
                         let abs_inc = inc_arr[i].abs();
-                        let corr = Self::poly_blep(phase, abs_inc)
-                            - Self::poly_blep((phase + 0.5) % 1.0, abs_inc);
+                        let mut p2 = phase + 0.5;
+                        if p2 >= 1.0 {
+                            p2 -= 1.0;
+                        }
+                        let corr = Self::poly_blep(phase, abs_inc) - Self::poly_blep(p2, abs_inc);
                         out_chunk[i] = naive + corr;
                     }
                 }
@@ -278,8 +284,11 @@ impl FrameProcessor<Mono> for Oscillator {
                 Waveform::Square => {
                     let naive = if phase < 0.5 { 1.0 } else { -1.0 };
                     let dt = inc.abs();
-                    let corr =
-                        Self::poly_blep(phase, dt) - Self::poly_blep((phase + 0.5) % 1.0, dt);
+                    let mut p2 = phase + 0.5;
+                    if p2 >= 1.0 {
+                        p2 -= 1.0;
+                    }
+                    let corr = Self::poly_blep(phase, dt) - Self::poly_blep(p2, dt);
                     naive + corr
                 }
                 Waveform::WhiteNoise => {

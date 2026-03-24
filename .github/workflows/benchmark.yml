@@ -40,21 +40,20 @@ jobs:
         results = []
         current_bench = None
         
-        name_pattern = re.compile(r"^([\w:]+)$")
-        inst_pattern = re.compile(r"^\s+Instructions:\s+(\d+)")
+        name_pattern = re.compile(r"^([\w:]+.*)$")
 
         try:
             with open("output.txt", "r") as f:
                 lines = f.readlines()
                 
             for line in lines:
-                line = line.strip() # Remove leading/trailing whitespace including newline
+                raw_line = line
+                line = line.strip()
                 
-                # If line is empty, skip
                 if not line:
                     continue
 
-                if "::" in line and name_pattern.match(line):
+                if "::" in line and not raw_line.startswith(" "):
                     current_bench = line
                     continue
                 

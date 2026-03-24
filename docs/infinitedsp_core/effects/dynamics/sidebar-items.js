@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["compressor","distortion"]};
+window.SIDEBAR_ITEMS = {"mod":["compressor","distortion","limiter"]};

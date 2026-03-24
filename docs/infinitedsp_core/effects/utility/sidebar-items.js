@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["add","bypass","dc_source","gain","gate","map_range","multiply","offset","panner","passthrough","stereo_widener"]};
+window.SIDEBAR_ITEMS = {"mod":["add","bypass","dc_source","gain","gate","lookahead","map_range","multiply","offset","panner","passthrough","stereo_widener"]};

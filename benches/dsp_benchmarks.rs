@@ -1,24 +1,10 @@
 use iai_callgrind::{library_benchmark, library_benchmark_group, main};
 use infinitedsp_core::core::audio_param::AudioParam;
-use infinitedsp_core::core::channels::Mono;
-use infinitedsp_core::core::dsp_chain::DspChain;
 use infinitedsp_core::core::ola::Ola;
-use infinitedsp_core::core::parameter::Parameter;
-use infinitedsp_core::core::static_dsp_chain::StaticDspChain;
-use infinitedsp_core::effects::filter::biquad::{Biquad, FilterType as BiquadType};
-use infinitedsp_core::effects::filter::ladder_filter::LadderFilter;
-use infinitedsp_core::effects::filter::predictive_ladder::PredictiveLadderFilter;
 use infinitedsp_core::effects::filter::state_variable::{StateVariableFilter, SvfType};
-use infinitedsp_core::effects::spectral::pitch_shift::FftPitchShift;
 use infinitedsp_core::effects::spectral::spectral_smear::SpectralSmear;
-use infinitedsp_core::effects::time::ping_pong_delay::PingPongDelay;
 use infinitedsp_core::effects::time::reverb::Reverb;
-use infinitedsp_core::effects::utility::gain::Gain;
-use infinitedsp_core::effects::utility::panner::StereoPanner;
-use infinitedsp_core::synthesis::brass_model::BrassModel;
 use infinitedsp_core::synthesis::envelope::Adsr;
-use infinitedsp_core::synthesis::karplus_strong::KarplusStrong;
-use infinitedsp_core::synthesis::lfo::{Lfo, LfoWaveform};
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
 use infinitedsp_core::synthesis::speech::SpeechSynth;
 use infinitedsp_core::synthesis::wavetable::{Wavetable, WavetableOscillator};
@@ -81,7 +67,7 @@ fn setup_ola_smear() -> (Ola<SpectralSmear<512>, 512>, Vec<f32>) {
     (smear, vec![0.5; BUFFER_SIZE])
 }
 
-fn setup_speech() -> (SpeechSynth, Vec<f32>) {
+fn setup_speech() -> (SpeechSynth<'static>, Vec<f32>) {
     let mut speech = SpeechSynth::new(SAMPLE_RATE);
     let tokens = ["A", "E", "I", "O", "U"];
     let mut phonemes = Vec::new();
@@ -144,12 +130,10 @@ fn bench_spectral_smear(args: (Ola<SpectralSmear<512>, 512>, Vec<f32>)) {
 
 #[library_benchmark]
 #[bench::default(setup_speech())]
-fn bench_speech_synth(args: (SpeechSynth, Vec<f32>)) {
+fn bench_speech_synth(args: (SpeechSynth<'static>, Vec<f32>)) {
     let (mut speech, mut buffer) = args;
     speech.process(black_box(&mut buffer), 0);
 }
-
-// (Remaining benchmarks could be refactored similarly, but these are the most critical ones)
 
 library_benchmark_group!(
     name = oscillator;

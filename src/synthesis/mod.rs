@@ -5,3 +5,4 @@ pub mod lfo;
 pub mod oscillator;
 pub mod speech;
 pub mod stack;
+pub mod wavetable;

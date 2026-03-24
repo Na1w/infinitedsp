@@ -5,7 +5,7 @@ use crate::effects::utility::lookahead::Lookahead;
 use alloc::vec;
 use alloc::vec::Vec;
 
-/// A high-quality Limiter with lookahead.
+/// A Limiter with lookahead.
 ///
 /// Uses a lookahead buffer to "see" upcoming peaks and apply gain reduction
 /// smoothly before the peak reaches the output, ensuring the signal never

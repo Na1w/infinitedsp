@@ -1,6 +1,7 @@
 use crate::core::audio_param::AudioParam;
 use crate::core::channels::ChannelConfig;
 use crate::core::frame_processor::FrameProcessor;
+use crate::core::latency_compensator::LatencyCompensator;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -9,7 +10,7 @@ use wide::f32x4;
 
 /// Sums multiple audio signals together, with optional gain and soft clipping.
 ///
-/// Useful for mixing multiple voices or signals.
+/// Automatically synchronizes input latencies by adding delay to inputs with lower latency.
 pub struct SummingMixer<
     C: ChannelConfig,
     T: FrameProcessor<C> + Send = Box<dyn FrameProcessor<C> + Send>,
@@ -17,22 +18,49 @@ pub struct SummingMixer<
     inputs: Vec<T>,
     gain: AudioParam,
     soft_clip: bool,
+    input_buffer: Vec<f32>,
     temp_buffer: Vec<f32>,
     gain_buffer: Vec<f32>,
     _marker: PhantomData<C>,
 }
 
-impl<C: ChannelConfig, T: FrameProcessor<C> + Send> SummingMixer<C, T> {
+impl<C: ChannelConfig + 'static, T: FrameProcessor<C> + Send + 'static> SummingMixer<C, T> {
     /// Creates a new SummingMixer with the given inputs.
     pub fn new(inputs: Vec<T>) -> Self {
         SummingMixer {
             inputs,
             gain: AudioParam::Static(1.0),
             soft_clip: false,
+            input_buffer: Vec::with_capacity(128),
             temp_buffer: Vec::with_capacity(128),
             gain_buffer: Vec::with_capacity(128),
             _marker: PhantomData,
         }
+    }
+
+    /// Creates a new SummingMixer and synchronizes latencies.
+    /// 
+    /// This is specifically for Boxed processors.
+    pub fn new_sync(inputs: Vec<Box<dyn FrameProcessor<C> + Send>>) -> SummingMixer<C, Box<dyn FrameProcessor<C> + Send>> {
+        let max_latency = inputs
+            .iter()
+            .map(|input| input.latency_samples())
+            .max()
+            .unwrap_or(0);
+
+        let sync_inputs = inputs
+            .into_iter()
+            .map(|input| {
+                if input.latency_samples() < max_latency {
+                    let wrapped: Box<dyn FrameProcessor<C> + Send> = Box::new(LatencyCompensator::new(input, max_latency));
+                    wrapped
+                } else {
+                    input
+                }
+            })
+            .collect();
+
+        SummingMixer::new(sync_inputs)
     }
 
     /// Sets the output gain.
@@ -65,17 +93,25 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             return;
         }
 
-        self.inputs[0].process(buffer, sample_index);
-
-        if self.inputs.len() > 1 {
-            if self.temp_buffer.len() < buffer.len() {
-                self.temp_buffer.resize(buffer.len(), 0.0);
+        if self.inputs.len() == 1 {
+            self.inputs[0].process(buffer, sample_index);
+        } else {
+            let len = buffer.len();
+            if self.input_buffer.len() < len {
+                self.input_buffer.resize(len, 0.0);
+            }
+            if self.temp_buffer.len() < len {
+                self.temp_buffer.resize(len, 0.0);
             }
 
-            let len = buffer.len();
-            let temp_slice = &mut self.temp_buffer[0..len];
+            self.input_buffer[0..len].copy_from_slice(buffer);
+            
+            self.inputs[0].process(buffer, sample_index);
 
             for input in &mut self.inputs[1..] {
+                let temp_slice = &mut self.temp_buffer[0..len];
+                temp_slice.copy_from_slice(&self.input_buffer[0..len]);
+                
                 input.process(temp_slice, sample_index);
 
                 let (buf_chunks, buf_rem) = buffer.as_chunks_mut::<4>();
@@ -108,9 +144,6 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             let gain_slice = &mut self.gain_buffer[0..frames];
             self.gain.process(gain_slice, sample_index);
 
-            // Apply gain (and soft clip)
-            // We need to iterate samples and map them to the correct gain frame
-
             for (i, sample) in buffer.iter_mut().enumerate() {
                 let frame_idx = i / channels;
                 let g = gain_slice[frame_idx];
@@ -136,6 +169,8 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
         for input in &mut self.inputs {
             input.reset();
         }
+        self.input_buffer.fill(0.0);
+        self.temp_buffer.fill(0.0);
     }
 
     fn latency_samples(&self) -> u32 {
@@ -151,11 +186,9 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
     }
 
     fn visualize(&self, indent: usize) -> String {
-
-
         #[cfg(feature = "debug_visualize")]
         {
-        use core::fmt::Write;
+            use core::fmt::Write;
             let mut output = String::new();
             let spaces = " ".repeat(indent);
             let child_indent = indent + 2;
@@ -174,5 +207,42 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             let _ = indent;
             String::new()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::channels::Mono;
+    use crate::effects::utility::passthrough::Passthrough;
+    use crate::effects::utility::lookahead::Lookahead;
+    use alloc::vec;
+
+    #[test]
+    fn test_summing_mixer_latency_compensation() {
+        // Input signal is a single 1.0 at sample 0.
+        // Input 1: Lookahead (latency: 5 samples)
+        // Input 2: Passthrough (latency: 0 samples)
+        // SummingMixer should sync both to 5 samples.
+        // Result: 1.0 + 1.0 = 2.0 at sample 5.
+
+        let input1: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Lookahead::new(5));
+        let input2: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Passthrough::new());
+
+        let mut mixer = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![input1, input2]);
+        assert_eq!(mixer.latency_samples(), 5);
+
+        let mut buffer = [0.0; 10];
+        buffer[0] = 1.0;
+
+        mixer.process(&mut buffer, 0);
+
+        // Sample 0-4 should be 0.0 (due to 5 sample latency)
+        for i in 0..5 {
+            assert_eq!(buffer[i], 0.0);
+        }
+
+        // Sample 5 should be 2.0 (1.0 from each input, both delayed by 5 samples)
+        assert_eq!(buffer[5], 2.0);
     }
 }

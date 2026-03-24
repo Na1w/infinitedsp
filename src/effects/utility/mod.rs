@@ -3,6 +3,7 @@ pub mod bypass;
 pub mod dc_source;
 pub mod gain;
 pub mod gate;
+pub mod lookahead;
 pub mod map_range;
 pub mod multiply;
 pub mod offset;

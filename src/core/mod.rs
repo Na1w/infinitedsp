@@ -2,6 +2,7 @@ pub mod audio_param;
 pub mod channels;
 pub mod dsp_chain;
 pub mod frame_processor;
+pub mod latency_compensator;
 pub mod ola;
 pub mod parallel_mixer;
 pub mod parameter;

@@ -120,7 +120,10 @@ impl WavetableOscillator {
         let size = level_data.len();
         let p = phase * size as f32;
         let i_a = p as usize;
-        let i_b = (i_a + 1) % size;
+        let mut i_b = i_a + 1;
+        if i_b >= size {
+            i_b -= size;
+        }
         let frac = p - i_a as f32;
         level_data[i_a] + (level_data[i_b] - level_data[i_a]) * frac
     }

@@ -109,8 +109,8 @@ impl WavetableOscillator {
             position,
             phase: 0.0,
             sample_rate: 44100.0,
-            freq_buffer: Vec::new(),
-            pos_buffer: Vec::new(),
+            freq_buffer: Vec::with_capacity(128),
+            pos_buffer: Vec::with_capacity(128),
         }
     }
 

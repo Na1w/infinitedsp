@@ -42,7 +42,7 @@ fn setup_wavetable_osc() -> (WavetableOscillator, Vec<f32>) {
         data[i] = libm::sinf(t * 2.0 * core::f32::consts::PI);
         data[size + i] = 2.0 * t - 1.0;
     }
-    let table = Wavetable::new(data, size);
+    let table = Wavetable::new(&data, size);
     let mut osc = WavetableOscillator::new(table, AudioParam::hz(440.0), AudioParam::Static(0.5));
     osc.set_sample_rate(SAMPLE_RATE);
     (osc, vec![0.0; BUFFER_SIZE])

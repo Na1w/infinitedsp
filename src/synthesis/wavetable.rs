@@ -20,7 +20,8 @@ pub struct Wavetable {
 
 impl Wavetable {
     /// Creates a new Wavetable from raw data and automatically generates mipmaps.
-    pub fn new(data: Vec<f32>, samples_per_frame: usize) -> Self {
+    #[must_use]
+    pub fn new(data: &[f32], samples_per_frame: usize) -> Self {
         assert_eq!(samples_per_frame, 2048);
         let num_frames = data.len() / samples_per_frame;
         let mut frames = Vec::with_capacity(num_frames);
@@ -41,7 +42,8 @@ impl Wavetable {
     }
 
     /// Band-limited constructor that uses FFT to properly band-limit each mipmap level.
-    pub fn new_bandlimited(data: Vec<f32>, samples_per_frame: usize) -> Self {
+    #[must_use]
+    pub fn new_bandlimited(data: &[f32], samples_per_frame: usize) -> Self {
         assert_eq!(samples_per_frame, 2048);
         let num_frames = data.len() / samples_per_frame;
         let mut frames = Vec::with_capacity(num_frames);
@@ -71,9 +73,9 @@ impl Wavetable {
                     }
                 }
 
-                for x in level_complex.iter_mut() { *x = x.conj(); }
+                for x in &mut level_complex { *x = x.conj(); }
                 let _ = microfft::complex::cfft_2048(&mut level_complex);
-                for x in level_complex.iter_mut() { *x = x.conj() / 2048.0; }
+                for x in &mut level_complex { *x = x.conj() / 2048.0; }
                 
                 let mut level_samples = vec![0.0; size];
                 for i in 0..size {
@@ -102,6 +104,7 @@ pub struct WavetableOscillator {
 }
 
 impl WavetableOscillator {
+    #[must_use]
     pub fn new(wavetable: Wavetable, frequency: AudioParam, position: AudioParam) -> Self {
         WavetableOscillator {
             wavetable,
@@ -109,12 +112,14 @@ impl WavetableOscillator {
             position,
             phase: 0.0,
             sample_rate: 44100.0,
-            freq_buffer: Vec::new(),
-            pos_buffer: Vec::new(),
+            freq_buffer: Vec::with_capacity(128),
+            pos_buffer: Vec::with_capacity(128),
         }
     }
 
-    #[inline(always)]
+    #[allow(clippy::cast_precision_loss)]
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
     fn read_frame(&self, f_idx: usize, m_idx: usize, phase: f32) -> f32 {
         let level_data = &self.wavetable.frames[f_idx].levels[m_idx];
         let size = level_data.len();
@@ -128,7 +133,9 @@ impl WavetableOscillator {
         level_data[i_a] + (level_data[i_b] - level_data[i_a]) * frac
     }
 
-    #[inline(always)]
+    #[allow(clippy::cast_precision_loss)]
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
     fn get_sample(&self, phase: f32, freq: f32, position: f32) -> f32 {
         let num_mip_levels = self.wavetable.frames[0].levels.len();
         
@@ -246,7 +253,7 @@ mod tests {
         for i in 0..size {
             data[i] = libm::sinf((i as f32 / size as f32) * 2.0 * core::f32::consts::PI);
         }
-        let table = Wavetable::new(data, size);
+        let table = Wavetable::new(&data, size);
         
         let freq = Parameter::new(441.0);
         let mut osc = WavetableOscillator::new(
@@ -271,7 +278,7 @@ mod tests {
         for i in 0..size { data[i] = 0.5; }
         for i in size..size*2 { data[i] = -0.5; }
         
-        let table = Wavetable::new(data, size);
+        let table = Wavetable::new(&data, size);
         
         let mut osc = WavetableOscillator::new(
             table,
@@ -293,7 +300,7 @@ mod tests {
         let size = 2048;
         let mut data = vec![0.0; size];
         for i in 0..size { data[i] = 1.0; }
-        let table = Wavetable::new_bandlimited(data, size);
+        let table = Wavetable::new_bandlimited(&data, size);
         let mut osc = WavetableOscillator::new(
             table,
             AudioParam::Static(20000.0),

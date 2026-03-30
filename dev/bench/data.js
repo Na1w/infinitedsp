@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774601624409,
+  "lastUpdate": 1774912110551,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -2866,6 +2866,80 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
             "value": 325367,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ab55884b3e87fe0bfe9a945ed8c42ca8febfa435",
+          "message": "perf: use `Vec::with_capacity` in `Oscillator` and `WavetableOscillator` (#31)\n\nReplaced `Vec::new()` with `Vec::with_capacity(128)` for `freq_buffer` and `pos_buffer`\nin `Oscillator` and `WavetableOscillator` setups to avoid runtime reallocation overhead\nwhen processing standard audio block sizes.\nThis adheres to Bolt's directive on avoiding runtime heap allocations when predictable.\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>",
+          "timestamp": "2026-03-31T01:06:58+02:00",
+          "tree_id": "568374d0a9af22a6d4585a530cea2b26a5cfd57b",
+          "url": "https://github.com/Na1w/infinitedsp/commit/ab55884b3e87fe0bfe9a945ed8c42ca8febfa435"
+        },
+        "date": 1774912109907,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27521,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12356,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22637,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4879,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 82234,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 206967,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 32371,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 191677,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 30167,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 326633,
             "unit": "instructions"
           }
         ]

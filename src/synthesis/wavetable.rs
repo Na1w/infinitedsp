@@ -120,6 +120,7 @@ impl WavetableOscillator {
     #[allow(clippy::cast_precision_loss)]
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_sign_loss)]
+    #[inline(always)]
     fn read_frame(&self, f_idx: usize, m_idx: usize, phase: f32) -> f32 {
         let level_data = &self.wavetable.frames[f_idx].levels[m_idx];
         let size = level_data.len();
@@ -136,6 +137,7 @@ impl WavetableOscillator {
     #[allow(clippy::cast_precision_loss)]
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_sign_loss)]
+    #[inline(always)]
     fn get_sample(&self, phase: f32, freq: f32, position: f32) -> f32 {
         let num_mip_levels = self.wavetable.frames[0].levels.len();
         

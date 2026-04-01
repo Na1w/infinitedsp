@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774943559394,
+  "lastUpdate": 1775031046254,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3038,6 +3038,80 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/5aa0f386762e489f22526630a7f47cbf1560033b"
         },
         "date": 1774943557718,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27521,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12356,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22637,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4879,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 82211,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 206967,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 32371,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 191677,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 30167,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 326633,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "fredrikandersson@mac.com",
+            "name": "Fredrik Andersson",
+            "username": "Na1w"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "209b68cc639acf907ce2cf2d9f01020a33ce7948",
+          "message": "Refactor format macros and capacity allocations (#34)\n\nCo-authored-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>\nCo-authored-by: Na1w <5161310+Na1w@users.noreply.github.com>",
+          "timestamp": "2026-04-01T10:09:09+02:00",
+          "tree_id": "58478ae093f109f89e5d0328ffe2693343b3a3be",
+          "url": "https://github.com/Na1w/infinitedsp/commit/209b68cc639acf907ce2cf2d9f01020a33ce7948"
+        },
+        "date": 1775031045574,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

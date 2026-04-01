@@ -226,14 +226,11 @@
 <a href=#226 id=226 data-nosnippet>226</a>
 <a href=#227 id=227 data-nosnippet>227</a>    <span class="attr">#[cfg(feature = <span class="string">"debug_visualize"</span>)]
 <a href=#228 id=228 data-nosnippet>228</a>    </span><span class="kw">fn </span>visualize(<span class="kw-2">&amp;</span><span class="self">self</span>, indent: usize) -&gt; String {
-<a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">let </span>spaces = <span class="string">" "</span>.repeat(indent);
-<a href=#230 id=230 data-nosnippet>230</a>        <span class="macro">alloc::format!</span>(
-<a href=#231 id=231 data-nosnippet>231</a>            <span class="string">"{}Ola (FFT Size: {})\n{}  |-- {}\n"</span>,
-<a href=#232 id=232 data-nosnippet>232</a>            spaces,
-<a href=#233 id=233 data-nosnippet>233</a>            N,
-<a href=#234 id=234 data-nosnippet>234</a>            spaces,
-<a href=#235 id=235 data-nosnippet>235</a>            <span class="self">self</span>.processor.name()
-<a href=#236 id=236 data-nosnippet>236</a>        )
-<a href=#237 id=237 data-nosnippet>237</a>    }
-<a href=#238 id=238 data-nosnippet>238</a>}
+<a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">use </span>core::fmt::Write;
+<a href=#230 id=230 data-nosnippet>230</a>        <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+<a href=#231 id=231 data-nosnippet>231</a>        <span class="kw">let </span>spaces = <span class="string">" "</span>.repeat(indent);
+<a href=#232 id=232 data-nosnippet>232</a>        <span class="kw">let _ </span>= <span class="macro">write!</span>(s, <span class="string">"{}Ola (FFT Size: {})\n{}  |-- {}\n"</span>, spaces, N, spaces, <span class="self">self</span>.processor.name());
+<a href=#233 id=233 data-nosnippet>233</a>        s
+<a href=#234 id=234 data-nosnippet>234</a>    }
+<a href=#235 id=235 data-nosnippet>235</a>}
 </code></pre></div></section></main></body></html>

@@ -69,8 +69,11 @@
 <a href=#69 id=69 data-nosnippet>69</a>
 <a href=#70 id=70 data-nosnippet>70</a>    <span class="attr">#[cfg(feature = <span class="string">"debug_visualize"</span>)]
 <a href=#71 id=71 data-nosnippet>71</a>    </span><span class="kw">fn </span>visualize(<span class="kw-2">&amp;</span><span class="self">self</span>, indent: usize) -&gt; alloc::string::String {
-<a href=#72 id=72 data-nosnippet>72</a>        <span class="kw">let </span>spaces = <span class="string">" "</span>.repeat(indent);
-<a href=#73 id=73 data-nosnippet>73</a>        <span class="macro">alloc::format!</span>(<span class="string">"{}Lookahead ({} samples)\n"</span>, spaces, <span class="self">self</span>.delay_samples)
-<a href=#74 id=74 data-nosnippet>74</a>    }
-<a href=#75 id=75 data-nosnippet>75</a>}
+<a href=#72 id=72 data-nosnippet>72</a>        <span class="kw">use </span>core::fmt::Write;
+<a href=#73 id=73 data-nosnippet>73</a>        <span class="kw">let </span><span class="kw-2">mut </span>s = alloc::string::String::new();
+<a href=#74 id=74 data-nosnippet>74</a>        <span class="kw">let </span>spaces = <span class="string">" "</span>.repeat(indent);
+<a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">let _ </span>= <span class="macro">write!</span>(s, <span class="string">"{}Lookahead ({} samples)\n"</span>, spaces, <span class="self">self</span>.delay_samples);
+<a href=#76 id=76 data-nosnippet>76</a>        s
+<a href=#77 id=77 data-nosnippet>77</a>    }
+<a href=#78 id=78 data-nosnippet>78</a>}
 </code></pre></div></section></main></body></html>

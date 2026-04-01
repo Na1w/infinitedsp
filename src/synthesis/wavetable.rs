@@ -57,7 +57,7 @@ impl Wavetable {
             
             let _ = microfft::complex::cfft_2048(&mut complex_buf);
             
-            let mut levels = Vec::new();
+            let mut levels = Vec::with_capacity(9);
             
             for level_idx in 0..9 {
                 let size = 2048 >> level_idx;

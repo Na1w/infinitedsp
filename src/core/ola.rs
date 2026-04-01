@@ -226,13 +226,10 @@ where
 
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> String {
+        use core::fmt::Write;
+        let mut s = String::new();
         let spaces = " ".repeat(indent);
-        alloc::format!(
-            "{}Ola (FFT Size: {})\n{}  |-- {}\n",
-            spaces,
-            N,
-            spaces,
-            self.processor.name()
-        )
+        let _ = write!(s, "{}Ola (FFT Size: {})\n{}  |-- {}\n", spaces, N, spaces, self.processor.name());
+        s
     }
 }

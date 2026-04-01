@@ -69,7 +69,10 @@ impl<C: ChannelConfig> FrameProcessor<C> for Lookahead<C> {
 
     #[cfg(feature = "debug_visualize")]
     fn visualize(&self, indent: usize) -> alloc::string::String {
+        use core::fmt::Write;
+        let mut s = alloc::string::String::new();
         let spaces = " ".repeat(indent);
-        alloc::format!("{}Lookahead ({} samples)\n", spaces, self.delay_samples)
+        let _ = write!(s, "{}Lookahead ({} samples)\n", spaces, self.delay_samples);
+        s
     }
 }

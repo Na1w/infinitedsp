@@ -48,7 +48,11 @@ pub trait FrameProcessor<C: ChannelConfig> {
         #[cfg(feature = "debug_visualize")]
         {
             let spaces = " ".repeat(indent);
-            alloc::format!("{}{}\n", spaces, self.name())
+            let mut s = String::new();
+            s.push_str(&spaces);
+            s.push_str(self.name());
+            s.push('\n');
+            s
         }
         #[cfg(not(feature = "debug_visualize"))]
         {

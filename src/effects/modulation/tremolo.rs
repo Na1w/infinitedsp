@@ -112,8 +112,7 @@ mod tests {
         let mut buffer = [1.0; 10];
         trem.process(&mut buffer, 0);
 
-        let min = buffer.iter().fold(1.0f32, |a, &b| a.min(b));
-        let max = buffer.iter().fold(0.0f32, |a, &b| a.max(b));
+        let (min, max) = buffer.iter().fold((core::f32::INFINITY, core::f32::NEG_INFINITY), |(min, max), &b| (min.min(b), max.max(b)));
 
         assert!(min < 0.1);
         assert!(max > 0.9);

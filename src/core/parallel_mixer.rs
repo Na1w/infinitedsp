@@ -142,21 +142,21 @@ impl<P: FrameProcessor<C>, C: ChannelConfig> FrameProcessor<C> for ParallelMixer
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
-        writeln!(output, "{}ParallelMixer", spaces).unwrap();
-        writeln!(output, "{}  |-- Input Signal (Passthrough)", spaces).unwrap();
-        writeln!(output, "{}  |-- Processed Signal", spaces).unwrap();
-        writeln!(output, "{}  |    |", spaces).unwrap();
-        writeln!(output, "{}  |    v", spaces).unwrap();
+        let _ = writeln!(output, "{}ParallelMixer", spaces);
+        let _ = writeln!(output, "{}  |-- Input Signal (Passthrough)", spaces);
+        let _ = writeln!(output, "{}  |-- Processed Signal", spaces);
+        let _ = writeln!(output, "{}  |    |", spaces);
+        let _ = writeln!(output, "{}  |    v", spaces);
 
         let inner_viz = self.processor.visualize(0);
 
         for line in inner_viz.lines() {
-            writeln!(output, "{}  |    {}", spaces, line).unwrap();
+            let _ = writeln!(output, "{}  |    {}", spaces, line);
         }
 
-        writeln!(output, "{}  |    |", spaces).unwrap();
-        writeln!(output, "{}  |    v", spaces).unwrap();
-        writeln!(output, "{}  |-- Sum", spaces).unwrap();
+        let _ = writeln!(output, "{}  |    |", spaces);
+        let _ = writeln!(output, "{}  |    v", spaces);
+        let _ = writeln!(output, "{}  |-- Sum", spaces);
 
         output
     }

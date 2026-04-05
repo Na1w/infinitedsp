@@ -82,26 +82,26 @@ impl<C: ChannelConfig> FrameProcessor<C> for Add {
         let spaces = " ".repeat(indent);
         let mut output = String::new();
 
-        writeln!(output, "{}Add (Signal Combiner)", spaces).unwrap();
+        let _ = writeln!(output, "{}Add (Signal Combiner)", spaces);
 
-        writeln!(output, "{}  |-- Input A:", spaces).unwrap();
+        let _ = writeln!(output, "{}  |-- Input A:", spaces);
         if let AudioParam::Dynamic(p) = &self.input_a {
             let inner = p.visualize(0);
             for line in inner.lines() {
-                writeln!(output, "{}  |    {}", spaces, line).unwrap();
+                let _ = writeln!(output, "{}  |    {}", spaces, line);
             }
         } else {
-            writeln!(output, "{}  |    (Static/Linked Value)", spaces).unwrap();
+            let _ = writeln!(output, "{}  |    (Static/Linked Value)", spaces);
         }
 
-        writeln!(output, "{}  |-- Input B:", spaces).unwrap();
+        let _ = writeln!(output, "{}  |-- Input B:", spaces);
         if let AudioParam::Dynamic(p) = &self.input_b {
             let inner = p.visualize(0);
             for line in inner.lines() {
-                writeln!(output, "{}  |    {}", spaces, line).unwrap();
+                let _ = writeln!(output, "{}  |    {}", spaces, line);
             }
         } else {
-            writeln!(output, "{}  |    (Static/Linked Value)", spaces).unwrap();
+            let _ = writeln!(output, "{}  |    (Static/Linked Value)", spaces);
         }
 
         output

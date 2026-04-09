@@ -82,26 +82,26 @@
 <a href=#82 id=82 data-nosnippet>82</a>        <span class="kw">let </span>spaces = <span class="string">" "</span>.repeat(indent);
 <a href=#83 id=83 data-nosnippet>83</a>        <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
 <a href=#84 id=84 data-nosnippet>84</a>
-<a href=#85 id=85 data-nosnippet>85</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}Add (Signal Combiner)"</span>, spaces).unwrap();
+<a href=#85 id=85 data-nosnippet>85</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}Add (Signal Combiner)"</span>, spaces);
 <a href=#86 id=86 data-nosnippet>86</a>
-<a href=#87 id=87 data-nosnippet>87</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Input A:"</span>, spaces).unwrap();
+<a href=#87 id=87 data-nosnippet>87</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Input A:"</span>, spaces);
 <a href=#88 id=88 data-nosnippet>88</a>        <span class="kw">if let </span>AudioParam::Dynamic(p) = <span class="kw-2">&amp;</span><span class="self">self</span>.input_a {
 <a href=#89 id=89 data-nosnippet>89</a>            <span class="kw">let </span>inner = p.visualize(<span class="number">0</span>);
 <a href=#90 id=90 data-nosnippet>90</a>            <span class="kw">for </span>line <span class="kw">in </span>inner.lines() {
-<a href=#91 id=91 data-nosnippet>91</a>                <span class="macro">writeln!</span>(output, <span class="string">"{}  |    {}"</span>, spaces, line).unwrap();
+<a href=#91 id=91 data-nosnippet>91</a>                <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    {}"</span>, spaces, line);
 <a href=#92 id=92 data-nosnippet>92</a>            }
 <a href=#93 id=93 data-nosnippet>93</a>        } <span class="kw">else </span>{
-<a href=#94 id=94 data-nosnippet>94</a>            <span class="macro">writeln!</span>(output, <span class="string">"{}  |    (Static/Linked Value)"</span>, spaces).unwrap();
+<a href=#94 id=94 data-nosnippet>94</a>            <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    (Static/Linked Value)"</span>, spaces);
 <a href=#95 id=95 data-nosnippet>95</a>        }
 <a href=#96 id=96 data-nosnippet>96</a>
-<a href=#97 id=97 data-nosnippet>97</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Input B:"</span>, spaces).unwrap();
+<a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Input B:"</span>, spaces);
 <a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">if let </span>AudioParam::Dynamic(p) = <span class="kw-2">&amp;</span><span class="self">self</span>.input_b {
 <a href=#99 id=99 data-nosnippet>99</a>            <span class="kw">let </span>inner = p.visualize(<span class="number">0</span>);
 <a href=#100 id=100 data-nosnippet>100</a>            <span class="kw">for </span>line <span class="kw">in </span>inner.lines() {
-<a href=#101 id=101 data-nosnippet>101</a>                <span class="macro">writeln!</span>(output, <span class="string">"{}  |    {}"</span>, spaces, line).unwrap();
+<a href=#101 id=101 data-nosnippet>101</a>                <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    {}"</span>, spaces, line);
 <a href=#102 id=102 data-nosnippet>102</a>            }
 <a href=#103 id=103 data-nosnippet>103</a>        } <span class="kw">else </span>{
-<a href=#104 id=104 data-nosnippet>104</a>            <span class="macro">writeln!</span>(output, <span class="string">"{}  |    (Static/Linked Value)"</span>, spaces).unwrap();
+<a href=#104 id=104 data-nosnippet>104</a>            <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    (Static/Linked Value)"</span>, spaces);
 <a href=#105 id=105 data-nosnippet>105</a>        }
 <a href=#106 id=106 data-nosnippet>106</a>
 <a href=#107 id=107 data-nosnippet>107</a>        output

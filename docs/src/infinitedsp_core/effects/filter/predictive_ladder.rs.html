@@ -156,14 +156,14 @@
 <a href=#156 id=156 data-nosnippet>156</a>            <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
 <a href=#157 id=157 data-nosnippet>157</a>            <span class="kw">for </span>chunk <span class="kw">in </span>chunks {
 <a href=#158 id=158 data-nosnippet>158</a>                <span class="kw">let </span>c_vec = <span class="kw">if </span>cutoff_is_dynamic {
-<a href=#159 id=159 data-nosnippet>159</a>                    <span class="kw">let </span>arr: [f32; <span class="number">4</span>] = cutoff_buf[i..i + <span class="number">4</span>].try_into().unwrap();
+<a href=#159 id=159 data-nosnippet>159</a>                    <span class="kw">let </span>arr: [f32; <span class="number">4</span>] = cutoff_buf[i..i + <span class="number">4</span>].try_into().unwrap_or([<span class="number">0.0</span>; <span class="number">4</span>]);
 <a href=#160 id=160 data-nosnippet>160</a>                    f32x4::from(arr)
 <a href=#161 id=161 data-nosnippet>161</a>                } <span class="kw">else </span>{
 <a href=#162 id=162 data-nosnippet>162</a>                    f32x4::splat(cutoff_static)
 <a href=#163 id=163 data-nosnippet>163</a>                };
 <a href=#164 id=164 data-nosnippet>164</a>
 <a href=#165 id=165 data-nosnippet>165</a>                <span class="kw">let </span>r_vec = <span class="kw">if </span>res_is_dynamic {
-<a href=#166 id=166 data-nosnippet>166</a>                    <span class="kw">let </span>arr: [f32; <span class="number">4</span>] = res_buf[i..i + <span class="number">4</span>].try_into().unwrap();
+<a href=#166 id=166 data-nosnippet>166</a>                    <span class="kw">let </span>arr: [f32; <span class="number">4</span>] = res_buf[i..i + <span class="number">4</span>].try_into().unwrap_or([<span class="number">0.0</span>; <span class="number">4</span>]);
 <a href=#167 id=167 data-nosnippet>167</a>                    f32x4::from(arr)
 <a href=#168 id=168 data-nosnippet>168</a>                } <span class="kw">else </span>{
 <a href=#169 id=169 data-nosnippet>169</a>                    f32x4::splat(res_static)

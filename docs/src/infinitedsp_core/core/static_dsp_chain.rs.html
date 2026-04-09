@@ -56,8 +56,8 @@
 <a href=#56 id=56 data-nosnippet>56</a>        <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
 <a href=#57 id=57 data-nosnippet>57</a>
 <a href=#58 id=58 data-nosnippet>58</a>        output.push_str(<span class="kw-2">&amp;</span><span class="self">self</span>.first.visualize(indent));
-<a href=#59 id=59 data-nosnippet>59</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, spaces).unwrap();
-<a href=#60 id=60 data-nosnippet>60</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, spaces).unwrap();
+<a href=#59 id=59 data-nosnippet>59</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, spaces);
+<a href=#60 id=60 data-nosnippet>60</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, spaces);
 <a href=#61 id=61 data-nosnippet>61</a>        output.push_str(<span class="kw-2">&amp;</span><span class="self">self</span>.second.visualize(indent));
 <a href=#62 id=62 data-nosnippet>62</a>
 <a href=#63 id=63 data-nosnippet>63</a>        output
@@ -205,15 +205,15 @@
 <a href=#205 id=205 data-nosnippet>205</a>        </span>};
 <a href=#206 id=206 data-nosnippet>206</a>
 <a href=#207 id=207 data-nosnippet>207</a>        <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
-<a href=#208 id=208 data-nosnippet>208</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}StaticDspChain ({})"</span>, spaces, channel_type).unwrap();
-<a href=#209 id=209 data-nosnippet>209</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces).unwrap();
-<a href=#210 id=210 data-nosnippet>210</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces).unwrap();
+<a href=#208 id=208 data-nosnippet>208</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}StaticDspChain ({})"</span>, spaces, channel_type);
+<a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces);
+<a href=#210 id=210 data-nosnippet>210</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces);
 <a href=#211 id=211 data-nosnippet>211</a>
 <a href=#212 id=212 data-nosnippet>212</a>        output.push_str(<span class="kw-2">&amp;</span><span class="self">self</span>.processor.visualize(indent));
 <a href=#213 id=213 data-nosnippet>213</a>
-<a href=#214 id=214 data-nosnippet>214</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces).unwrap();
-<a href=#215 id=215 data-nosnippet>215</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces).unwrap();
-<a href=#216 id=216 data-nosnippet>216</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}Output"</span>, spaces).unwrap();
+<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces);
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces);
+<a href=#216 id=216 data-nosnippet>216</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}Output"</span>, spaces);
 <a href=#217 id=217 data-nosnippet>217</a>
 <a href=#218 id=218 data-nosnippet>218</a>        output
 <a href=#219 id=219 data-nosnippet>219</a>    }

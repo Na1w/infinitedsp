@@ -142,21 +142,21 @@
 <a href=#142 id=142 data-nosnippet>142</a>        <span class="kw">let </span>spaces = <span class="string">" "</span>.repeat(indent);
 <a href=#143 id=143 data-nosnippet>143</a>        <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
 <a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}ParallelMixer"</span>, spaces).unwrap();
-<a href=#146 id=146 data-nosnippet>146</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Input Signal (Passthrough)"</span>, spaces).unwrap();
-<a href=#147 id=147 data-nosnippet>147</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Processed Signal"</span>, spaces).unwrap();
-<a href=#148 id=148 data-nosnippet>148</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |    |"</span>, spaces).unwrap();
-<a href=#149 id=149 data-nosnippet>149</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |    v"</span>, spaces).unwrap();
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}ParallelMixer"</span>, spaces);
+<a href=#146 id=146 data-nosnippet>146</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Input Signal (Passthrough)"</span>, spaces);
+<a href=#147 id=147 data-nosnippet>147</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Processed Signal"</span>, spaces);
+<a href=#148 id=148 data-nosnippet>148</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    |"</span>, spaces);
+<a href=#149 id=149 data-nosnippet>149</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    v"</span>, spaces);
 <a href=#150 id=150 data-nosnippet>150</a>
 <a href=#151 id=151 data-nosnippet>151</a>        <span class="kw">let </span>inner_viz = <span class="self">self</span>.processor.visualize(<span class="number">0</span>);
 <a href=#152 id=152 data-nosnippet>152</a>
 <a href=#153 id=153 data-nosnippet>153</a>        <span class="kw">for </span>line <span class="kw">in </span>inner_viz.lines() {
-<a href=#154 id=154 data-nosnippet>154</a>            <span class="macro">writeln!</span>(output, <span class="string">"{}  |    {}"</span>, spaces, line).unwrap();
+<a href=#154 id=154 data-nosnippet>154</a>            <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    {}"</span>, spaces, line);
 <a href=#155 id=155 data-nosnippet>155</a>        }
 <a href=#156 id=156 data-nosnippet>156</a>
-<a href=#157 id=157 data-nosnippet>157</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |    |"</span>, spaces).unwrap();
-<a href=#158 id=158 data-nosnippet>158</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |    v"</span>, spaces).unwrap();
-<a href=#159 id=159 data-nosnippet>159</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Sum"</span>, spaces).unwrap();
+<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    |"</span>, spaces);
+<a href=#158 id=158 data-nosnippet>158</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |    v"</span>, spaces);
+<a href=#159 id=159 data-nosnippet>159</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}  |-- Sum"</span>, spaces);
 <a href=#160 id=160 data-nosnippet>160</a>
 <a href=#161 id=161 data-nosnippet>161</a>        output
 <a href=#162 id=162 data-nosnippet>162</a>    }

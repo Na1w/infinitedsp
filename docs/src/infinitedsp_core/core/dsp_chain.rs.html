@@ -132,21 +132,21 @@
 <a href=#132 id=132 data-nosnippet>132</a>            <span class="string">"Stereo"
 <a href=#133 id=133 data-nosnippet>133</a>        </span>};
 <a href=#134 id=134 data-nosnippet>134</a>
-<a href=#135 id=135 data-nosnippet>135</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}DspChain ({})"</span>, spaces, channel_type).unwrap();
-<a href=#136 id=136 data-nosnippet>136</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces).unwrap();
-<a href=#137 id=137 data-nosnippet>137</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces).unwrap();
+<a href=#135 id=135 data-nosnippet>135</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}DspChain ({})"</span>, spaces, channel_type);
+<a href=#136 id=136 data-nosnippet>136</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces);
+<a href=#137 id=137 data-nosnippet>137</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces);
 <a href=#138 id=138 data-nosnippet>138</a>
 <a href=#139 id=139 data-nosnippet>139</a>        <span class="kw">for </span>(i, p) <span class="kw">in </span><span class="self">self</span>.processors.iter().enumerate() {
 <a href=#140 id=140 data-nosnippet>140</a>            output.push_str(<span class="kw-2">&amp;</span>p.visualize(indent));
 <a href=#141 id=141 data-nosnippet>141</a>            <span class="kw">if </span>i &lt; <span class="self">self</span>.processors.len() - <span class="number">1 </span>{
-<a href=#142 id=142 data-nosnippet>142</a>                <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces).unwrap();
-<a href=#143 id=143 data-nosnippet>143</a>                <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces).unwrap();
+<a href=#142 id=142 data-nosnippet>142</a>                <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces);
+<a href=#143 id=143 data-nosnippet>143</a>                <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces);
 <a href=#144 id=144 data-nosnippet>144</a>            }
 <a href=#145 id=145 data-nosnippet>145</a>        }
 <a href=#146 id=146 data-nosnippet>146</a>
-<a href=#147 id=147 data-nosnippet>147</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces).unwrap();
-<a href=#148 id=148 data-nosnippet>148</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces).unwrap();
-<a href=#149 id=149 data-nosnippet>149</a>        <span class="macro">writeln!</span>(output, <span class="string">"{}Output"</span>, spaces).unwrap();
+<a href=#147 id=147 data-nosnippet>147</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}|"</span>, arrow_spaces);
+<a href=#148 id=148 data-nosnippet>148</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}v"</span>, arrow_spaces);
+<a href=#149 id=149 data-nosnippet>149</a>        <span class="kw">let _ </span>= <span class="macro">writeln!</span>(output, <span class="string">"{}Output"</span>, spaces);
 <a href=#150 id=150 data-nosnippet>150</a>
 <a href=#151 id=151 data-nosnippet>151</a>        output
 <a href=#152 id=152 data-nosnippet>152</a>    }

@@ -132,21 +132,21 @@ impl<C: ChannelConfig> FrameProcessor<C> for DspChain<C> {
             "Stereo"
         };
 
-        writeln!(output, "{}DspChain ({})", spaces, channel_type).unwrap();
-        writeln!(output, "{}|", arrow_spaces).unwrap();
-        writeln!(output, "{}v", arrow_spaces).unwrap();
+        let _ = writeln!(output, "{}DspChain ({})", spaces, channel_type);
+        let _ = writeln!(output, "{}|", arrow_spaces);
+        let _ = writeln!(output, "{}v", arrow_spaces);
 
         for (i, p) in self.processors.iter().enumerate() {
             output.push_str(&p.visualize(indent));
             if i < self.processors.len() - 1 {
-                writeln!(output, "{}|", arrow_spaces).unwrap();
-                writeln!(output, "{}v", arrow_spaces).unwrap();
+                let _ = writeln!(output, "{}|", arrow_spaces);
+                let _ = writeln!(output, "{}v", arrow_spaces);
             }
         }
 
-        writeln!(output, "{}|", arrow_spaces).unwrap();
-        writeln!(output, "{}v", arrow_spaces).unwrap();
-        writeln!(output, "{}Output", spaces).unwrap();
+        let _ = writeln!(output, "{}|", arrow_spaces);
+        let _ = writeln!(output, "{}v", arrow_spaces);
+        let _ = writeln!(output, "{}Output", spaces);
 
         output
     }

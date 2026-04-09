@@ -46,7 +46,7 @@ impl<C: ChannelConfig + 'static, T: FrameProcessor<C> + Send + 'static> SummingM
             .iter()
             .map(|input| input.latency_samples())
             .max()
-            .unwrap_or(0);
+            .unwrap_or_default();
 
         let sync_inputs = inputs
             .into_iter()
@@ -178,7 +178,7 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             .iter()
             .map(|input| input.latency_samples())
             .max()
-            .unwrap_or(0)
+            .unwrap_or_default()
     }
 
     fn name(&self) -> &str {
@@ -193,10 +193,10 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             let spaces = " ".repeat(indent);
             let child_indent = indent + 2;
 
-            writeln!(output, "{}SummingMixer", spaces).unwrap();
+            let _ = writeln!(output, "{}SummingMixer", spaces);
 
             for (i, input) in self.inputs.iter().enumerate() {
-                writeln!(output, "{}Input {}:", " ".repeat(child_indent), i + 1).unwrap();
+                let _ = writeln!(output, "{}Input {}:", " ".repeat(child_indent), i + 1);
                 output.push_str(&input.visualize(child_indent + 2));
             }
 

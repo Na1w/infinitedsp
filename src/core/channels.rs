@@ -120,12 +120,12 @@ where
 
         let spaces = " ".repeat(indent);
         let mut output = alloc::string::String::new();
-        writeln!(output, "{}DualMono Wrapper", spaces).unwrap();
+        let _ = writeln!(output, "{}DualMono Wrapper", spaces);
 
-        writeln!(output, "{}  Left Channel:", spaces).unwrap();
+        let _ = writeln!(output, "{}  Left Channel:", spaces);
         output.push_str(&self.left.visualize(indent + 4));
 
-        writeln!(output, "{}  Right Channel:", spaces).unwrap();
+        let _ = writeln!(output, "{}  Right Channel:", spaces);
         output.push_str(&self.right.visualize(indent + 4));
 
         output
@@ -180,7 +180,7 @@ impl<P: FrameProcessor<Mono> + Send> FrameProcessor<Stereo> for MonoToStereo<P> 
 
         let spaces = " ".repeat(indent);
         let mut output = alloc::string::String::new();
-        writeln!(output, "{}MonoToStereo", spaces).unwrap();
+        let _ = writeln!(output, "{}MonoToStereo", spaces);
         output.push_str(&self.inner.visualize(indent + 2));
         output
     }
@@ -249,7 +249,7 @@ impl<P: FrameProcessor<Stereo> + Send> FrameProcessor<Mono> for StereoToMono<P> 
 
         let spaces = " ".repeat(indent);
         let mut output = alloc::string::String::new();
-        writeln!(output, "{}StereoToMono", spaces).unwrap();
+        let _ = writeln!(output, "{}StereoToMono", spaces);
         output.push_str(&self.inner.visualize(indent + 2));
         output
     }

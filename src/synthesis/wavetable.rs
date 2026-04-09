@@ -237,8 +237,8 @@ impl FrameProcessor<Mono> for WavetableOscillator {
         use core::fmt::Write;
         let mut output = alloc::string::String::new();
         let spaces = " ".repeat(indent);
-        writeln!(output, "{}WavetableOscillator (Anti-aliased)", spaces).unwrap();
-        writeln!(output, "{}  |-- Frames: {}", spaces, self.wavetable.frames.len()).unwrap();
+        let _ = writeln!(output, "{}WavetableOscillator (Anti-aliased)", spaces);
+        let _ = writeln!(output, "{}  |-- Frames: {}", spaces, self.wavetable.frames.len());
         output
     }
 }

@@ -99,14 +99,13 @@ impl<C: ChannelConfig, P: FrameProcessor<C>> FrameProcessor<C> for LatencyCompen
         use core::fmt::Write;
         let mut output = alloc::string::String::new();
         let spaces = " ".repeat(indent);
-        writeln!(
+        let _ = writeln!(
             output,
             "{}LatencyCompensator (Total: {}, Added: {})",
             spaces,
             self.target_latency,
             self.added_latency()
-        )
-        .unwrap();
+        );
         output.push_str(&self.processor.visualize(indent + 2));
         output
     }

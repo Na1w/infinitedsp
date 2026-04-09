@@ -156,14 +156,14 @@ impl FrameProcessor<Mono> for PredictiveLadderFilter {
             let mut i = 0;
             for chunk in chunks {
                 let c_vec = if cutoff_is_dynamic {
-                    let arr: [f32; 4] = cutoff_buf[i..i + 4].try_into().unwrap();
+                    let arr: [f32; 4] = cutoff_buf[i..i + 4].try_into().unwrap_or([0.0; 4]);
                     f32x4::from(arr)
                 } else {
                     f32x4::splat(cutoff_static)
                 };
 
                 let r_vec = if res_is_dynamic {
-                    let arr: [f32; 4] = res_buf[i..i + 4].try_into().unwrap();
+                    let arr: [f32; 4] = res_buf[i..i + 4].try_into().unwrap_or([0.0; 4]);
                     f32x4::from(arr)
                 } else {
                     f32x4::splat(res_static)

@@ -56,8 +56,8 @@ where
         let mut output = String::new();
 
         output.push_str(&self.first.visualize(indent));
-        writeln!(output, "{}|", spaces).unwrap();
-        writeln!(output, "{}v", spaces).unwrap();
+        let _ = writeln!(output, "{}|", spaces);
+        let _ = writeln!(output, "{}v", spaces);
         output.push_str(&self.second.visualize(indent));
 
         output
@@ -205,15 +205,15 @@ impl<C: ChannelConfig, P: FrameProcessor<C>> FrameProcessor<C> for StaticDspChai
         };
 
         let mut output = String::new();
-        writeln!(output, "{}StaticDspChain ({})", spaces, channel_type).unwrap();
-        writeln!(output, "{}|", arrow_spaces).unwrap();
-        writeln!(output, "{}v", arrow_spaces).unwrap();
+        let _ = writeln!(output, "{}StaticDspChain ({})", spaces, channel_type);
+        let _ = writeln!(output, "{}|", arrow_spaces);
+        let _ = writeln!(output, "{}v", arrow_spaces);
 
         output.push_str(&self.processor.visualize(indent));
 
-        writeln!(output, "{}|", arrow_spaces).unwrap();
-        writeln!(output, "{}v", arrow_spaces).unwrap();
-        writeln!(output, "{}Output", spaces).unwrap();
+        let _ = writeln!(output, "{}|", arrow_spaces);
+        let _ = writeln!(output, "{}v", arrow_spaces);
+        let _ = writeln!(output, "{}Output", spaces);
 
         output
     }

@@ -55,11 +55,7 @@ fn setup_reverb() -> (Reverb, Vec<f32>) {
 }
 
 fn setup_svf() -> (StateVariableFilter, Vec<f32>) {
-    let mut filter = StateVariableFilter::new(
-        SvfType::LowPass,
-        AudioParam::hz(1000.0),
-        AudioParam::Static(0.7),
-    );
+    let mut filter = StateVariableFilter::new(SvfType::LowPass, AudioParam::hz(1000.0), AudioParam::Static(0.7));
     filter.set_sample_rate(SAMPLE_RATE);
     (filter, vec![0.5; BUFFER_SIZE])
 }
@@ -154,4 +150,8 @@ library_benchmark_group!(
     benchmarks = bench_adsr, bench_speech_synth
 );
 
-main!(library_benchmark_groups = oscillator, effects, synthesis);
+main!(
+    library_benchmark_groups = oscillator,
+    effects,
+    synthesis
+);

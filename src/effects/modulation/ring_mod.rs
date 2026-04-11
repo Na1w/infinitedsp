@@ -110,10 +110,7 @@ mod tests {
         let mut buffer = [1.0; 10];
         rm.process(&mut buffer, 0);
 
-        let (min, max) = buffer.iter().fold(
-            (core::f32::INFINITY, core::f32::NEG_INFINITY),
-            |(min, max), &b| (min.min(b), max.max(b)),
-        );
+        let (min, max) = buffer.iter().fold((core::f32::INFINITY, core::f32::NEG_INFINITY), |(min, max), &b| (min.min(b), max.max(b)));
 
         assert!(min < -0.5);
         assert!(max > 0.5);

@@ -41,9 +41,7 @@ impl<C: ChannelConfig + 'static, T: FrameProcessor<C> + Send + 'static> SummingM
     /// Creates a new SummingMixer and synchronizes latencies.
     ///
     /// This is specifically for Boxed processors.
-    pub fn new_sync(
-        inputs: Vec<Box<dyn FrameProcessor<C> + Send>>,
-    ) -> SummingMixer<C, Box<dyn FrameProcessor<C> + Send>> {
+    pub fn new_sync(inputs: Vec<Box<dyn FrameProcessor<C> + Send>>) -> SummingMixer<C, Box<dyn FrameProcessor<C> + Send>> {
         let max_latency = inputs
             .iter()
             .map(|input| input.latency_samples())
@@ -54,8 +52,7 @@ impl<C: ChannelConfig + 'static, T: FrameProcessor<C> + Send + 'static> SummingM
             .into_iter()
             .map(|input| {
                 if input.latency_samples() < max_latency {
-                    let wrapped: Box<dyn FrameProcessor<C> + Send> =
-                        Box::new(LatencyCompensator::new(input, max_latency));
+                    let wrapped: Box<dyn FrameProcessor<C> + Send> = Box::new(LatencyCompensator::new(input, max_latency));
                     wrapped
                 } else {
                     input
@@ -217,8 +214,8 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
 mod tests {
     use super::*;
     use crate::core::channels::Mono;
-    use crate::effects::utility::lookahead::Lookahead;
     use crate::effects::utility::passthrough::Passthrough;
+    use crate::effects::utility::lookahead::Lookahead;
     use alloc::vec;
 
     #[test]
@@ -232,9 +229,7 @@ mod tests {
         let input1: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Lookahead::new(5));
         let input2: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Passthrough::new());
 
-        let mut mixer = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![
-            input1, input2,
-        ]);
+        let mut mixer = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![input1, input2]);
         assert_eq!(mixer.latency_samples(), 5);
 
         let mut buffer = [0.0; 10];

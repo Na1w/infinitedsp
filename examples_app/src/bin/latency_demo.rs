@@ -3,8 +3,8 @@ use cpal::traits::StreamTrait;
 use infinitedsp_core::core::audio_param::AudioParam;
 use infinitedsp_core::core::channels::Mono;
 use infinitedsp_core::core::frame_processor::FrameProcessor;
-use infinitedsp_core::core::parameter::Parameter;
 use infinitedsp_core::core::summing_mixer::SummingMixer;
+use infinitedsp_core::core::parameter::Parameter;
 use infinitedsp_core::effects::utility::lookahead::Lookahead;
 use infinitedsp_core::effects::utility::passthrough::Passthrough;
 use infinitedsp_core::synthesis::oscillator::{Oscillator, Waveform};
@@ -69,9 +69,7 @@ fn create_engine(sample_rate: f32, sync_enabled: Parameter) -> LatencyDemoEngine
 
     let path_a_1: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Lookahead::new(latency_samples));
     let path_b_1: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Passthrough::new());
-    let compensated = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![
-        path_a_1, path_b_1,
-    ]);
+    let compensated = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![path_a_1, path_b_1]);
 
     let path_a_2: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Lookahead::new(latency_samples));
     let path_b_2: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Passthrough::new());
@@ -111,21 +109,14 @@ fn main() -> Result<()> {
                     buffer[i * 2 + 1] = s;
                 }
             }
-            fn set_sample_rate(&mut self, sr: f32) {
-                self.0.set_sample_rate(sr);
-            }
-            fn reset(&mut self) {
-                self.0.reset();
-            }
+            fn set_sample_rate(&mut self, sr: f32) { self.0.set_sample_rate(sr); }
+            fn reset(&mut self) { self.0.reset(); }
         }
 
         Box::new(MonoToStereoWrapper(engine))
     })?;
 
-    println!(
-        "Playing at {}Hz (Run with --release for best performance)...",
-        sample_rate
-    );
+    println!("Playing at {}Hz (Run with --release for best performance)...", sample_rate);
     stream.play()?;
 
     let start_time = Instant::now();

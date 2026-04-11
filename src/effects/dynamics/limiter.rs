@@ -31,12 +31,7 @@ impl<C: ChannelConfig> Limiter<C> {
     /// * `lookahead_ms` - Lookahead time in milliseconds (e.g. 5.0).
     /// * `release_ms` - Release time in milliseconds (e.g. 100.0).
     /// * `sample_rate` - Initial sample rate.
-    pub fn new(
-        threshold_db: AudioParam,
-        lookahead_ms: f32,
-        release_ms: AudioParam,
-        sample_rate: f32,
-    ) -> Self {
+    pub fn new(threshold_db: AudioParam, lookahead_ms: f32, release_ms: AudioParam, sample_rate: f32) -> Self {
         let lookahead_samples = (lookahead_ms * sample_rate / 1000.0) as u32;
 
         Limiter {
@@ -73,10 +68,8 @@ impl<C: ChannelConfig> FrameProcessor<C> for Limiter<C> {
             self.release_buffer.resize(frames, 0.0);
         }
 
-        self.threshold_db
-            .process(&mut self.threshold_buffer[0..frames], sample_index);
-        self.release_ms
-            .process(&mut self.release_buffer[0..frames], sample_index);
+        self.threshold_db.process(&mut self.threshold_buffer[0..frames], sample_index);
+        self.release_ms.process(&mut self.release_buffer[0..frames], sample_index);
 
         for i in 0..frames {
             let threshold_db = self.threshold_buffer[i];
@@ -101,7 +94,7 @@ impl<C: ChannelConfig> FrameProcessor<C> for Limiter<C> {
                 gain = threshold / self.envelope;
             }
 
-            let frame_slice = &mut buffer[i * channels..(i + 1) * channels];
+            let frame_slice = &mut buffer[i * channels .. (i + 1) * channels];
             self.lookahead.process(frame_slice, sample_index + i as u64);
 
             for sample in frame_slice.iter_mut() {

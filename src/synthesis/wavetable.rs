@@ -31,20 +31,14 @@ impl Wavetable {
             let mut base_frame = data[start..start + samples_per_frame].to_vec();
 
             let mut max_abs = 0.0f32;
-            for &s in &base_frame {
-                max_abs = max_abs.max(s.abs());
-            }
+            for &s in &base_frame { max_abs = max_abs.max(s.abs()); }
             if max_abs > 0.0 {
-                for s in &mut base_frame {
-                    *s /= max_abs;
-                }
+                for s in &mut base_frame { *s /= max_abs; }
             }
             let levels = vec![base_frame];
             frames.push(MipmappedFrame { levels });
         }
-        Wavetable {
-            frames: Arc::new(frames),
-        }
+        Wavetable { frames: Arc::new(frames) }
     }
 
     /// Band-limited constructor that uses FFT to properly band-limit each mipmap level.
@@ -59,9 +53,7 @@ impl Wavetable {
             let raw_samples = &data[start..start + samples_per_frame];
 
             let mut complex_buf = [Complex32::new(0.0, 0.0); 2048];
-            for i in 0..2048 {
-                complex_buf[i] = Complex32::new(raw_samples[i], 0.0);
-            }
+            for i in 0..2048 { complex_buf[i] = Complex32::new(raw_samples[i], 0.0); }
 
             let _ = microfft::complex::cfft_2048(&mut complex_buf);
 
@@ -69,9 +61,7 @@ impl Wavetable {
 
             for level_idx in 0..9 {
                 let size = 2048 >> level_idx;
-                if size < 16 {
-                    break;
-                }
+                if size < 16 { break; }
 
                 let mut level_complex = [Complex32::new(0.0, 0.0); 2048];
                 let harmonics_to_keep = 1024 >> level_idx;
@@ -83,13 +73,9 @@ impl Wavetable {
                     }
                 }
 
-                for x in &mut level_complex {
-                    *x = x.conj();
-                }
+                for x in &mut level_complex { *x = x.conj(); }
                 let _ = microfft::complex::cfft_2048(&mut level_complex);
-                for x in &mut level_complex {
-                    *x = x.conj() / 2048.0;
-                }
+                for x in &mut level_complex { *x = x.conj() / 2048.0; }
 
                 let mut level_samples = vec![0.0; size];
                 for i in 0..size {
@@ -193,12 +179,8 @@ impl WavetableOscillator {
 impl FrameProcessor<Mono> for WavetableOscillator {
     fn process(&mut self, buffer: &mut [f32], sample_index: u64) {
         let len = buffer.len();
-        if self.freq_buffer.len() < len {
-            self.freq_buffer.resize(len, 0.0);
-        }
-        if self.pos_buffer.len() < len {
-            self.pos_buffer.resize(len, 0.0);
-        }
+        if self.freq_buffer.len() < len { self.freq_buffer.resize(len, 0.0); }
+        if self.pos_buffer.len() < len { self.pos_buffer.resize(len, 0.0); }
 
         self.frequency.process(&mut self.freq_buffer, sample_index);
         self.position.process(&mut self.pos_buffer, sample_index);
@@ -220,9 +202,7 @@ impl FrameProcessor<Mono> for WavetableOscillator {
             for j in 0..4 {
                 results[j] = self.get_sample(self.phase, freq_arr[j], pos_arr[j]);
                 self.phase += inc_arr[j];
-                if self.phase >= 1.0 {
-                    self.phase -= 1.0;
-                }
+                if self.phase >= 1.0 { self.phase -= 1.0; }
             }
             chunks[i] = results;
         }
@@ -233,9 +213,7 @@ impl FrameProcessor<Mono> for WavetableOscillator {
             let inc = f / self.sample_rate;
             remainder[i] = self.get_sample(self.phase, f, p);
             self.phase += inc;
-            if self.phase >= 1.0 {
-                self.phase -= 1.0;
-            }
+            if self.phase >= 1.0 { self.phase -= 1.0; }
         }
     }
 
@@ -260,12 +238,7 @@ impl FrameProcessor<Mono> for WavetableOscillator {
         let mut output = alloc::string::String::new();
         let spaces = " ".repeat(indent);
         let _ = writeln!(output, "{}WavetableOscillator (Anti-aliased)", spaces);
-        let _ = writeln!(
-            output,
-            "{}  |-- Frames: {}",
-            spaces,
-            self.wavetable.frames.len()
-        );
+        let _ = writeln!(output, "{}  |-- Frames: {}", spaces, self.wavetable.frames.len());
         output
     }
 }
@@ -285,8 +258,11 @@ mod tests {
         let table = Wavetable::new(&data, size);
 
         let freq = Parameter::new(441.0);
-        let mut osc =
-            WavetableOscillator::new(table, AudioParam::Linked(freq), AudioParam::Static(0.0));
+        let mut osc = WavetableOscillator::new(
+            table,
+            AudioParam::Linked(freq),
+            AudioParam::Static(0.0),
+        );
         osc.set_sample_rate(44100.0);
 
         let mut buffer = [0.0; 100];
@@ -301,17 +277,16 @@ mod tests {
     fn test_wavetable_morphing() {
         let size = 2048;
         let mut data = vec![0.0; size * 2];
-        for i in 0..size {
-            data[i] = 0.5;
-        }
-        for i in size..size * 2 {
-            data[i] = -0.5;
-        }
+        for i in 0..size { data[i] = 0.5; }
+        for i in size..size*2 { data[i] = -0.5; }
 
         let table = Wavetable::new(&data, size);
 
-        let mut osc =
-            WavetableOscillator::new(table, AudioParam::Static(100.0), AudioParam::Static(0.5));
+        let mut osc = WavetableOscillator::new(
+            table,
+            AudioParam::Static(100.0),
+            AudioParam::Static(0.5),
+        );
         osc.set_sample_rate(44100.0);
 
         let mut buffer = [0.0; 10];
@@ -326,12 +301,13 @@ mod tests {
     fn test_wavetable_mipmapping_logic() {
         let size = 2048;
         let mut data = vec![0.0; size];
-        for i in 0..size {
-            data[i] = 1.0;
-        }
+        for i in 0..size { data[i] = 1.0; }
         let table = Wavetable::new_bandlimited(&data, size);
-        let mut osc =
-            WavetableOscillator::new(table, AudioParam::Static(20000.0), AudioParam::Static(0.0));
+        let mut osc = WavetableOscillator::new(
+            table,
+            AudioParam::Static(20000.0),
+            AudioParam::Static(0.0),
+        );
         osc.set_sample_rate(44100.0);
         let mut buffer = [0.0; 10];
         osc.process(&mut buffer, 0);

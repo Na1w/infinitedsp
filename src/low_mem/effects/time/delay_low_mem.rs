@@ -191,21 +191,13 @@ impl FrameProcessor<Mono> for DelayLowMem {
 
                 let idx_f: [f32; 4] = read_ptr_norm_v.into();
                 let mut idx_a_0 = idx_f[0] as usize;
-                if idx_a_0 >= len {
-                    idx_a_0 -= len;
-                }
+                if idx_a_0 >= len { idx_a_0 -= len; }
                 let mut idx_a_1 = idx_f[1] as usize;
-                if idx_a_1 >= len {
-                    idx_a_1 -= len;
-                }
+                if idx_a_1 >= len { idx_a_1 -= len; }
                 let mut idx_a_2 = idx_f[2] as usize;
-                if idx_a_2 >= len {
-                    idx_a_2 -= len;
-                }
+                if idx_a_2 >= len { idx_a_2 -= len; }
                 let mut idx_a_3 = idx_f[3] as usize;
-                if idx_a_3 >= len {
-                    idx_a_3 -= len;
-                }
+                if idx_a_3 >= len { idx_a_3 -= len; }
 
                 let idx_a = [idx_a_0, idx_a_1, idx_a_2, idx_a_3];
 
@@ -318,9 +310,7 @@ impl FrameProcessor<Mono> for DelayLowMem {
                 }
 
                 let mut idx_a = read_ptr_norm as usize;
-                if idx_a >= len {
-                    idx_a -= len;
-                }
+                if idx_a >= len { idx_a -= len; }
                 let idx_b = if idx_a + 1 == len { 0 } else { idx_a + 1 };
                 let idx_prev = if idx_a == 0 { len - 1 } else { idx_a - 1 };
                 let idx_next = if idx_b + 1 == len { 0 } else { idx_b + 1 };

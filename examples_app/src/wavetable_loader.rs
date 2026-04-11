@@ -10,21 +10,19 @@ pub fn load_wavetable<P: AsRef<Path>>(path: P, samples_per_frame: usize) -> Resu
     let spec = reader.spec();
 
     let samples: Vec<f32> = match spec.sample_format {
-        hound::SampleFormat::Float => reader.samples::<f32>().map(|s| s.unwrap_or(0.0)).collect(),
+        hound::SampleFormat::Float => {
+            reader.samples::<f32>().map(|s| s.unwrap_or(0.0)).collect()
+        }
         hound::SampleFormat::Int => {
             let max_val = (1 << (spec.bits_per_sample - 1)) as f32;
-            reader
-                .samples::<i32>()
+            reader.samples::<i32>()
                 .map(|s| s.unwrap_or(0) as f32 / max_val)
                 .collect()
         }
     };
 
     let mono_samples = if spec.channels > 1 {
-        samples
-            .chunks(spec.channels as usize)
-            .map(|chunk| chunk[0])
-            .collect()
+        samples.chunks(spec.channels as usize).map(|chunk| chunk[0]).collect()
     } else {
         samples
     };

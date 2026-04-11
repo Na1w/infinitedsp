@@ -14,11 +14,11 @@ pub struct Limiter<C: ChannelConfig> {
     threshold_db: AudioParam,
     release_ms: AudioParam,
     lookahead_samples: u32,
-    
+
     lookahead: Lookahead<C>,
     envelope: f32,
     sample_rate: f32,
-    
+
     threshold_buffer: Vec<f32>,
     release_buffer: Vec<f32>,
 }
@@ -33,7 +33,7 @@ impl<C: ChannelConfig> Limiter<C> {
     /// * `sample_rate` - Initial sample rate.
     pub fn new(threshold_db: AudioParam, lookahead_ms: f32, release_ms: AudioParam, sample_rate: f32) -> Self {
         let lookahead_samples = (lookahead_ms * sample_rate / 1000.0) as u32;
-        
+
         Limiter {
             threshold_db,
             release_ms,
@@ -74,7 +74,7 @@ impl<C: ChannelConfig> FrameProcessor<C> for Limiter<C> {
         for i in 0..frames {
             let threshold_db = self.threshold_buffer[i];
             let release_ms = self.release_buffer[i];
-            
+
             let threshold = libm::powf(10.0, threshold_db / 20.0);
             let release_coeff = libm::expf(-1.0 / (release_ms * self.sample_rate * 0.001));
 
@@ -96,7 +96,7 @@ impl<C: ChannelConfig> FrameProcessor<C> for Limiter<C> {
 
             let frame_slice = &mut buffer[i * channels .. (i + 1) * channels];
             self.lookahead.process(frame_slice, sample_index + i as u64);
-            
+
             for sample in frame_slice.iter_mut() {
                 *sample *= gain;
             }
@@ -134,7 +134,7 @@ mod tests {
         let threshold = AudioParam::db(-6.0); // approx 0.5
         let release = AudioParam::ms(100.0);
         let mut limiter = Limiter::<Mono>::new(threshold, 5.0, release, 44100.0);
-        
+
         assert_eq!(limiter.latency_samples(), (5.0 * 44100.0 / 1000.0) as u32);
 
         // Input 2.0 (well above 0.5)

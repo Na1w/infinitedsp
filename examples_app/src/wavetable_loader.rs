@@ -8,7 +8,7 @@ use std::path::Path;
 pub fn load_wavetable<P: AsRef<Path>>(path: P, samples_per_frame: usize) -> Result<Wavetable> {
     let mut reader = hound::WavReader::open(path).context("Failed to open WAV file")?;
     let spec = reader.spec();
-    
+
     let samples: Vec<f32> = match spec.sample_format {
         hound::SampleFormat::Float => {
             reader.samples::<f32>().map(|s| s.unwrap_or(0.0)).collect()

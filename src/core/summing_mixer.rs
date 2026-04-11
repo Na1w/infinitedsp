@@ -39,7 +39,7 @@ impl<C: ChannelConfig + 'static, T: FrameProcessor<C> + Send + 'static> SummingM
     }
 
     /// Creates a new SummingMixer and synchronizes latencies.
-    /// 
+    ///
     /// This is specifically for Boxed processors.
     pub fn new_sync(inputs: Vec<Box<dyn FrameProcessor<C> + Send>>) -> SummingMixer<C, Box<dyn FrameProcessor<C> + Send>> {
         let max_latency = inputs
@@ -105,13 +105,13 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             }
 
             self.input_buffer[0..len].copy_from_slice(buffer);
-            
+
             self.inputs[0].process(buffer, sample_index);
 
             for input in &mut self.inputs[1..] {
                 let temp_slice = &mut self.temp_buffer[0..len];
                 temp_slice.copy_from_slice(&self.input_buffer[0..len]);
-                
+
                 input.process(temp_slice, sample_index);
 
                 let (buf_chunks, buf_rem) = buffer.as_chunks_mut::<4>();

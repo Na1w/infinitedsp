@@ -29,7 +29,7 @@ impl Wavetable {
         for f in 0..num_frames {
             let start = f * samples_per_frame;
             let mut base_frame = data[start..start + samples_per_frame].to_vec();
-            
+
             let mut max_abs = 0.0f32;
             for &s in &base_frame { max_abs = max_abs.max(s.abs()); }
             if max_abs > 0.0 {
@@ -51,21 +51,21 @@ impl Wavetable {
         for f in 0..num_frames {
             let start = f * samples_per_frame;
             let raw_samples = &data[start..start + samples_per_frame];
-            
+
             let mut complex_buf = [Complex32::new(0.0, 0.0); 2048];
             for i in 0..2048 { complex_buf[i] = Complex32::new(raw_samples[i], 0.0); }
-            
+
             let _ = microfft::complex::cfft_2048(&mut complex_buf);
-            
+
             let mut levels = Vec::with_capacity(9);
-            
+
             for level_idx in 0..9 {
                 let size = 2048 >> level_idx;
                 if size < 16 { break; }
-                
+
                 let mut level_complex = [Complex32::new(0.0, 0.0); 2048];
                 let harmonics_to_keep = 1024 >> level_idx;
-                
+
                 for i in 0..harmonics_to_keep {
                     level_complex[i] = complex_buf[i];
                     if i > 0 {
@@ -76,14 +76,14 @@ impl Wavetable {
                 for x in &mut level_complex { *x = x.conj(); }
                 let _ = microfft::complex::cfft_2048(&mut level_complex);
                 for x in &mut level_complex { *x = x.conj() / 2048.0; }
-                
+
                 let mut level_samples = vec![0.0; size];
                 for i in 0..size {
                     level_samples[i] = level_complex[i * (1 << level_idx)].re;
                 }
                 levels.push(level_samples);
             }
-            
+
             frames.push(MipmappedFrame { levels });
         }
 
@@ -140,7 +140,7 @@ impl WavetableOscillator {
     #[inline(always)]
     fn get_sample(&self, phase: f32, freq: f32, position: f32) -> f32 {
         let num_mip_levels = self.wavetable.frames[0].levels.len();
-        
+
         if num_mip_levels == 1 {
             let num_frames = self.wavetable.frames.len();
             let pos_scaled = position.clamp(0.0, 1.0) * (num_frames - 1) as f32;
@@ -197,7 +197,7 @@ impl FrameProcessor<Mono> for WavetableOscillator {
             let inc_arr = inc.to_array();
             let freq_arr = freq.to_array();
             let pos_arr = pos.to_array();
-            
+
             let mut results = [0.0f32; 4];
             for j in 0..4 {
                 results[j] = self.get_sample(self.phase, freq_arr[j], pos_arr[j]);
@@ -256,7 +256,7 @@ mod tests {
             data[i] = libm::sinf((i as f32 / size as f32) * 2.0 * core::f32::consts::PI);
         }
         let table = Wavetable::new(&data, size);
-        
+
         let freq = Parameter::new(441.0);
         let mut osc = WavetableOscillator::new(
             table,
@@ -279,9 +279,9 @@ mod tests {
         let mut data = vec![0.0; size * 2];
         for i in 0..size { data[i] = 0.5; }
         for i in size..size*2 { data[i] = -0.5; }
-        
+
         let table = Wavetable::new(&data, size);
-        
+
         let mut osc = WavetableOscillator::new(
             table,
             AudioParam::Static(100.0),

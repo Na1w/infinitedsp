@@ -46,27 +46,27 @@ impl Comb4 {
     fn process(&mut self, input: f32) -> f32 {
         let input_vec = f32x4::splat(input);
 
-        // SAFETY: pos can never be outside the bounds.
-        let delayed = unsafe {
-            let d0 = *self.buffers[0].get_unchecked(self.pos[0]);
-            let d1 = *self.buffers[1].get_unchecked(self.pos[1]);
-            let d2 = *self.buffers[2].get_unchecked(self.pos[2]);
-            let d3 = *self.buffers[3].get_unchecked(self.pos[3]);
-            f32x4::new([d0, d1, d2, d3])
-        };
+        let p0 = self.pos[0];
+        let p1 = self.pos[1];
+        let p2 = self.pos[2];
+        let p3 = self.pos[3];
+
+        let d0 = *self.buffers[0].get(p0).unwrap_or(&0.0);
+        let d1 = *self.buffers[1].get(p1).unwrap_or(&0.0);
+        let d2 = *self.buffers[2].get(p2).unwrap_or(&0.0);
+        let d3 = *self.buffers[3].get(p3).unwrap_or(&0.0);
+
+        let delayed = f32x4::new([d0, d1, d2, d3]);
 
         let new_input = input_vec + self.filter_state * self.feedback;
         self.filter_state = delayed * self.damp_inv + self.filter_state * self.damp;
 
         let to_write = new_input.to_array();
 
-        // SAFETY: pos can never be outside the bounds.
-        unsafe {
-            *self.buffers[0].get_unchecked_mut(self.pos[0]) = to_write[0];
-            *self.buffers[1].get_unchecked_mut(self.pos[1]) = to_write[1];
-            *self.buffers[2].get_unchecked_mut(self.pos[2]) = to_write[2];
-            *self.buffers[3].get_unchecked_mut(self.pos[3]) = to_write[3];
-        };
+        if let Some(v) = self.buffers[0].get_mut(p0) { *v = to_write[0]; }
+        if let Some(v) = self.buffers[1].get_mut(p1) { *v = to_write[1]; }
+        if let Some(v) = self.buffers[2].get_mut(p2) { *v = to_write[2]; }
+        if let Some(v) = self.buffers[3].get_mut(p3) { *v = to_write[3]; }
 
         for i in 0..4 {
             self.pos[i] += 1;
@@ -105,12 +105,15 @@ impl Allpass {
 
     fn process(&mut self, input: f32) -> f32 {
         let len = self.buffer.len();
-        // SAFETY: pos can never be outside the bounds.
-        let delayed = unsafe { *self.buffer.get_unchecked(self.pos) };
+        let p = self.pos;
+
+        let delayed = *self.buffer.get(p).unwrap_or(&0.0);
         let output = -input + delayed;
         let to_store = input + output * self.feedback;
-        // SAFETY: pos can never be outside the bounds.
-        unsafe { *self.buffer.get_unchecked_mut(self.pos) = to_store };
+
+        if let Some(v) = self.buffer.get_mut(p) {
+            *v = to_store;
+        }
 
         self.pos += 1;
         if self.pos >= len {

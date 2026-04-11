@@ -32,11 +32,11 @@ fn main() -> Result<()> {
     }
 
     let mut max_abs = 0.0f32;
-    for &s in &all_samples { 
+    for &s in &all_samples {
         let abs_s = if s < 0.0 { -s } else { s };
         if abs_s > max_abs { max_abs = abs_s; }
     }
-    
+
     if max_abs > 0.0 {
         for s in &mut all_samples { *s /= max_abs; }
     }

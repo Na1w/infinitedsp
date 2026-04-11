@@ -46,10 +46,24 @@ impl Comb4 {
     fn process(&mut self, input: f32) -> f32 {
         let input_vec = f32x4::splat(input);
 
-        let d0 = self.buffers[0][self.pos[0]];
-        let d1 = self.buffers[1][self.pos[1]];
-        let d2 = self.buffers[2][self.pos[2]];
-        let d3 = self.buffers[3][self.pos[3]];
+        let p0 = self.pos[0];
+        let p1 = self.pos[1];
+        let p2 = self.pos[2];
+        let p3 = self.pos[3];
+
+        let (buf0, rest) = self.buffers.split_at_mut(1);
+        let (buf1, rest) = rest.split_at_mut(1);
+        let (buf2, rest) = rest.split_at_mut(1);
+        let buf3 = &mut rest[0];
+
+        let buf0 = &mut buf0[0];
+        let buf1 = &mut buf1[0];
+        let buf2 = &mut buf2[0];
+
+        let d0 = buf0[p0];
+        let d1 = buf1[p1];
+        let d2 = buf2[p2];
+        let d3 = buf3[p3];
         let delayed = f32x4::new([d0, d1, d2, d3]);
 
         let new_input = input_vec + self.filter_state * self.feedback;
@@ -57,10 +71,10 @@ impl Comb4 {
 
         let to_write = new_input.to_array();
 
-        self.buffers[0][self.pos[0]] = to_write[0];
-        self.buffers[1][self.pos[1]] = to_write[1];
-        self.buffers[2][self.pos[2]] = to_write[2];
-        self.buffers[3][self.pos[3]] = to_write[3];
+        buf0[p0] = to_write[0];
+        buf1[p1] = to_write[1];
+        buf2[p2] = to_write[2];
+        buf3[p3] = to_write[3];
 
         for i in 0..4 {
             self.pos[i] += 1;
@@ -99,10 +113,13 @@ impl Allpass {
 
     fn process(&mut self, input: f32) -> f32 {
         let len = self.buffer.len();
-        let delayed = self.buffer[self.pos];
+        let p = self.pos;
+        let buf = &mut self.buffer;
+
+        let delayed = buf[p];
         let output = -input + delayed;
         let to_store = input + output * self.feedback;
-        self.buffer[self.pos] = to_store;
+        buf[p] = to_store;
 
         self.pos += 1;
         if self.pos >= len {

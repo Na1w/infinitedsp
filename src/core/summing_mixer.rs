@@ -238,8 +238,8 @@ mod tests {
         mixer.process(&mut buffer, 0);
 
         // Sample 0-4 should be 0.0 (due to 5 sample latency)
-        for i in 0..5 {
-            assert_eq!(buffer[i], 0.0);
+        for &sample in buffer.iter().take(5) {
+            assert_eq!(sample, 0.0);
         }
 
         // Sample 5 should be 2.0 (1.0 from each input, both delayed by 5 samples)

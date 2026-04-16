@@ -229,7 +229,7 @@ where
         use core::fmt::Write;
         let mut s = String::new();
         let spaces = " ".repeat(indent);
-        let _ = write!(s, "{}Ola (FFT Size: {})\n{}  |-- {}\n", spaces, N, spaces, self.processor.name());
+        let _ = writeln!(s, "{}Ola (FFT Size: {})\n{}  |-- {}", spaces, N, spaces, self.processor.name());
         s
     }
 }

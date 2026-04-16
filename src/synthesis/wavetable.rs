@@ -252,8 +252,8 @@ mod tests {
     fn test_wavetable_basic_processing() {
         let size = 2048;
         let mut data = vec![0.0; size];
-        for i in 0..size {
-            data[i] = libm::sinf((i as f32 / size as f32) * 2.0 * core::f32::consts::PI);
+        for (i, d) in data.iter_mut().enumerate().take(size) {
+            *d = libm::sinf((i as f32 / size as f32) * 2.0 * core::f32::consts::PI);
         }
         let table = Wavetable::new(&data, size);
         
@@ -277,8 +277,8 @@ mod tests {
     fn test_wavetable_morphing() {
         let size = 2048;
         let mut data = vec![0.0; size * 2];
-        for i in 0..size { data[i] = 0.5; }
-        for i in size..size*2 { data[i] = -0.5; }
+        data[..size].fill(0.5);
+        data[size..].fill(-0.5);
         
         let table = Wavetable::new(&data, size);
         
@@ -301,7 +301,7 @@ mod tests {
     fn test_wavetable_mipmapping_logic() {
         let size = 2048;
         let mut data = vec![0.0; size];
-        for i in 0..size { data[i] = 1.0; }
+        data.fill(1.0);
         let table = Wavetable::new_bandlimited(&data, size);
         let mut osc = WavetableOscillator::new(
             table,

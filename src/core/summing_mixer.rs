@@ -39,9 +39,11 @@ impl<C: ChannelConfig + 'static, T: FrameProcessor<C> + Send + 'static> SummingM
     }
 
     /// Creates a new SummingMixer and synchronizes latencies.
-    /// 
+    ///
     /// This is specifically for Boxed processors.
-    pub fn new_sync(inputs: Vec<Box<dyn FrameProcessor<C> + Send>>) -> SummingMixer<C, Box<dyn FrameProcessor<C> + Send>> {
+    pub fn new_sync(
+        inputs: Vec<Box<dyn FrameProcessor<C> + Send>>,
+    ) -> SummingMixer<C, Box<dyn FrameProcessor<C> + Send>> {
         let max_latency = inputs
             .iter()
             .map(|input| input.latency_samples())
@@ -52,7 +54,8 @@ impl<C: ChannelConfig + 'static, T: FrameProcessor<C> + Send + 'static> SummingM
             .into_iter()
             .map(|input| {
                 if input.latency_samples() < max_latency {
-                    let wrapped: Box<dyn FrameProcessor<C> + Send> = Box::new(LatencyCompensator::new(input, max_latency));
+                    let wrapped: Box<dyn FrameProcessor<C> + Send> =
+                        Box::new(LatencyCompensator::new(input, max_latency));
                     wrapped
                 } else {
                     input
@@ -105,13 +108,13 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
             }
 
             self.input_buffer[0..len].copy_from_slice(buffer);
-            
+
             self.inputs[0].process(buffer, sample_index);
 
             for input in &mut self.inputs[1..] {
                 let temp_slice = &mut self.temp_buffer[0..len];
                 temp_slice.copy_from_slice(&self.input_buffer[0..len]);
-                
+
                 input.process(temp_slice, sample_index);
 
                 let (buf_chunks, buf_rem) = buffer.as_chunks_mut::<4>();
@@ -214,8 +217,8 @@ impl<C: ChannelConfig, T: FrameProcessor<C> + Send> FrameProcessor<C> for Summin
 mod tests {
     use super::*;
     use crate::core::channels::Mono;
-    use crate::effects::utility::passthrough::Passthrough;
     use crate::effects::utility::lookahead::Lookahead;
+    use crate::effects::utility::passthrough::Passthrough;
     use alloc::vec;
 
     #[test]
@@ -229,7 +232,9 @@ mod tests {
         let input1: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Lookahead::new(5));
         let input2: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Passthrough::new());
 
-        let mut mixer = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![input1, input2]);
+        let mut mixer = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![
+            input1, input2,
+        ]);
         assert_eq!(mixer.latency_samples(), 5);
 
         let mut buffer = [0.0; 10];
@@ -238,7 +243,7 @@ mod tests {
         mixer.process(&mut buffer, 0);
 
         // Sample 0-4 should be 0.0 (due to 5 sample latency)
-        for i in 0..5 {
+        for (i, _) in buffer.iter().enumerate().take(5) {
             assert_eq!(buffer[i], 0.0);
         }
 

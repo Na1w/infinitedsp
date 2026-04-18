@@ -13,11 +13,11 @@ use std::time::Duration;
 fn create_wavetable_demo(_sample_rate: f32) -> Result<Box<dyn FrameProcessor<Stereo> + Send>> {
     let table = load_wavetable("assets/audio/demo_wavetable.wav", 2048)?;
     let lfo = Lfo::new(AudioParam::hz(0.5), LfoWaveform::Sine);
-    
+
     let osc = WavetableOscillator::new(
-        table, 
+        table,
         AudioParam::hz(110.0),
-        AudioParam::Dynamic(Box::new(lfo))
+        AudioParam::Dynamic(Box::new(lfo)),
     );
 
     struct MonoToStereo(WavetableOscillator);
@@ -31,10 +31,18 @@ fn create_wavetable_demo(_sample_rate: f32) -> Result<Box<dyn FrameProcessor<Ste
                 buffer[i * 2 + 1] = s;
             }
         }
-        fn set_sample_rate(&mut self, sr: f32) { self.0.set_sample_rate(sr); }
-        fn reset(&mut self) { self.0.reset(); }
-        fn name(&self) -> &str { "Wavetable Demo" }
-        fn visualize(&self, indent: usize) -> String { self.0.visualize(indent) }
+        fn set_sample_rate(&mut self, sr: f32) {
+            self.0.set_sample_rate(sr);
+        }
+        fn reset(&mut self) {
+            self.0.reset();
+        }
+        fn name(&self) -> &str {
+            "Wavetable Demo"
+        }
+        fn visualize(&self, indent: usize) -> String {
+            self.0.visualize(indent)
+        }
     }
 
     Ok(Box::new(MonoToStereo(osc)))

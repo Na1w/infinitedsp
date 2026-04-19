@@ -72,7 +72,7 @@ impl<C: ChannelConfig> FrameProcessor<C> for Lookahead<C> {
         use core::fmt::Write;
         let mut s = alloc::string::String::new();
         let spaces = " ".repeat(indent);
-        let _ = write!(s, "{}Lookahead ({} samples)\n", spaces, self.delay_samples);
+        let _ = writeln!(s, "{}Lookahead ({} samples)", spaces, self.delay_samples);
         s
     }
 }

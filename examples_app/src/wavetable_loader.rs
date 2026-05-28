@@ -30,5 +30,5 @@ pub fn load_wavetable<P: AsRef<Path>>(path: P, samples_per_frame: usize) -> Resu
     let total_samples = (mono_samples.len() / samples_per_frame) * samples_per_frame;
     let final_samples = mono_samples[0..total_samples].to_vec();
 
-    Ok(Wavetable::new_bandlimited(final_samples, samples_per_frame))
+    Ok(Wavetable::new_bandlimited(&final_samples, samples_per_frame))
 }

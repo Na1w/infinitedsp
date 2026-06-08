@@ -500,6 +500,12 @@ impl<'a> FrameProcessor<Mono> for SpeechSynth<'a> {
 
         let dt_ms = 1000.0 / self.sample_rate;
 
+        // The one-pole smoothing coefficients depend only on the (fixed) sample
+        // rate, so compute the three `expf` once here instead of 2-3 per sample.
+        let smooth_freq_jump = 1.0 - libm::expf(-1.0 / (0.001 * self.sample_rate));
+        let smooth_freq_glide = 1.0 - libm::expf(-1.0 / (0.015 * self.sample_rate));
+        let smooth_amp = 1.0 - libm::expf(-1.0 / (0.008 * self.sample_rate));
+
         for (i, sample) in buffer.iter_mut().enumerate() {
             let current_sample_idx = sample_index + i as u64;
             self.time_in_phoneme += dt_ms;
@@ -526,11 +532,10 @@ impl<'a> FrameProcessor<Mono> for SpeechSynth<'a> {
 
             let t = &self.phonemes[self.current_idx];
             let smooth_freq = if t.jump_freq {
-                1.0 - libm::expf(-1.0 / (0.001 * self.sample_rate))
+                smooth_freq_jump
             } else {
-                1.0 - libm::expf(-1.0 / (0.015 * self.sample_rate))
+                smooth_freq_glide
             };
-            let smooth_amp = 1.0 - libm::expf(-1.0 / (0.008 * self.sample_rate));
 
             self.cur_f1 += (t.f1 - self.cur_f1) * smooth_freq;
             self.cur_f2 += (t.f2 - self.cur_f2) * smooth_freq;
@@ -542,15 +547,22 @@ impl<'a> FrameProcessor<Mono> for SpeechSynth<'a> {
 
             let p = 110.0 * self.cur_pitch;
 
+            // The per-oscillator detune factors `1 + ((idx/3)*2 - 1)*0.005` are
+            // constants (the voice stack is fixed at 4 oscillators in `new`), so
+            // use a precomputed table instead of recomputing `spread` for all 4
+            // oscillators every sample. Same f32 values as the inline expression.
+            const DETUNE: [f32; 4] = [
+                1.0 + ((0.0 / 3.0) * 2.0 - 1.0) * 0.005,
+                1.0 + ((1.0 / 3.0) * 2.0 - 1.0) * 0.005,
+                1.0 + ((2.0 / 3.0) * 2.0 - 1.0) * 0.005,
+                1.0 + ((3.0 / 3.0) * 2.0 - 1.0) * 0.005,
+            ];
             let voiced_stack = self
                 .voice_stack
                 .oscillators
                 .iter_mut()
                 .enumerate()
-                .map(|(idx, osc)| {
-                    let spread = (idx as f32 / 3.0) * 2.0 - 1.0;
-                    osc.tick(p * (1.0 + spread * 0.005))
-                })
+                .map(|(idx, osc)| osc.tick(p * DETUNE[idx]))
                 .sum::<f32>()
                 * 0.25;
 

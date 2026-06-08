@@ -30,6 +30,10 @@ pub struct Oscillator {
     pub frequency: AudioParam,
     pub waveform: Waveform,
     pub sample_rate: f32,
+    // Cached 1/sample_rate. `tick()` is the per-sample entry point (a voice can
+    // call it several times per output sample), so caching the reciprocal keeps
+    // a division off the hot path.
+    inv_sample_rate: f32,
     freq_buffer: Vec<f32>,
     pub rng_state: u32,
 }
@@ -46,6 +50,7 @@ impl Oscillator {
             frequency,
             waveform,
             sample_rate: 44100.0,
+            inv_sample_rate: 1.0 / 44100.0,
             freq_buffer: Vec::with_capacity(128),
             rng_state: 12345,
         }
@@ -91,8 +96,7 @@ impl Oscillator {
     /// Processes a single sample from the oscillator.
     #[inline(always)]
     pub fn tick(&mut self, freq_hz: f32) -> f32 {
-        let inv_sr = 1.0 / self.sample_rate;
-        let inc = freq_hz * inv_sr;
+        let inc = freq_hz * self.inv_sample_rate;
 
         if self.waveform != Waveform::WhiteNoise {
             self.phase += inc;
@@ -306,6 +310,7 @@ impl FrameProcessor<Mono> for Oscillator {
 
     fn set_sample_rate(&mut self, sample_rate: f32) {
         self.sample_rate = sample_rate;
+        self.inv_sample_rate = 1.0 / sample_rate;
         self.frequency.set_sample_rate(sample_rate);
     }
 

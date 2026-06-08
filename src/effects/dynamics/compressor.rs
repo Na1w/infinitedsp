@@ -199,25 +199,36 @@ impl FrameProcessor<Mono> for Compressor {
             }
 
             let makeup = libm::powf(10.0, makeup_db / 20.0);
+            // Every term here is block-constant in this all-params-constant fast
+            // path (threshold/ratio/knee and the attack/release coeffs do not
+            // change across the buffer), so hoist them out of the per-sample
+            // loop. Removes a division (1/ratio) and several repeated ops per
+            // sample. Bit-identical to the inline form.
+            let slope = 1.0 - 1.0 / ratio;
+            let knee_half = knee_db / 2.0;
+            let thresh_hi = threshold_db + knee_half;
+            let thresh_lo = threshold_db - knee_half;
+            let two_knee = 2.0 * knee_db;
+            let one_minus_atk = 1.0 - self.attack_coeff;
+            let one_minus_rel = 1.0 - self.release_coeff;
 
             for sample in buffer.iter_mut() {
                 let input = *sample;
                 let abs_input = input.abs();
 
                 if abs_input > self.envelope {
-                    self.envelope =
-                        self.attack_coeff * self.envelope + (1.0 - self.attack_coeff) * abs_input;
+                    self.envelope = self.attack_coeff * self.envelope + one_minus_atk * abs_input;
                 } else {
-                    self.envelope =
-                        self.release_coeff * self.envelope + (1.0 - self.release_coeff) * abs_input;
+                    self.envelope = self.release_coeff * self.envelope + one_minus_rel * abs_input;
                 }
 
                 let mut gain = 1.0;
                 let env_db = env_to_db(self.envelope + 1e-9);
 
                 if knee_db > 0.0 {
-                    if env_db > (threshold_db + knee_db / 2.0) {
+                    if env_db > thresh_hi {
                         let over_db = env_db - threshold_db;
+<<<<<<< HEAD
                         let gain_db = -over_db * (1.0 - 1.0 / ratio);
                         gain = gain_db_to_lin(gain_db);
                     } else if env_db > (threshold_db - knee_db / 2.0) {
@@ -230,6 +241,19 @@ impl FrameProcessor<Mono> for Compressor {
                     let over_db = env_db - threshold_db;
                     let gain_db = -over_db * (1.0 - 1.0 / ratio);
                     gain = gain_db_to_lin(gain_db);
+=======
+                        let gain_db = -over_db * slope;
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    } else if env_db > thresh_lo {
+                        let over_db = env_db - threshold_db + knee_half;
+                        let gain_db = -slope * (over_db * over_db) / two_knee;
+                        gain = libm::powf(10.0, gain_db / 20.0);
+                    }
+                } else if env_db > threshold_db {
+                    let over_db = env_db - threshold_db;
+                    let gain_db = -over_db * slope;
+                    gain = libm::powf(10.0, gain_db / 20.0);
+>>>>>>> 5faf984 (perf(dynamics): hoist block-constant gain-computer terms in Compressor)
                 }
 
                 *sample = input * gain * makeup;

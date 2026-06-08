@@ -31,6 +31,11 @@ pub struct StateVariableFilter {
     last_res: f32,
     g: f32,
     k: f32,
+    // Per-sample-invariant quantities derived from g/k, cached behind the same
+    // change guard as g/k so the per-sample body needs no division.
+    denom: f32,    // 1 / (1 + g*(g+k))
+    g_plus_k: f32, // g + k
+    two_g: f32,    // 2*g
 
     cutoff_buffer: Vec<f32>,
     res_buffer: Vec<f32>,
@@ -55,6 +60,9 @@ impl StateVariableFilter {
             last_res: -1.0,
             g: 0.0,
             k: 0.0,
+            denom: 0.0,
+            g_plus_k: 0.0,
+            two_g: 0.0,
             cutoff_buffer: Vec::with_capacity(128),
             res_buffer: Vec::with_capacity(128),
         }
@@ -83,17 +91,20 @@ impl StateVariableFilter {
                 (PI / self.sample_rate) * cutoff_hz.clamp(10.0, self.sample_rate * 0.49),
             );
             self.k = 1.0 / res.max(0.01);
+            // Recompute the g/k-derived constants only when g/k change.
+            self.g_plus_k = self.g + self.k;
+            self.two_g = 2.0 * self.g;
+            self.denom = 1.0 / (1.0 + self.g * self.g_plus_k);
             self.last_cutoff = cutoff_hz;
             self.last_res = res;
         }
 
-        let denom = 1.0 / (1.0 + self.g * (self.g + self.k));
-        let hp = (input - self.s1 * (self.g + self.k) - self.s2) * denom;
+        let hp = (input - self.s1 * self.g_plus_k - self.s2) * self.denom;
         let bp = self.g * hp + self.s1;
         let lp = self.g * bp + self.s2;
 
-        self.s1 += 2.0 * self.g * hp;
-        self.s2 += 2.0 * self.g * bp;
+        self.s1 += self.two_g * hp;
+        self.s2 += self.two_g * bp;
 
         match self.filter_type {
             SvfType::LowPass => lp,

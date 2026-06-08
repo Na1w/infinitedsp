@@ -21,6 +21,11 @@ members = [
 [features]
 default = []
 debug_visualize = []
+# Opt-in: swap exact libm transcendentals (tan/sin/log/exp) in the per-sample
+# DSP hot paths for cheap polynomial/bit-trick approximations. Large speedups on
+# targets without hardware transcendental units (e.g. Cortex-M7), at the cost of
+# small, bounded error. Off by default — the default build is bit-exact.
+perf-approximations = []
 
 [dependencies]
 wide = { version = "1.1.1", default-features = false }

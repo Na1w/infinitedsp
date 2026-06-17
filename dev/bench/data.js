@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781710792766,
+  "lastUpdate": 1781710834593,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3828,6 +3828,80 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
             "value": 312325,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "chris.czub@gmail.com",
+            "name": "Chris Czub",
+            "username": "zbuc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4c6f6778996ea1e498c738728f3ecbbf35c193f9",
+          "message": "perf(synthesis): hoist loop-invariants in SpeechSynth::process (#45)\n\nTwo per-sample hoists in the synth loop, both bit-identical:\n\n- The three one-pole smoothing coefficients depend only on the fixed\n  sample rate, but were recomputed every sample (smooth_amp always, plus\n  one of two smooth_freq branches) — 2-3 libm::expf per sample. Compute\n  them once before the loop and select smooth_freq inside.\n\n- The 4 voiced-stack detune factors are constants (the stack is fixed at\n  4 oscillators in new()), so replace the per-sample `spread` recompute\n  with a precomputed DETUNE table.\n\nlibm transcendentals dominate this loop on targets without hardware\ntranscendental units, so the expf hoist in particular is a large win there.",
+          "timestamp": "2026-06-17T17:38:56+02:00",
+          "tree_id": "808e95473bd28f27db4424f6ec14ec672f26e423",
+          "url": "https://github.com/Na1w/infinitedsp/commit/4c6f6778996ea1e498c738728f3ecbbf35c193f9"
+        },
+        "date": 1781710833340,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27519,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12354,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22635,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4877,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 81691,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 207995,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 27282,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 177841,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 33231,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 257153,
             "unit": "instructions"
           }
         ]

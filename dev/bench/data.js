@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781710718144,
+  "lastUpdate": 1781710726041,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3680,6 +3680,80 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
             "value": 326634,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "chris.czub@gmail.com",
+            "name": "Chris Czub",
+            "username": "zbuc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "38d8ec65b45045d9e440573118be2ea19134fd63",
+          "message": "perf(synthesis): cache 1/sample_rate in Oscillator::tick (#44)\n\nOscillator::tick is the per-sample entry point (a voice may call it several\ntimes per output sample). It recomputed `1.0 / self.sample_rate` on every\ncall. Cache the reciprocal in a field, refreshed in set_sample_rate, and\nmultiply by it in tick — same value, no per-call division.\n\nThe block process() path already hoists the reciprocal per buffer and is\nleft unchanged. Bit-identical output.",
+          "timestamp": "2026-06-17T17:37:11+02:00",
+          "tree_id": "a44fb4b0742104de99286c25b0d38715a9861dca",
+          "url": "https://github.com/Na1w/infinitedsp/commit/38d8ec65b45045d9e440573118be2ea19134fd63"
+        },
+        "date": 1781710725186,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27519,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12354,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22635,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4877,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 81691,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 207995,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 32363,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 177841,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 33231,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 321514,
             "unit": "instructions"
           }
         ]

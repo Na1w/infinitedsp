@@ -4,6 +4,29 @@ use crate::FrameProcessor;
 use alloc::vec::Vec;
 use core::f32::consts::PI;
 
+/// Prewarp tangent for the TPT/ZDF bilinear transform.
+///
+/// Exact `libm::tanf` by default.
+#[cfg(not(feature = "perf-approximations"))]
+#[inline]
+fn prewarp_tan(x: f32) -> f32 {
+    libm::tanf(x)
+}
+
+/// Prewarp tangent — Padé[3/2] approximation `tan(x) ≈ x(15 - x²)/(15 - 6x²)`.
+///
+/// Matches `tan` through the x⁵ term: <0.2% error for x ≤ ~0.64 (covers all
+/// audio cutoffs up to ~9.8 kHz at 48 kHz), rising to ~10% only near the
+/// `0.49·fs` clamp. The denominator stays positive for x < π/2, and the SVF
+/// clamps the cutoff below that, so there is no pole. Enabled by the
+/// `perf-approximations` feature.
+#[cfg(feature = "perf-approximations")]
+#[inline]
+fn prewarp_tan(x: f32) -> f32 {
+    let x2 = x * x;
+    x * (15.0 - x2) / (15.0 - 6.0 * x2)
+}
+
 /// The output type of the State Variable Filter.
 #[derive(Clone, Copy)]
 pub enum SvfType {
@@ -31,6 +54,11 @@ pub struct StateVariableFilter {
     last_res: f32,
     g: f32,
     k: f32,
+    // Per-sample-invariant quantities derived from g/k, cached behind the same
+    // change guard as g/k so the per-sample body needs no division.
+    denom: f32,    // 1 / (1 + g*(g+k))
+    g_plus_k: f32, // g + k
+    two_g: f32,    // 2*g
 
     cutoff_buffer: Vec<f32>,
     res_buffer: Vec<f32>,
@@ -55,6 +83,9 @@ impl StateVariableFilter {
             last_res: -1.0,
             g: 0.0,
             k: 0.0,
+            denom: 0.0,
+            g_plus_k: 0.0,
+            two_g: 0.0,
             cutoff_buffer: Vec::with_capacity(128),
             res_buffer: Vec::with_capacity(128),
         }
@@ -79,21 +110,24 @@ impl StateVariableFilter {
     #[inline(always)]
     pub fn tick(&mut self, input: f32, cutoff_hz: f32, res: f32) -> f32 {
         if (cutoff_hz - self.last_cutoff).abs() > 0.001 || (res - self.last_res).abs() > 0.001 {
-            self.g = libm::tanf(
+            self.g = prewarp_tan(
                 (PI / self.sample_rate) * cutoff_hz.clamp(10.0, self.sample_rate * 0.49),
             );
             self.k = 1.0 / res.max(0.01);
+            // Recompute the g/k-derived constants only when g/k change.
+            self.g_plus_k = self.g + self.k;
+            self.two_g = 2.0 * self.g;
+            self.denom = 1.0 / (1.0 + self.g * self.g_plus_k);
             self.last_cutoff = cutoff_hz;
             self.last_res = res;
         }
 
-        let denom = 1.0 / (1.0 + self.g * (self.g + self.k));
-        let hp = (input - self.s1 * (self.g + self.k) - self.s2) * denom;
+        let hp = (input - self.s1 * self.g_plus_k - self.s2) * self.denom;
         let bp = self.g * hp + self.s1;
         let lp = self.g * bp + self.s2;
 
-        self.s1 += 2.0 * self.g * hp;
-        self.s2 += 2.0 * self.g * bp;
+        self.s1 += self.two_g * hp;
+        self.s2 += self.two_g * bp;
 
         match self.filter_type {
             SvfType::LowPass => lp,

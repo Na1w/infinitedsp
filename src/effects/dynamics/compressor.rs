@@ -3,6 +3,70 @@ use crate::core::channels::Mono;
 use crate::FrameProcessor;
 use alloc::vec::Vec;
 
+// Gain-computer dB conversions. The per-sample gain computer needs one log
+// (envelope → dB) and one exp (gain dB → linear) every sample. By default these
+// are exact libm `log10f`/`powf`; with `perf-approximations` they use cheap
+// float bit-trick approximations (~50x faster on a transcendental-less core such
+// as the Cortex-M7, where this is typically the largest always-on per-sample
+// cost on a master-bus compressor).
+//   20·log10(x) = 6.0205999·log2(x);   10^(db/20) = exp2(db·0.16609640)
+
+#[cfg(not(feature = "perf-approximations"))]
+#[inline]
+fn env_to_db(x: f32) -> f32 {
+    20.0 * libm::log10f(x)
+}
+
+#[cfg(not(feature = "perf-approximations"))]
+#[inline]
+fn gain_db_to_lin(db: f32) -> f32 {
+    libm::powf(10.0, db / 20.0)
+}
+
+/// log2 via the float exponent + a degree-5 polynomial on the mantissa.
+/// Fit to <0.0002 dB over the gain computer's range.
+#[cfg(feature = "perf-approximations")]
+#[inline]
+fn fast_log2(x: f32) -> f32 {
+    let bits = x.to_bits();
+    let exp = (((bits >> 23) & 0xFF) as i32) - 127;
+    let mant = f32::from_bits((bits & 0x007F_FFFF) | 0x3F80_0000); // [1, 2)
+    let p = -2.78679071
+        + mant
+            * (5.04679808
+                + mant
+                    * (-3.49238645
+                        + mant * (1.59382778 + mant * (-0.40484239 + mant * 0.04342561))));
+    exp as f32 + p
+}
+
+/// exp2 via integer/fractional split and a degree-4 polynomial on the fraction.
+/// Fit to <0.001% over the gain computer's range.
+#[cfg(feature = "perf-approximations")]
+#[inline]
+fn fast_exp2(x: f32) -> f32 {
+    let x = x.max(-100.0).min(100.0);
+    let xi = libm::floorf(x);
+    let xf = x - xi; // [0, 1)
+    let frac =
+        1.00000728 + xf * (0.69293129 + xf * (0.24171026 + xf * (0.05166688 + xf * 0.01367653)));
+    let n = xi as i32;
+    let scale = f32::from_bits(((n + 127) as u32) << 23); // 2^n
+    frac * scale
+}
+
+#[cfg(feature = "perf-approximations")]
+#[inline]
+fn env_to_db(x: f32) -> f32 {
+    6.0205999 * fast_log2(x)
+}
+
+#[cfg(feature = "perf-approximations")]
+#[inline]
+fn gain_db_to_lin(db: f32) -> f32 {
+    fast_exp2(db * 0.16609640)
+}
+
 /// A dynamic range compressor.
 ///
 /// Reduces the volume of loud sounds or amplifies quiet sounds by narrowing or compressing an audio signal's dynamic range.
@@ -159,22 +223,22 @@ impl FrameProcessor<Mono> for Compressor {
                 }
 
                 let mut gain = 1.0;
-                let env_db = 20.0 * libm::log10f(self.envelope + 1e-9);
+                let env_db = env_to_db(self.envelope + 1e-9);
 
                 if knee_db > 0.0 {
                     if env_db > thresh_hi {
                         let over_db = env_db - threshold_db;
                         let gain_db = -over_db * slope;
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     } else if env_db > thresh_lo {
                         let over_db = env_db - threshold_db + knee_half;
                         let gain_db = -slope * (over_db * over_db) / two_knee;
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     }
                 } else if env_db > threshold_db {
                     let over_db = env_db - threshold_db;
                     let gain_db = -over_db * slope;
-                    gain = libm::powf(10.0, gain_db / 20.0);
+                    gain = gain_db_to_lin(gain_db);
                 }
 
                 *sample = input * gain * makeup;
@@ -244,23 +308,23 @@ impl FrameProcessor<Mono> for Compressor {
                 }
 
                 let mut gain = 1.0;
-                let env_db = 20.0 * libm::log10f(self.envelope + 1e-9);
+                let env_db = env_to_db(self.envelope + 1e-9);
 
                 if knee_db > 0.0 {
                     if env_db > (threshold_db + knee_db / 2.0) {
                         let over_db = env_db - threshold_db;
                         let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     } else if env_db > (threshold_db - knee_db / 2.0) {
                         let slope = 1.0 - 1.0 / ratio;
                         let over_db = env_db - threshold_db + knee_db / 2.0;
                         let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     }
                 } else if env_db > threshold_db {
                     let over_db = env_db - threshold_db;
                     let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                    gain = libm::powf(10.0, gain_db / 20.0);
+                    gain = gain_db_to_lin(gain_db);
                 }
 
                 *sample = input * gain * makeup;

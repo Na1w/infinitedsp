@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Compressor"]};
+window.SIDEBAR_ITEMS = {"fn":["env_to_db","gain_db_to_lin"],"struct":["Compressor"]};

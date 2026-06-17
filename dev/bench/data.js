@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781712927218,
+  "lastUpdate": 1781713027775,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3926,6 +3926,80 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/6a7317806834e255383e99f7af20f19ad73861e9"
         },
         "date": 1781712926466,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27519,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12354,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22635,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4877,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 81691,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 207995,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 27282,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 177841,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 33231,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 257153,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "chris.czub@gmail.com",
+            "name": "Chris Czub",
+            "username": "zbuc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "60cd2ab782065e18f75d832de8914f1a133368ff",
+          "message": "perf(dynamics): hoist block-constant gain-computer terms in Compressor (#43)\n\nIn the all-parameters-constant fast path, the threshold/ratio/knee values\nand the attack/release coefficients are constant for the whole buffer, yet\nthe per-sample loop recomputed `1.0 - 1.0/ratio` (a division), the two knee\nbounds, `2*knee`, and `1 - coeff` on every sample. Hoist them above the\nloop.\n\nOnly the constant-param branch is changed; the per-sample varying-param\nbranch leaves these terms inline because they genuinely vary per sample.\nBit-identical output.\n\nCo-authored-by: Fredrik Andersson <fredrikandersson@mac.com>",
+          "timestamp": "2026-06-17T18:15:28+02:00",
+          "tree_id": "f22c01f679e9aea300f463e07f596d4be690ffba",
+          "url": "https://github.com/Na1w/infinitedsp/commit/60cd2ab782065e18f75d832de8914f1a133368ff"
+        },
+        "date": 1781713026426,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

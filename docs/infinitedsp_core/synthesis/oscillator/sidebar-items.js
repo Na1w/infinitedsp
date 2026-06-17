@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Waveform"],"struct":["Oscillator"]};
+window.SIDEBAR_ITEMS = {"enum":["Waveform"],"fn":["sine_norm"],"struct":["Oscillator"]};

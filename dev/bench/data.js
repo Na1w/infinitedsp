@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781710675132,
+  "lastUpdate": 1781710718144,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3556,6 +3556,80 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/45363fdd9a392d75cc138edbd665cfe736cdf267"
         },
         "date": 1781710674338,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27517,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12352,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22633,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4875,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 81691,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 207995,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 32363,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 177841,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 33231,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 326634,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "chris.czub@gmail.com",
+            "name": "Chris Czub",
+            "username": "zbuc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "188bd872c55281fc724a47ef10ba4e710fc584e6",
+          "message": "perf(filter): optional Padé tan prewarp behind perf-approximations (#46)\n\nAdds a `perf-approximations` cargo feature. When enabled, the SVF's TPT\nprewarp uses a Padé[3/2] approximation of tan() instead of libm::tanf:\ntan(x) ≈ x(15 - x²)/(15 - 6x²), <0.2% error across the audio band, no pole\nbelow the existing cutoff clamp.\n\nlibm::tanf is ~1250 cycles on a Cortex-M7 and the formant filter re-derives\ng whenever the cutoff moves, so this is a large win on transcendental-less\ntargets. Default build is unchanged (exact libm::tanf).",
+          "timestamp": "2026-06-17T17:36:45+02:00",
+          "tree_id": "25ec4fed8521586c6ee9f09a1a037719940c703d",
+          "url": "https://github.com/Na1w/infinitedsp/commit/188bd872c55281fc724a47ef10ba4e710fc584e6"
+        },
+        "date": 1781710713976,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

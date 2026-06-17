@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780064279434,
+  "lastUpdate": 1781710328146,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3448,6 +3448,80 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
             "value": 177838,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 33231,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 326634,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "chris.czub@gmail.com",
+            "name": "Chris Czub",
+            "username": "zbuc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a9b2e03992d4703d8f4ea1934ea3014c074d1283",
+          "message": "perf(synthesis): optional parabolic fast-sine behind perf-approximations (#48)\n\nRoutes the Oscillator's Sine waveform (tick + both process paths) through a\n`sine_norm` helper with two implementations selected by the\n`perf-approximations` feature:\n\n- default: exact libm::sinf (unchanged behavior)\n- perf-approximations: parabolic sine + one refinement pass, ~0.2% peak error\n\nlibm::sinf is ~1250 cycles on a Cortex-M7, and an FM voice hits the Sine\npath twice per oscillator per sample, so the approximation is a large win on\ntranscendental-less targets. The sine unit test widens its tolerance under\nthe feature; the default build stays bit-exact.",
+          "timestamp": "2026-06-17T17:30:35+02:00",
+          "tree_id": "55d2915f8d8cf58633925351b53259756abe010a",
+          "url": "https://github.com/Na1w/infinitedsp/commit/a9b2e03992d4703d8f4ea1934ea3014c074d1283"
+        },
+        "date": 1781710327105,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27517,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12352,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22633,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4875,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 81691,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 207995,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 32363,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 177841,
             "unit": "instructions"
           },
           {

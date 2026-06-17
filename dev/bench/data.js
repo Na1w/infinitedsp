@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781710328146,
+  "lastUpdate": 1781710675132,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3482,6 +3482,80 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/Na1w/infinitedsp/commit/a9b2e03992d4703d8f4ea1934ea3014c074d1283"
         },
         "date": 1781710327105,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27517,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12352,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22633,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4875,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 81691,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 207995,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 32363,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 177841,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 33231,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 326634,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "chris.czub@gmail.com",
+            "name": "Chris Czub",
+            "username": "zbuc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "45363fdd9a392d75cc138edbd665cfe736cdf267",
+          "message": "perf(dynamics): optional fast log2/exp2 gain computer behind perf-approximations (#47)\n\nAdds the gain computer's dB conversions (envelope→dB log, gain dB→linear\nexp) as helper fns with two implementations selected by the\n`perf-approximations` feature:\n\n- default: exact libm log10f / powf (unchanged behavior)\n- perf-approximations: float bit-trick fast_log2 (<0.0002 dB) and fast_exp2\n  (<0.001%)\n\nOn a master-bus compressor these two transcendentals are the largest\nalways-on per-sample cost on a core without a hardware transcendental unit\n(~1250 cyc each on the Cortex-M7); the approximations are ~50x cheaper and\ninaudible in a smooth, envelope-driven gain control. Makeup gain is left as\nexact libm in both configs (it is at most once per block on the constant\npath). Default build is bit-exact.",
+          "timestamp": "2026-06-17T17:36:20+02:00",
+          "tree_id": "242d6c766fe3d5beff6a8afa220e0b9439797474",
+          "url": "https://github.com/Na1w/infinitedsp/commit/45363fdd9a392d75cc138edbd665cfe736cdf267"
+        },
+        "date": 1781710674338,
         "tool": "customSmallerIsBetter",
         "benches": [
           {

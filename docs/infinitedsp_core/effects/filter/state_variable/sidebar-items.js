@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["SvfType"],"struct":["StateVariableFilter"]};
+window.SIDEBAR_ITEMS = {"enum":["SvfType"],"fn":["prewarp_tan"],"struct":["StateVariableFilter"]};

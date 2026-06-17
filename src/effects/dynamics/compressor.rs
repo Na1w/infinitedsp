@@ -228,32 +228,17 @@ impl FrameProcessor<Mono> for Compressor {
                 if knee_db > 0.0 {
                     if env_db > thresh_hi {
                         let over_db = env_db - threshold_db;
-<<<<<<< HEAD
-                        let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                        gain = gain_db_to_lin(gain_db);
-                    } else if env_db > (threshold_db - knee_db / 2.0) {
-                        let slope = 1.0 - 1.0 / ratio;
-                        let over_db = env_db - threshold_db + knee_db / 2.0;
-                        let gain_db = -slope * (over_db * over_db) / (2.0 * knee_db);
-                        gain = gain_db_to_lin(gain_db);
-                    }
-                } else if env_db > threshold_db {
-                    let over_db = env_db - threshold_db;
-                    let gain_db = -over_db * (1.0 - 1.0 / ratio);
-                    gain = gain_db_to_lin(gain_db);
-=======
                         let gain_db = -over_db * slope;
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     } else if env_db > thresh_lo {
                         let over_db = env_db - threshold_db + knee_half;
                         let gain_db = -slope * (over_db * over_db) / two_knee;
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     }
                 } else if env_db > threshold_db {
                     let over_db = env_db - threshold_db;
                     let gain_db = -over_db * slope;
-                    gain = libm::powf(10.0, gain_db / 20.0);
->>>>>>> 5faf984 (perf(dynamics): hoist block-constant gain-computer terms in Compressor)
+                    gain = gain_db_to_lin(gain_db);
                 }
 
                 *sample = input * gain * makeup;

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781710726041,
+  "lastUpdate": 1781710792766,
   "repoUrl": "https://github.com/Na1w/infinitedsp",
   "entries": {
     "Rust Benchmark": [
@@ -3754,6 +3754,80 @@ window.BENCHMARK_DATA = {
           {
             "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
             "value": 321514,
+            "unit": "instructions"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "chris.czub@gmail.com",
+            "name": "Chris Czub",
+            "username": "zbuc"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9c44b61e0403561d2e932e7aea94dbcb21b5f66",
+          "message": "perf(filter): cache g/k-derived constants in StateVariableFilter::tick (#42)\n\nThe TPT/ZDF per-sample body recomputed `1/(1 + g*(g+k))` (a division),\n`g+k`, and `2*g` on every sample, even though g and k only change when the\ncutoff/resonance cross the existing change threshold. Cache those three\nderived quantities alongside g/k, behind the same change guard, so the\nhot path has no division and no redundant arithmetic.\n\nBit-identical output (same operations, same order; only the evaluation\nsite moves).",
+          "timestamp": "2026-06-17T17:38:05+02:00",
+          "tree_id": "52ba77e89040692c48e165c43ddfa8e41f462421",
+          "url": "https://github.com/Na1w/infinitedsp/commit/c9c44b61e0403561d2e932e7aea94dbcb21b5f66"
+        },
+        "date": 1781710790590,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator sine:setup_osc(Waveform :: Sine)",
+            "value": 27519,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator saw:setup_osc(Waveform :: Saw)",
+            "value": 12354,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator square:setup_osc(Waveform :: Square)",
+            "value": 22635,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_oscillator noise:setup_osc(Waveform :: WhiteNoise)",
+            "value": 4877,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::oscillator::bench_wavetable_oscillator default:setup_wavetable_osc()",
+            "value": 81691,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_reverb default:setup_reverb()",
+            "value": 207995,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_svf_lowpass default:setup_svf()",
+            "value": 27282,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::effects::bench_spectral_smear default:setup_ola_smear()",
+            "value": 177841,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_adsr default:setup_adsr()",
+            "value": 33231,
+            "unit": "instructions"
+          },
+          {
+            "name": "dsp_benchmarks::synthesis::bench_speech_synth default:setup_speech()",
+            "value": 312325,
             "unit": "instructions"
           }
         ]

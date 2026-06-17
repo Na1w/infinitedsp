@@ -229,16 +229,16 @@ impl FrameProcessor<Mono> for Compressor {
                     if env_db > thresh_hi {
                         let over_db = env_db - threshold_db;
                         let gain_db = -over_db * slope;
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     } else if env_db > thresh_lo {
                         let over_db = env_db - threshold_db + knee_half;
                         let gain_db = -slope * (over_db * over_db) / two_knee;
-                        gain = libm::powf(10.0, gain_db / 20.0);
+                        gain = gain_db_to_lin(gain_db);
                     }
                 } else if env_db > threshold_db {
                     let over_db = env_db - threshold_db;
                     let gain_db = -over_db * slope;
-                    gain = libm::powf(10.0, gain_db / 20.0);
+                    gain = gain_db_to_lin(gain_db);
                 }
 
                 *sample = input * gain * makeup;

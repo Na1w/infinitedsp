@@ -12,19 +12,31 @@ fn main() -> Result<()> {
             let t = i as f32 / samples_per_frame as f32;
             let val = match f {
                 0 => libm::sinf(t * 2.0 * PI), // Sine
-                1 => { // Triangle
-                    if t < 0.25 { 4.0 * t }
-                    else if t < 0.75 { 2.0 - 4.0 * t }
-                    else { -4.0 + 4.0 * t }
-                },
-                2 => if t < 0.5 { 1.0 } else { -1.0 }, // Square
-                3 => { // Saw (sum of 100 harmonics)
+                1 => {
+                    // Triangle
+                    if t < 0.25 {
+                        4.0 * t
+                    } else if t < 0.75 {
+                        2.0 - 4.0 * t
+                    } else {
+                        -4.0 + 4.0 * t
+                    }
+                }
+                2 => {
+                    if t < 0.5 {
+                        1.0
+                    } else {
+                        -1.0
+                    }
+                } // Square
+                3 => {
+                    // Saw (sum of 100 harmonics)
                     let mut s = 0.0;
                     for h in 1..=100 {
                         s += libm::sinf(t * 2.0 * PI * h as f32) / h as f32;
                     }
                     s
-                },
+                }
                 _ => 0.0,
             };
             all_samples.push(val);
@@ -32,13 +44,17 @@ fn main() -> Result<()> {
     }
 
     let mut max_abs = 0.0f32;
-    for &s in &all_samples { 
+    for &s in &all_samples {
         let abs_s = if s < 0.0 { -s } else { s };
-        if abs_s > max_abs { max_abs = abs_s; }
+        if abs_s > max_abs {
+            max_abs = abs_s;
+        }
     }
-    
+
     if max_abs > 0.0 {
-        for s in &mut all_samples { *s /= max_abs; }
+        for s in &mut all_samples {
+            *s /= max_abs;
+        }
     }
 
     let spec = hound::WavSpec {

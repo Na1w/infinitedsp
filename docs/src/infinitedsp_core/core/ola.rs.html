@@ -229,8 +229,15 @@
 <a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">use </span>core::fmt::Write;
 <a href=#230 id=230 data-nosnippet>230</a>        <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
 <a href=#231 id=231 data-nosnippet>231</a>        <span class="kw">let </span>spaces = <span class="string">" "</span>.repeat(indent);
-<a href=#232 id=232 data-nosnippet>232</a>        <span class="kw">let _ </span>= <span class="macro">write!</span>(s, <span class="string">"{}Ola (FFT Size: {})\n{}  |-- {}\n"</span>, spaces, N, spaces, <span class="self">self</span>.processor.name());
-<a href=#233 id=233 data-nosnippet>233</a>        s
-<a href=#234 id=234 data-nosnippet>234</a>    }
-<a href=#235 id=235 data-nosnippet>235</a>}
+<a href=#232 id=232 data-nosnippet>232</a>        <span class="kw">let _ </span>= <span class="macro">write!</span>(
+<a href=#233 id=233 data-nosnippet>233</a>            s,
+<a href=#234 id=234 data-nosnippet>234</a>            <span class="string">"{}Ola (FFT Size: {})\n{}  |-- {}\n"</span>,
+<a href=#235 id=235 data-nosnippet>235</a>            spaces,
+<a href=#236 id=236 data-nosnippet>236</a>            N,
+<a href=#237 id=237 data-nosnippet>237</a>            spaces,
+<a href=#238 id=238 data-nosnippet>238</a>            <span class="self">self</span>.processor.name()
+<a href=#239 id=239 data-nosnippet>239</a>        );
+<a href=#240 id=240 data-nosnippet>240</a>        s
+<a href=#241 id=241 data-nosnippet>241</a>    }
+<a href=#242 id=242 data-nosnippet>242</a>}
 </code></pre></div></section></main></body></html>

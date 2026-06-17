@@ -5,6 +5,33 @@ use alloc::vec::Vec;
 use core::f32::consts::PI;
 use wide::f32x4;
 
+/// Sine of a normalized phase in `[0, 1)` — i.e. `sin(2π·phase)`.
+///
+/// Exact `libm::sinf` by default.
+#[cfg(not(feature = "perf-approximations"))]
+#[inline]
+fn sine_norm(phase: f32) -> f32 {
+    libm::sinf(phase * 2.0 * PI)
+}
+
+/// Sine of a normalized phase — parabolic approximation with one refinement
+/// pass (Bhaskara-style), ~0.2% peak error vs `libm::sinf`.
+///
+/// `libm::sinf` is ~1250 cycles on a Cortex-M7; an FM voice calls the Sine path
+/// twice per oscillator per sample, which can blow the audio-callback budget on
+/// transcendental-less cores. Enabled by the `perf-approximations` feature.
+#[cfg(feature = "perf-approximations")]
+#[inline]
+fn sine_norm(phase: f32) -> f32 {
+    // sin is 1-periodic in `phase`; wrap to [-0.5, 0.5) then to x in [-PI, PI).
+    let p = if phase >= 0.5 { phase - 1.0 } else { phase };
+    let x = p * (2.0 * PI);
+    let abs_x = if x < 0.0 { -x } else { x };
+    let y = (4.0 / PI) * x - (4.0 / (PI * PI)) * x * abs_x;
+    let abs_y = if y < 0.0 { -y } else { y };
+    0.225 * (y * abs_y - y) + y
+}
+
 /// The waveform shape for the oscillator.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Waveform {
@@ -104,7 +131,7 @@ impl Oscillator {
         }
 
         match self.waveform {
-            Waveform::Sine => libm::sinf(self.phase * 2.0 * PI),
+            Waveform::Sine => sine_norm(self.phase),
             Waveform::Triangle => {
                 if self.phase < 0.5 {
                     4.0 * self.phase - 1.0
@@ -160,7 +187,7 @@ impl FrameProcessor<Mono> for Oscillator {
                         } else if phase < 0.0 {
                             phase += 1.0;
                         }
-                        out_chunk[i] = libm::sinf(phase * 2.0 * PI);
+                        out_chunk[i] = sine_norm(phase);
                     }
                 }
             }
@@ -267,7 +294,7 @@ impl FrameProcessor<Mono> for Oscillator {
             }
 
             let val = match self.waveform {
-                Waveform::Sine => libm::sinf(phase * 2.0 * PI),
+                Waveform::Sine => sine_norm(phase),
                 Waveform::Triangle => {
                     let x = phase;
                     if x < 0.5 {
@@ -340,6 +367,12 @@ mod tests {
 
         // First sample at 44100Hz, 441Hz increment is 0.01.
         // Phase after first sample is 0.01. sin(0.01 * 2 * PI)
-        assert!((buffer[0] - libm::sinf(0.01 * 2.0 * PI)).abs() < 1e-5);
+        // The exact libm path matches to 1e-5; the perf-approximations sine has
+        // ~0.2% peak error, so widen the tolerance when that feature is on.
+        #[cfg(not(feature = "perf-approximations"))]
+        let tol = 1e-5;
+        #[cfg(feature = "perf-approximations")]
+        let tol = 5e-3;
+        assert!((buffer[0] - libm::sinf(0.01 * 2.0 * PI)).abs() < tol);
     }
 }

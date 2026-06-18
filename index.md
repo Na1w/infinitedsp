@@ -39,8 +39,22 @@ It is `no_std` compatible (requires `alloc`), making it suitable for embedded au
 
 ## Benchmarks
 
-Performance is tracked over time to ensure no regressions.
+Performance (instruction counts, via `iai-callgrind`) is tracked over time to ensure no regressions.
 [View Benchmark Charts](https://na1w.github.io/infinitedsp/dev/bench/)
+
+The suite is run in two configurations on every push, so each benchmark appears as two tracked series:
+
+*   the default **bit-exact** build, and
+*   the same build with **`perf-approximations`** (suffixed ` (perf-approximations)` in the charts).
+
+Comparing the two shows the per-effect instruction savings of the approximations — most visible on `bench_oscillator::sine`, `bench_svf_lowpass`, `bench_compressor` and `bench_speech_synth`.
+
+To reproduce locally:
+
+```sh
+cargo bench                                # bit-exact
+cargo bench --features perf-approximations # approximations
+```
 
 ## Documentation
 [View Documentation](https://na1w.github.io/infinitedsp/docs/)
@@ -106,6 +120,12 @@ chain.process(&mut buffer, 0);
 ### Feature Flags
 
 *   **`debug_visualize`**: Enables `get_graph()` and `visualize()` methods for debugging signal chains. Disabled by default to minimize binary size for embedded targets.
+*   **`perf-approximations`**: Swaps the exact `libm` transcendentals (`tan`/`sin`/`log`/`exp`) in the per-sample DSP hot paths for cheap polynomial / float-bit-trick approximations. **Off by default** — the default build is bit-exact. These give large speedups on targets *without* a hardware transcendental unit (e.g. the Cortex-M7, where a single `libm` call is ~1250 cycles), at the cost of small, bounded error:
+    *   `Oscillator` (`Sine`) — parabolic + one refinement pass, ~0.2% peak error vs `libm::sinf`.
+    *   `StateVariableFilter` prewarp — Padé[3/2] `tan(x) ≈ x(15 - x²)/(15 - 6x²)`, <0.2% error for cutoffs up to ~9.8 kHz @ 48 kHz.
+    *   `Compressor` gain computer — fast `log2`/`exp2` (one `log` + one `exp` per sample), fit to <0.0002 dB and <0.001% over the gain computer's range.
+
+    The errors are inaudible in smooth, envelope-driven processing, but the feature is opt-in so the default build stays bit-exact. The [benchmark suite](#benchmarks) runs both with and without the flag so the per-effect speedup is tracked over time.
 
 ## Running Examples
 

@@ -1,6 +1,7 @@
 use iai_callgrind::{library_benchmark, library_benchmark_group, main};
 use infinitedsp_core::core::audio_param::AudioParam;
 use infinitedsp_core::core::ola::Ola;
+use infinitedsp_core::effects::dynamics::compressor::Compressor;
 use infinitedsp_core::effects::filter::state_variable::{StateVariableFilter, SvfType};
 use infinitedsp_core::effects::spectral::spectral_smear::SpectralSmear;
 use infinitedsp_core::effects::time::reverb::Reverb;
@@ -62,6 +63,14 @@ fn setup_svf() -> (StateVariableFilter, Vec<f32>) {
     );
     filter.set_sample_rate(SAMPLE_RATE);
     (filter, vec![0.5; BUFFER_SIZE])
+}
+
+fn setup_compressor() -> (Compressor, Vec<f32>) {
+    let mut comp = Compressor::new(AudioParam::db(-20.0), AudioParam::Static(4.0));
+    comp.set_sample_rate(SAMPLE_RATE);
+    // Input well above the -20 dB threshold so the gain computer's per-sample
+    // log/exp runs every sample (this is the path `perf-approximations` speeds up).
+    (comp, vec![0.5; BUFFER_SIZE])
 }
 
 fn setup_ola_smear() -> (Ola<SpectralSmear<512>, 512>, Vec<f32>) {
@@ -126,6 +135,13 @@ fn bench_svf_lowpass(args: (StateVariableFilter, Vec<f32>)) {
 }
 
 #[library_benchmark]
+#[bench::default(setup_compressor())]
+fn bench_compressor(args: (Compressor, Vec<f32>)) {
+    let (mut comp, mut buffer) = args;
+    comp.process(black_box(&mut buffer), 0);
+}
+
+#[library_benchmark]
 #[bench::default(setup_ola_smear())]
 fn bench_spectral_smear(args: (Ola<SpectralSmear<512>, 512>, Vec<f32>)) {
     let (mut smear, mut buffer) = args;
@@ -146,7 +162,7 @@ library_benchmark_group!(
 
 library_benchmark_group!(
     name = effects;
-    benchmarks = bench_reverb, bench_svf_lowpass, bench_spectral_smear
+    benchmarks = bench_reverb, bench_svf_lowpass, bench_compressor, bench_spectral_smear
 );
 
 library_benchmark_group!(

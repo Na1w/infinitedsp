@@ -26,66 +26,72 @@ jobs:
     - name: Install iai-callgrind-runner
       run: cargo install iai-callgrind-runner --version 0.16.1
 
-    - name: Run benchmarks
+    # The `perf-approximations` feature swaps exact libm transcendentals for
+    # cheap approximations in the per-sample hot paths. Bench both the bit-exact
+    # default and the approximation build so each benchmark is tracked as two
+    # series and the speedup is visible on the chart dashboard.
+    - name: Run benchmarks (bit-exact)
       # Disable color output to make parsing easier
-      run: CARGO_TERM_COLOR=never cargo bench | tee output.txt
+      run: CARGO_TERM_COLOR=never cargo bench | tee output_exact.txt
+
+    - name: Run benchmarks (perf-approximations)
+      run: CARGO_TERM_COLOR=never cargo bench --features perf-approximations | tee output_approx.txt
 
     - name: Parse benchmark results
       run: |
         python3 -c '
         import sys
         import json
-        import re
 
-        results = []
-        current_bench = None
-        
-        name_pattern = re.compile(r"^([\w:]+.*)$")
+        def parse(path, suffix):
+            results = []
+            current_bench = None
+            try:
+                with open(path, "r") as f:
+                    lines = f.readlines()
+            except FileNotFoundError:
+                print(f"{path} not found")
+                sys.exit(1)
 
-        try:
-            with open("output.txt", "r") as f:
-                lines = f.readlines()
-                
-            for line in lines:
-                raw_line = line
-                line = line.strip()
-                
+            for raw_line in lines:
+                line = raw_line.strip()
                 if not line:
                     continue
-
+                # Benchmark id lines (e.g. "bench_oscillator::sine") start at col 0.
                 if "::" in line and not raw_line.startswith(" "):
                     current_bench = line
                     continue
-                
-                if current_bench:
-                    if line.startswith("Instructions:"):
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            val_str = parts[1].split("|")[0]
-                            if val_str.isdigit():
-                                results.append({
-                                    "name": current_bench,
-                                    "unit": "instructions",
-                                    "value": int(val_str)
-                                })
-                                current_bench = None 
-        except FileNotFoundError:
-            print("output.txt not found")
-            sys.exit(1)
+                if current_bench and line.startswith("Instructions:"):
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        # "Instructions:  1234|5678 (-1%)" -> current run is 1234.
+                        val_str = parts[1].split("|")[0]
+                        if val_str.isdigit():
+                            results.append({
+                                "name": current_bench + suffix,
+                                "unit": "instructions",
+                                "value": int(val_str),
+                            })
+                            current_bench = None
+            return results
+
+        results = parse("output_exact.txt", "")
+        results += parse("output_approx.txt", " (perf-approximations)")
 
         with open("benchmark_result.json", "w") as f:
             json.dump(results, f, indent=2)
-        
+
         print(f"Parsed {len(results)} benchmarks")
-        
+
         if len(results) == 0:
-             print("--- output.txt content ---")
-             with open("output.txt", "r") as f:
-                 print(f.read())
-             print("--------------------------")
-             sys.exit(1)
+            for path in ("output_exact.txt", "output_approx.txt"):
+                print(f"--- {path} content ---")
+                with open(path, "r") as f:
+                    print(f.read())
+                print("--------------------------")
+            sys.exit(1)
         '
-      
+
     - name: Store benchmark result
       uses: benchmark-action/github-action-benchmark@v1
       with:

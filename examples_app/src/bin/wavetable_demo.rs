@@ -6,19 +6,23 @@ use infinitedsp_core::core::frame_processor::FrameProcessor;
 use infinitedsp_core::synthesis::lfo::{Lfo, LfoWaveform};
 use infinitedsp_core::synthesis::wavetable::WavetableOscillator;
 use infinitedsp_examples::audio_backend::init_audio_interleaved;
-use infinitedsp_examples::wavetable_loader::load_wavetable;
+use infinitedsp_examples::wavetable_loader::load_wavetable_from_bytes;
 use std::thread;
 use std::time::Duration;
 
-fn create_wavetable_demo(_sample_rate: f32) -> Result<Box<dyn FrameProcessor<Stereo> + Send>> {
-    let table = load_wavetable("assets/audio/demo_wavetable.wav", 2048)?;
-    let lfo = Lfo::new(AudioParam::hz(0.5), LfoWaveform::Sine);
+fn create_wavetable_demo(sample_rate: f32) -> Result<Box<dyn FrameProcessor<Stereo> + Send>> {
+    let bytes = include_bytes!("../../../assets/audio/demo_wavetable.wav");
+    let table = load_wavetable_from_bytes(bytes, 2048)?;
+    let mut lfo = Lfo::new(AudioParam::hz(0.5), LfoWaveform::Sine);
+    lfo.set_unipolar(true);
+    lfo.set_sample_rate(sample_rate);
 
-    let osc = WavetableOscillator::new(
+    let mut osc = WavetableOscillator::new(
         table,
         AudioParam::hz(110.0),
         AudioParam::Dynamic(Box::new(lfo)),
     );
+    osc.set_sample_rate(sample_rate);
 
     struct MonoToStereo(WavetableOscillator);
     impl FrameProcessor<Stereo> for MonoToStereo {
@@ -52,7 +56,7 @@ fn main() -> Result<()> {
     println!("--- InfiniteDSP Wavetable Demo ---");
     println!("Loading wavetable from assets/audio/demo_wavetable.wav");
     println!("Morphing through Sine -> Triangle -> Square -> Saw...");
-    println!("");
+    println!();
 
     let (stream, sample_rate) = init_audio_interleaved(|sr| {
         create_wavetable_demo(sr).expect("Failed to create demo chain")

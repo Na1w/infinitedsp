@@ -64,18 +64,21 @@ impl FrameProcessor<Mono> for LatencyDemoEngine {
 }
 
 fn create_engine(sample_rate: f32, sync_enabled: Parameter) -> LatencyDemoEngine {
-    let osc = Oscillator::new(AudioParam::hz(50.0), Waveform::Sine);
+    let mut osc = Oscillator::new(AudioParam::hz(50.0), Waveform::Sine);
+    osc.set_sample_rate(sample_rate);
     let latency_samples = (10.0 * sample_rate / 1000.0) as u32;
 
     let path_a_1: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Lookahead::new(latency_samples));
     let path_b_1: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Passthrough::new());
-    let compensated = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![
+    let mut compensated = SummingMixer::<Mono, Box<dyn FrameProcessor<Mono> + Send>>::new_sync(vec![
         path_a_1, path_b_1,
     ]);
+    compensated.set_sample_rate(sample_rate);
 
     let path_a_2: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Lookahead::new(latency_samples));
     let path_b_2: Box<dyn FrameProcessor<Mono> + Send> = Box::new(Passthrough::new());
-    let direct = SummingMixer::new(vec![path_a_2, path_b_2]);
+    let mut direct = SummingMixer::new(vec![path_a_2, path_b_2]);
+    direct.set_sample_rate(sample_rate);
 
     LatencyDemoEngine {
         source: osc,
@@ -89,7 +92,7 @@ fn main() -> Result<()> {
     println!("--- InfiniteDSP Latency Comparison Demo ---");
     println!("Signal: 50Hz Sine wave.");
     println!("Setup: Two parallel paths, one delayed by 10ms (180° phase shift).");
-    println!("");
+    println!();
 
     let sync_param = Parameter::new(1.0);
     let sync_enabled = sync_param.clone();

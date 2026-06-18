@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-19
+
+This release features massive performance enhancements, including AI-assisted optimization passes and an opt-in fast math mode, alongside major new DSP blocks.
+
+Special thanks to:
+- **Chris Czub** for designing and contributing the opt-in `perf-approximations` fast transcendentals engine, SVF prewarp approximations, and hoisting loop-invariants throughout the synthesis hot paths.
+- **Google Labs' "Jules"** for co-authoring several critical memory footprint reductions, buffer pre-allocations, and error-handling cleanups.
+
+### Added
+- **Wavetable Synthesis:** Added [Wavetable](file:///Users/fredrikandersson/Projects/infinitedsp/src/synthesis/wavetable.rs) and [WavetableOscillator](file:///Users/fredrikandersson/Projects/infinitedsp/src/synthesis/wavetable.rs#L110) supporting band-limiting via mipmapping (using FFT to pre-filter harmonics).
+- **Lookahead Limiter:** Introduced [Limiter](file:///Users/fredrikandersson/Projects/infinitedsp/src/effects/dynamics/limiter.rs) for brickwall dynamics control.
+- **Lookahead Utility:** Added [Lookahead](file:///Users/fredrikandersson/Projects/infinitedsp/src/effects/utility/lookahead.rs) to delay signals for upcoming peak detection.
+- **Latency Compensation:** Introduced [LatencyCompensator](file:///Users/fredrikandersson/Projects/infinitedsp/src/core/latency_compensator.rs) to wrap any processor and align its latency to a target value.
+- **Feature Flags:** Added `perf-approximations` feature flag to opt-in for fast math transcendental approximations (sin, log2, exp2, Padé tangent) in hot DSP paths.
+- **Benchmarks:** Added `dsp_benchmarks` using `iai-callgrind` to track CPU performance.
+- **New Demos:** Added `wavetable_demo.rs` and `latency_demo.rs` showcasing these features.
+- **Wavetable Loader Enhancement:** Added `load_wavetable_from_bytes` in the examples workspace and updated the wavetable demo to embed the wavetable asset directly in the compiled binary via `include_bytes!`, resolving runtime relative file path resolution errors.
+
+### Changed
+- **Performance Optimizations:** Hoisted loop-invariants and cached coefficients in `Oscillator`, `Compressor`, and `StateVariableFilter`.
+- **Memory Optimizations:** Pre-allocated audio buffers and minimized heap reallocations (using `Vec::with_capacity` in hot paths).
+- **Embedded Cleanups:** Eliminated `.unwrap()` panics to reduce binary size on no_std targets.
+- **Formatting:** Cleaned up code visualization formatting to use `core::fmt::Write` rather than `format!`.
+
 ## [1.1.0] - 2026-03-08
 
 ### Added
